@@ -1,0 +1,173 @@
+:root {
+  color-scheme: dark;
+  --background: #13131b;
+  --surface: #1f1f27;
+  --surface-high: #292932;
+  --outline: #464554;
+  --text: #e4e1ed;
+  --muted: #c7c4d7;
+  --primary: #c0c1ff;
+  --secondary: #4cd7f6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.index-page {
+  min-height: 100vh;
+  padding: 40px;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(192, 193, 255, 0.12), transparent 34%),
+    radial-gradient(circle at 86% 18%, rgba(76, 215, 246, 0.11), transparent 30%),
+    var(--background);
+}
+
+.index-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.eyebrow {
+  color: var(--secondary);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.index-title {
+  max-width: 760px;
+  margin: 14px 0 12px;
+  font-family: "Plus Jakarta Sans", Inter, sans-serif;
+  font-size: clamp(40px, 7vw, 76px);
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+.index-copy {
+  max-width: 680px;
+  margin: 0 0 34px;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.screen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+  gap: 18px;
+}
+
+.screen-card {
+  min-height: 150px;
+  padding: 20px;
+  border: 1px solid var(--outline);
+  border-radius: 8px;
+  background: rgba(31, 31, 39, 0.86);
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.screen-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  background: rgba(41, 41, 50, 0.94);
+}
+
+.screen-card h2 {
+  margin: 0 0 10px;
+  color: var(--primary);
+  font-family: "Plus Jakarta Sans", Inter, sans-serif;
+  font-size: 22px;
+  letter-spacing: 0;
+}
+
+.screen-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.screen-card span {
+  display: inline-block;
+  margin-top: 20px;
+  color: var(--secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.missing-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.missing-card {
+  max-width: 520px;
+  padding: 28px;
+  border: 1px solid var(--outline);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.missing-card h1 {
+  margin: 0 0 10px;
+  color: var(--primary);
+}
+
+.missing-card p {
+  margin: 0 0 20px;
+  color: var(--muted);
+}
+
+.missing-card a {
+  color: var(--secondary);
+  font-weight: 700;
+}
+
+/* Shared utility classes used by all components */
+.ai-glow {
+  box-shadow: 0px 4px 20px rgba(99, 102, 241, 0.15);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #c0c1ff;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  display: inline-block;
+  vertical-align: middle;
+}
