@@ -17,7 +17,7 @@ export default function OnboardingRedesign() {
 
   const getStepDotClasses = (step) => {
     if (step < currentStep) return "w-12 h-12 rounded-2xl flex items-center justify-center bg-green-500 text-white font-bold transition-all duration-300 ring-4 ring-background";
-    if (step === currentStep) return "w-12 h-12 rounded-2xl flex items-center justify-center bg-primary text-white font-bold ai-glow transition-all duration-300 ring-4 ring-background";
+    if (step === currentStep) return "w-12 h-12 rounded-2xl flex items-center justify-center bg-primary text-on-primary font-bold ai-glow transition-all duration-300 ring-4 ring-background";
     return "w-12 h-12 rounded-2xl flex items-center justify-center bg-surface-container-highest text-on-surface-variant font-bold transition-all duration-300 ring-4 ring-background";
   };
 
@@ -56,19 +56,19 @@ export default function OnboardingRedesign() {
 
   const copyCode = async () => {
     const code = `<script>
-  window.BotimiConfig = {
+  window.botimiConfig = {
     apiKey: "bh_9823x_prod_kll2",
     botId: "asst_9x2100",
     theme: "indigo-dark"
   };
 </script>
-<script async src="https://cdn.Botimi.ai/v1/widget.js"></script>`;
+<script async src="https://cdn.botimi.ai/v1/widget.js"></script>`;
     try {
       await navigator.clipboard.writeText(code);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      alert("Botimi code snippet copied to clipboard!");
+      alert("botimi code snippet copied to clipboard!");
     }
   };
 
@@ -118,9 +118,9 @@ export default function OnboardingRedesign() {
             box-shadow: 0 0 40px -10px rgba(192, 193, 255, 0.2);
         }
         .glass-panel {
-            background: rgba(17, 17, 24, 0.8);
+            background: var(--glass-bg);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
         }
         .stepper-line-active {
             background: linear-gradient(90deg, #c0c1ff 0%, #a855f7 100%);
@@ -145,9 +145,9 @@ export default function OnboardingRedesign() {
         <div className="flex justify-between items-center w-full px-margin-desktop max-w-container-max mx-auto h-16">
           <div className="flex items-center gap-stack-sm">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="material-symbols-outlined text-white text-xl">hub</span>
+              <span className="material-symbols-outlined text-on-primary text-xl">hub</span>
             </div>
-            <a href="/" className="font-display text-headline-md font-extrabold tracking-tight text-on-surface">Botimi</a>
+            <a href="/" className="font-display text-headline-md font-extrabold tracking-tight text-on-surface">botimi</a>
             <span className="text-primary font-label-md bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20 ml-2">Setup Wizard</span>
           </div>
           <div className="hidden md:flex items-center gap-stack-lg">
@@ -305,15 +305,15 @@ export default function OnboardingRedesign() {
                     <div className="w-[340px] bg-surface-container border border-outline/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col transform hover:scale-[1.02] transition-transform">
                       <div className="bg-primary p-5 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                            <span className="material-symbols-outlined text-white">smart_toy</span>
+                          <div className="w-10 h-10 rounded-full bg-on-primary/10 flex items-center justify-center">
+                            <span className="material-symbols-outlined text-on-primary">smart_toy</span>
                           </div>
                           <div>
-                            <h4 className="font-bold text-sm text-white">HiveAssistant</h4>
-                            <span className="text-[10px] text-white/70">Online & Ready</span>
+                            <h4 className="font-bold text-sm text-on-primary">HiveAssistant</h4>
+                            <span className="text-[10px] text-on-primary/70">Online & Ready</span>
                           </div>
                         </div>
-                        <span className="material-symbols-outlined text-white/50 text-sm">close</span>
+                        <span className="material-symbols-outlined text-on-primary/50 text-sm">close</span>
                       </div>
                       <div className="p-5 space-y-4 flex-grow h-48 bg-surface-container-highest/30">
                         <div className="bg-surface-container p-3 rounded-2xl rounded-bl-none text-xs text-on-surface max-w-[85%] border border-outline/10">
@@ -325,7 +325,7 @@ export default function OnboardingRedesign() {
                       </div>
                       <div className="p-4 bg-surface-container border-t border-outline/10 flex gap-3">
                         <div className="flex-grow bg-background rounded-lg px-4 py-2 text-xs text-on-surface-variant border border-outline/5 italic">Type a message...</div>
-                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
+                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-on-primary">
                           <span className="material-symbols-outlined text-sm">send</span>
                         </div>
                       </div>
@@ -340,7 +340,7 @@ export default function OnboardingRedesign() {
                 <div className="max-w-2xl mx-auto text-center">
                   <div className="mb-10">
                     <h2 className="font-display text-3xl font-bold text-on-surface tracking-tight">Deploy to Production</h2>
-                    <p className="text-on-surface-variant mt-3">Integration complete. Add this script tag to your website header to activate Botimi.</p>
+                    <p className="text-on-surface-variant mt-3">Integration complete. Add this script tag to your website header to activate botimi.</p>
                   </div>
                   <div className="bg-background border border-outline/20 rounded-2xl overflow-hidden text-left mb-10 group">
                     <div className="flex justify-between items-center px-6 py-4 bg-surface-container-highest/30 border-b border-outline/20">
@@ -359,14 +359,14 @@ export default function OnboardingRedesign() {
                         {copied ? "Copied!" : "Copy Snippet"}
                       </button>
                     </div>
-                    <pre className="p-6 font-code-sm text-sm text-on-surface leading-relaxed overflow-x-auto hide-scrollbar bg-[#050508]"><code>{`<script>
-  window.BotimiConfig = {
+                    <pre className="p-6 font-code-sm text-sm text-on-surface leading-relaxed overflow-x-auto hide-scrollbar" style={{backgroundColor: "var(--code-bg)"}}><code>{`<script>
+  window.botimiConfig = {
     apiKey: "bh_9823x_prod_kll2",
     botId: "asst_9x2100",
     theme: "indigo-dark"
   };
 </script>
-<script async src="https://cdn.Botimi.ai/v1/widget.js"></script>`}</code></pre>
+<script async src="https://cdn.botimi.ai/v1/widget.js"></script>`}</code></pre>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div className="p-6 bg-primary/5 border border-primary/20 rounded-2xl flex items-start gap-4 text-left">
@@ -429,8 +429,8 @@ export default function OnboardingRedesign() {
             <div className="flex items-center gap-4">
               <button
                 type="button"
-                className={`text-white px-10 py-3 rounded-xl font-bold transition-all ai-glow flex items-center gap-2 group ${
-                  currentStep === totalSteps ? "bg-green-500" : "bg-primary hover:bg-primary/90"
+                className={`px-10 py-3 bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 ai-glow hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2 group ${
+                  currentStep === totalSteps ? "bg-green-500" : ""
                 }`}
                 id="next-btn"
                 onClick={nextStep}
@@ -446,7 +446,7 @@ export default function OnboardingRedesign() {
       <footer className="bg-surface-container-lowest/50 border-t border-outline/5 py-8 mt-auto">
         <div className="flex flex-col md:flex-row justify-between items-center px-margin-desktop max-w-container-max mx-auto w-full gap-4">
           <div className="flex items-center gap-4">
-            <span className="font-body-sm text-on-surface-variant">© 2024 Botimi Intelligence. Built for the modern web.</span>
+            <span className="font-body-sm text-on-surface-variant">© 2024 botimi Intelligence. Built for the modern web.</span>
           </div>
           <div className="flex gap-8">
             <a className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/dashboard">Dashboard</a>

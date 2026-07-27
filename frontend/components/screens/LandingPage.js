@@ -1,7 +1,21 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function LandingPage() {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains("dark"));
+  }, []);
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    try {
+      localStorage.setItem("botimi-theme", next ? "dark" : "light");
+    } catch (e) {}
+  };
   useEffect(() => {
     const observerOptions = { threshold: 0.1 };
     const observer = new IntersectionObserver((entries) => {
@@ -45,7 +59,7 @@ export default function LandingPage() {
           padding: 1px;
         }
         .gradient-border-content {
-          background: #0F172A;
+          background: var(--color-surface-container-lowest);
           border-radius: calc(1.5rem - 1px);
         }
         .bento-grid {
@@ -57,7 +71,7 @@ export default function LandingPage() {
           width: 6px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #334155;
+          background: var(--scrollbar-thumb);
           border-radius: 10px;
         }
         .hero-animate {
@@ -67,12 +81,24 @@ export default function LandingPage() {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-20px); }
         }
+        .animate-tilt-sway {
+          animation: tiltSway 6s ease-in-out infinite;
+        }
+        @keyframes tiltSway {
+          0%, 100% { transform: perspective(800px) rotateY(-2deg) rotateX(1deg) translateY(0px); }
+          25% { transform: perspective(800px) rotateY(2deg) rotateX(-0.5deg) translateY(-4px); }
+          50% { transform: perspective(800px) rotateY(-1deg) rotateX(1.5deg) translateY(-2px); }
+          75% { transform: perspective(800px) rotateY(3deg) rotateX(-1deg) translateY(-5px); }
+        }
+        .group:hover .animate-tilt-sway {
+          animation-duration: 2s;
+        }
       `}</style>
       <header className="fixed top-0 left-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant">
         <nav className="flex justify-between items-center w-full px-margin-desktop max-w-container-max mx-auto h-16">
           <div className="flex items-center gap-8">
             <a href="/" target="_top" className="font-display text-headline-md font-extrabold text-primary">
-              Botimi
+              botimi
             </a>
             <div className="hidden md:flex gap-6">
               <a
@@ -98,34 +124,44 @@ export default function LandingPage() {
               </a>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container transition-all duration-200"
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              title={isDark ? "Light mode" : "Dark mode"}
+            >
+              <span className="material-symbols-outlined text-xl">
+                {isDark ? "light_mode" : "dark_mode"}
+              </span>
+            </button>
             <button
               className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 px-4 py-2"
-              onClick={() => (window.location.href = "/dashboard")}
+              onClick={() => (window.location.href = "/login")}
             >
               Log In
             </button>
             <button
-              className="bg-primary text-on-primary font-bold px-6 py-2 rounded-lg active:scale-95 transition-all duration-100"
-              onClick={() => (window.location.href = "/onboarding")}
+              className="bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-6 py-2"
+              onClick={() => (window.location.href = "/login")}
             >
               Get Started
             </button>
           </div>
         </nav>
       </header>
-      <main className="pt-16">
-        <section className="relative min-h-[921px] flex items-center justify-center overflow-hidden px-margin-mobile md:px-margin-desktop">
-          <div className="absolute inset-0 pointer-events-none opacity-20">
+      <main>
+        <section className="relative min-h-[85vh] px-margin-mobile md:px-margin-desktop pt-24 md:pt-32">
+          <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary rounded-full blur-[120px] animate-pulse"></div>
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary rounded-full blur-[120px] delay-1000 animate-pulse"></div>
           </div>
           <div className="max-w-container-max mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
             <div className="flex flex-col gap-stack-lg">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full border border-outline-variant w-fit">
-                <span className="material-symbols-outlined text-primary text-sm">spark</span>
+                <span className="material-symbols-outlined text-primary text-sm">bolt</span>
                 <span className="font-label-md text-label-md text-primary">
-                  Now integrated with Groq & Gemini Pro
+                  Powered by world-class AI models
                 </span>
               </div>
               <h1 className="font-display text-display text-on-surface leading-tight tracking-tighter">
@@ -135,19 +171,19 @@ export default function LandingPage() {
                 </span>
               </h1>
               <p className="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
-                Deploy a smart, context-aware chatbot trained on your data in minutes. Harness ultra-low latency
-                inference with Groq and deep reasoning with Gemini.
+                Deploy a smart, context-aware chatbot trained on your data in minutes. Powered by industry-leading
+                models for speed, accuracy, and reliability.
               </p>
               <div className="flex flex-wrap gap-4 mt-4">
                 <button
-                  className="bg-gradient-to-r from-primary to-secondary text-on-primary font-bold px-8 py-4 rounded-xl text-lg hover:brightness-110 active:scale-95 transition-all duration-200 shadow-lg shadow-primary/20"
-                  onClick={() => (window.location.href = "/onboarding")}
+                  className="bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-8 py-4 text-lg"
+                  onClick={() => (window.location.href = "/login")}
                 >
                   Get Started Free
                 </button>
                 <button
-                  className="border border-outline-variant hover:bg-surface-variant text-on-surface font-bold px-8 py-4 rounded-xl text-lg active:scale-95 transition-all duration-200"
-                  onClick={() => (window.location.href = "/dashboard")}
+                  className="border border-outline/10 bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all px-8 py-4 text-lg"
+                  onClick={() => (window.location.href = "/login")}
                 >
                   Book a Demo
                 </button>
@@ -184,7 +220,7 @@ export default function LandingPage() {
                         <span className="material-symbols-outlined">smart_toy</span>
                       </div>
                       <div>
-                        <p className="font-label-md text-label-md text-on-surface font-bold">Botimi AI</p>
+                        <p className="font-label-md text-label-md text-on-surface font-bold">botimi AI</p>
                         <span className="flex items-center gap-1 text-[10px] text-primary">
                           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
                           Online & Processing
@@ -203,12 +239,13 @@ export default function LandingPage() {
                     </div>
                     <div className="bg-primary/20 p-3 rounded-lg rounded-tr-none self-end max-w-[80%] border border-primary/30">
                       <p className="font-body-sm text-body-sm text-on-surface">
-                        How do I set up the Groq integration for instant replies?
+                        How do I set up the AI integration for instant replies?
                       </p>
                     </div>
-                    <div className="bg-surface-variant/50 p-3 rounded-lg rounded-tl-none max-w-[85%] border-l-2 border-primary">
+                    <div className="bg-surface-variant/50 p-3 rounded-lg rounded-tl-none max-w-[85%] relative overflow-hidden pl-5">
+                      <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full bg-gradient-to-b from-primary via-secondary to-primary/40"></div>
                       <p className="font-body-sm text-body-sm text-on-surface mb-2">
-                        Integrating Groq is simple. Follow these steps:
+                        Integrating AI models is simple. Follow these steps:
                       </p>
                       <ul className="text-[12px] list-disc list-inside text-on-surface-variant space-y-1">
                         <li>
@@ -307,19 +344,19 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="col-span-12 md:col-span-6 lg:col-span-4 bg-surface-container border border-outline-variant p-8 rounded-xl group hover:border-tertiary/50 transition-colors">
-              <div className="w-12 h-12 bg-tertiary/20 rounded-lg flex items-center justify-center text-tertiary mb-6">
+              <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center text-primary mb-6">
                 <span className="material-symbols-outlined text-3xl">payments</span>
               </div>
               <h3 className="font-headline-md text-headline-md text-on-surface mb-3">Zero API Costs</h3>
               <p className="text-on-surface-variant">
-                Using our shared inference pool on Groq, small businesses pay $0 in additional token fees. Pure
+                Using our shared inference pool, small businesses pay $0 in additional token fees. Pure
                 efficiency.
               </p>
             </div>
             <div className="col-span-12 lg:col-span-8 bg-surface-container border border-outline-variant p-8 rounded-xl group hover:border-primary/50 transition-colors">
               <div className="flex flex-col md:flex-row gap-8 items-center h-full">
                 <div className="flex-1">
-                  <div className="w-12 h-12 bg-primary-container/20 rounded-lg flex items-center justify-center text-primary-container mb-6">
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary mb-6">
                     <span className="material-symbols-outlined text-3xl">confirmation_number</span>
                   </div>
                   <h3 className="font-headline-md text-headline-md text-on-surface mb-3">Ticket Support Add-on</h3>
@@ -346,29 +383,34 @@ export default function LandingPage() {
           <div className="max-w-container-max mx-auto px-margin-desktop">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
               <div
-                className="rounded-2xl border border-outline-variant shadow-2xl relative overflow-hidden"
+                className="rounded-2xl border border-outline-variant shadow-2xl relative overflow-hidden group animate-tilt-sway"
               >
-                <img
-                  src="/taxcul.png"
-                  alt="Taxcul project dashboard showing AI-powered tax calculation"
-                  className="w-full h-full object-cover"
-                  style={{ minHeight: "300px" }}
-                />
+                <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-10 pointer-events-none"></div>
+                <div className="relative scale-110">
+                  <img
+                    src="/taxcul.png"
+                    alt="Taxcul project dashboard showing AI-powered tax calculation"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    style={{ minHeight: "300px" }}
+                  />
+                </div>
               </div>
               <div className="flex flex-col gap-6">
-                <span className="material-symbols-outlined text-primary text-5xl opacity-40">format_quote</span>
+                <span className="material-symbols-outlined text-primary text-5xl opacity-100">format_quote</span>
                 <h3 className="font-headline-lg text-headline-lg text-on-surface italic leading-tight">
-                  &quot;BotHive transformed our support desk. We reduced human intervention by 70% in the first month
+                  &quot;botimi transformed our support desk. We reduced human intervention by 70% in the first month
                   without losing customer satisfaction.&quot;
                 </h3>
                 <p className="text-on-surface-variant font-body-lg">
-                  We were skeptical about AI hallucinations, but BotHive&apos;s RAG system is bulletproof. It&apos;s
+                  We were skeptical about AI hallucinations, but botimi&apos;s RAG system is bulletproof. It&apos;s
                   like having our best support rep working 24/7 for a fraction of the cost.
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-sm">
-                    CV
-                  </div>
+                  <img
+                    src="/culverwell.png"
+                    alt="Culverwell Venge"
+                    className="w-12 h-12 rounded-full object-cover border-2 border-surface"
+                  />
                   <div>
                     <p className="text-on-surface font-bold text-sm">Culverwell Venge</p>
                     <p className="text-primary text-xs">CEO, Taxcul</p>
@@ -402,14 +444,14 @@ export default function LandingPage() {
                   <span className="material-symbols-outlined text-primary">done</span> Up to 500 chats / month
                 </li>
                 <li className="flex items-center gap-3 text-sm text-on-surface">
-                  <span className="material-symbols-outlined text-primary">done</span> Gemini Pro 1.5 Integration
+                  <span className="material-symbols-outlined text-primary">done</span> Multi-Model AI Integration
                 </li>
                 <li className="flex items-center gap-3 text-sm text-on-surface">
                   <span className="material-symbols-outlined text-primary">done</span> Standard Support
                 </li>
               </ul>
               <button
-                className="w-full border border-outline-variant py-3 rounded-lg font-bold hover:bg-surface-variant transition-colors"
+                className="w-full border border-outline/10 bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all py-3"
                 onClick={() => (window.location.href = "/onboarding")}
               >
                 Start Free Trial
@@ -432,7 +474,7 @@ export default function LandingPage() {
                   <span className="material-symbols-outlined text-primary">done</span> Up to 5,000 chats / month
                 </li>
                 <li className="flex items-center gap-3 text-sm text-on-surface">
-                  <span className="material-symbols-outlined text-primary">done</span> Groq High-Speed Inference
+                  <span className="material-symbols-outlined text-primary">done</span> High-Speed AI Inference
                 </li>
                 <li className="flex items-center gap-3 text-sm text-on-surface">
                   <span className="material-symbols-outlined text-primary">done</span> Advanced RAG (10 sources)
@@ -442,7 +484,7 @@ export default function LandingPage() {
                 </li>
               </ul>
               <button
-                className="w-full bg-primary text-on-primary py-3 rounded-lg font-bold hover:brightness-110 active:scale-[0.98] transition-all"
+                className="w-full bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all py-3"
                 onClick={() => (window.location.href = "/onboarding")}
               >
                 Get Growth
@@ -472,7 +514,7 @@ export default function LandingPage() {
                 </li>
               </ul>
               <button
-                className="w-full border border-outline-variant py-3 rounded-lg font-bold hover:bg-surface-variant transition-colors"
+                className="w-full border border-outline/10 bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all py-3"
                 onClick={() => (window.location.href = "/onboarding")}
               >
                 Contact Sales
@@ -486,17 +528,17 @@ export default function LandingPage() {
             <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-secondary/20 blur-[100px] rounded-full"></div>
             <h2 className="font-display text-display text-on-surface mb-6 relative z-10">Ready to automate?</h2>
             <p className="text-on-surface-variant text-body-lg max-w-xl mx-auto mb-10 relative z-10">
-              Join 500+ businesses saving thousands on support costs with Botimi. Deployment takes less than 5 minutes.
+              Join 500+ businesses saving thousands on support costs with botimi. Deployment takes less than 5 minutes.
             </p>
             <div className="flex flex-col md:flex-row gap-4 justify-center relative z-10">
               <button
-                className="bg-primary text-on-primary font-bold px-10 py-4 rounded-xl text-lg hover:brightness-110 active:scale-95 transition-all shadow-lg"
+                className="bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-10 py-4 text-lg"
                 onClick={() => (window.location.href = "/onboarding")}
               >
                 Start Free Deployment
               </button>
               <button
-                className="bg-surface-container border border-outline-variant text-on-surface font-bold px-10 py-4 rounded-xl text-lg hover:bg-surface-variant active:scale-95 transition-all"
+                className="border border-outline/10 bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all px-10 py-4 text-lg"
                 onClick={() => (window.location.href = "/dashboard")}
               >
                 Talk to an Expert
@@ -509,10 +551,10 @@ export default function LandingPage() {
         <div className="flex flex-col md:flex-row justify-between items-center px-margin-desktop max-w-container-max mx-auto gap-8">
           <div className="flex flex-col gap-4 items-center md:items-start">
             <a href="/" target="_top" className="font-display text-headline-md text-primary font-bold">
-              Botimi
+              botimi
             </a>
             <p className="font-body-sm text-body-sm text-on-surface-variant text-center md:text-left">
-              &copy; 2024 Botimi AI Ecosystem. All rights reserved.
+              &copy; 2024 botimi AI Ecosystem. All rights reserved.
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-8">

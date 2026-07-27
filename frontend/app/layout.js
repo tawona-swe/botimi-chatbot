@@ -1,16 +1,30 @@
 import "./globals.css";
+import { AuthProvider } from "../context/AuthContext";
+import { Toaster } from "react-hot-toast";
 
 export const metadata = {
-  title: "Botimi Frontend",
-  description: "Next.js frontend for the Botimi multi-vendor AI platform UI"
+  title: "botimi — Multi-Vendor AI Chatbot Platform",
+  description: "Deploy a smart, context-aware AI chatbot trained on your data in minutes."
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&family=Geist:wght@400;500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Caveat:wght@400;500;600;700&family=Instrument+Serif:ital@1&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              try {
+                var saved = localStorage.getItem('botimi-theme');
+                if (saved === 'dark') {
+                  document.documentElement.classList.add('dark');
+                }
+              } catch(e) {}
+            })();
+          `
+        }} />
         <script dangerouslySetInnerHTML={{
           __html: `
             tailwind.config = {
@@ -18,59 +32,63 @@ export default function RootLayout({ children }) {
               theme: {
                 extend: {
                   colors: {
-                    "on-secondary-container": "#00424e",
-                    "secondary-fixed": "#acedff",
-                    "surface-variant": "#34343d",
-                    "on-primary-fixed-variant": "#2f2ebe",
-                    "surface-container": "#1f1f27",
-                    "on-primary-fixed": "#07006c",
-                    "inverse-surface": "#e4e1ed",
-                    "tertiary-container": "#d97721",
-                    "on-background": "#e4e1ed",
-                    "tertiary-fixed-dim": "#ffb783",
-                    "on-primary": "#1000a9",
-                    "surface-tint": "#c0c1ff",
-                    "secondary": "#4cd7f6",
-                    "primary-fixed-dim": "#c0c1ff",
-                    "surface-dim": "#13131b",
-                    "outline": "#908fa0",
-                    "on-error-container": "#ffdad6",
-                    "surface-container-lowest": "#0d0d15",
-                    "on-secondary-fixed": "#001f26",
-                    "surface-bright": "#393841",
-                    "on-tertiary": "#4f2500",
-                    "on-tertiary-container": "#452000",
-                    "on-primary-container": "#0d0096",
-                    "secondary-container": "#03b5d3",
-                    "error": "#ffb4ab",
-                    "primary-container": "#8083ff",
-                    "on-tertiary-fixed": "#301400",
-                    "on-secondary": "#003640",
-                    "tertiary-fixed": "#ffdcc5",
-                    "secondary-fixed-dim": "#4cd7f6",
-                    "on-surface-variant": "#c7c4d7",
-                    "surface-container-high": "#292932",
-                    "on-surface": "#e4e1ed",
-                    "background": "#13131b",
-                    "on-secondary-fixed-variant": "#004e5c",
-                    "surface-container-highest": "#34343d",
-                    "inverse-primary": "#494bd6",
-                    "error-container": "#93000a",
-                    "outline-variant": "#464554",
-                    "tertiary": "#ffb783",
-                    "primary": "#c0c1ff",
-                    "on-tertiary-fixed-variant": "#703700",
-                    "surface": "#13131b",
-                    "on-error": "#690005",
-                    "inverse-on-surface": "#303038",
-                    "primary-fixed": "#e1e0ff",
-                    "surface-container-low": "#1b1b23"
+                    "on-secondary-container": "var(--color-on-secondary-container)",
+                    "secondary-fixed": "var(--color-secondary-fixed)",
+                    "surface-variant": "var(--color-surface-variant)",
+                    "on-primary-fixed-variant": "var(--color-on-primary-fixed-variant)",
+                    "surface-container": "var(--color-surface-container)",
+                    "on-primary-fixed": "var(--color-on-primary-fixed)",
+                    "inverse-surface": "var(--color-inverse-surface)",
+                    "tertiary-container": "var(--color-tertiary-container)",
+                    "on-background": "var(--color-on-background)",
+                    "tertiary-fixed-dim": "var(--color-tertiary-fixed-dim)",
+                    "on-primary": "var(--color-on-primary)",
+                    "surface-tint": "var(--color-surface-tint)",
+                    "secondary": "var(--color-secondary)",
+                    "primary-fixed-dim": "var(--color-primary-fixed-dim)",
+                    "surface-dim": "var(--color-surface-dim)",
+                    "outline": "var(--color-outline)",
+                    "on-error-container": "var(--color-on-error-container)",
+                    "surface-container-lowest": "var(--color-surface-container-lowest)",
+                    "on-secondary-fixed": "var(--color-on-secondary-fixed)",
+                    "surface-bright": "var(--color-surface-bright)",
+                    "on-tertiary": "var(--color-on-tertiary)",
+                    "on-tertiary-container": "var(--color-on-tertiary-container)",
+                    "on-primary-container": "var(--color-on-primary-container)",
+                    "secondary-container": "var(--color-secondary-container)",
+                    "error": "var(--color-error)",
+                    "primary-container": "var(--color-primary-container)",
+                    "on-tertiary-fixed": "var(--color-on-tertiary-fixed)",
+                    "on-secondary": "var(--color-on-secondary)",
+                    "tertiary-fixed": "var(--color-tertiary-fixed)",
+                    "secondary-fixed-dim": "var(--color-secondary-fixed-dim)",
+                    "on-surface-variant": "var(--color-on-surface-variant)",
+                    "surface-container-high": "var(--color-surface-container-high)",
+                    "on-surface": "var(--color-on-surface)",
+                    "background": "var(--color-background)",
+                    "on-secondary-fixed-variant": "var(--color-on-secondary-fixed-variant)",
+                    "surface-container-highest": "var(--color-surface-container-highest)",
+                    "inverse-primary": "var(--color-inverse-primary)",
+                    "error-container": "var(--color-error-container)",
+                    "outline-variant": "var(--color-outline-variant)",
+                    "tertiary": "var(--color-tertiary)",
+                    "primary": "var(--color-primary)",
+                    "on-tertiary-fixed-variant": "var(--color-on-tertiary-fixed-variant)",
+                    "surface": "var(--color-surface)",
+                    "on-error": "var(--color-on-error)",
+                    "inverse-on-surface": "var(--color-inverse-on-surface)",
+                    "primary-fixed": "var(--color-primary-fixed)",
+                    "surface-container-low": "var(--color-surface-container-low)",
+                    "accent": "#6A2BC2"
                   },
                   borderRadius: {
                     DEFAULT: "0.5rem",
                     lg: "1rem",
                     xl: "1.5rem",
                     full: "9999px"
+                  },
+                  gridTemplateColumns: {
+                    20: "repeat(20, minmax(0, 1fr))"
                   },
                   spacing: {
                     gutter: "24px",
@@ -85,19 +103,20 @@ export default function RootLayout({ children }) {
                     "stack-md": "16px"
                   },
                   fontFamily: {
-                    "label-md": ["Geist"],
-                    "headline-lg-mobile": ["Plus Jakarta Sans"],
-                    "body-md": ["Inter"],
-                    "code-sm": ["Geist"],
-                    "headline-lg": ["Plus Jakarta Sans"],
-                    "body-lg": ["Inter"],
-                    display: ["Plus Jakarta Sans"],
-                    "headline-md": ["Plus Jakarta Sans"],
-                    "body-sm": ["Inter"]
+                    "label-md": ["DM Sans", "sans-serif"],
+                    "headline-lg-mobile": ["DM Sans", "sans-serif"],
+                    "body-md": ["DM Sans", "sans-serif"],
+                    "code-sm": ["JetBrains Mono", "monospace"],
+                    "headline-lg": ["DM Sans", "sans-serif"],
+                    "body-lg": ["DM Sans", "sans-serif"],
+                    display: ["DM Sans", "sans-serif"],
+                    "headline-md": ["DM Sans", "sans-serif"],
+                    "body-sm": ["DM Sans", "sans-serif"],
+                    script: ["Caveat", "cursive"]
                   },
                   fontSize: {
                     "label-md": ["14px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "500" }],
-                    "headline-lg-mobile": ["24px", { lineHeight: "32px", fontWeight: "700" }],
+                    "headline-lg-mobile": ["24px", { lineHeight: "32px", fontWeight: "600" }],
                     "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
                     "code-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }],
                     "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "700" }],
@@ -112,7 +131,25 @@ export default function RootLayout({ children }) {
           `
         }} />
       </head>
-      <body>{children}</body>
+      <body>
+        <AuthProvider>
+          {children}
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              style: {
+                background: "var(--color-surface)",
+                color: "var(--color-on-surface)",
+                border: "1px solid var(--color-outline-variant)",
+                fontSize: "14px",
+                borderRadius: "12px",
+              },
+              success: { iconTheme: { primary: "#22c55e", secondary: "white" } },
+              error: { iconTheme: { primary: "#ef4444", secondary: "white" } },
+            }}
+          />
+        </AuthProvider>
+      </body>
     </html>
   );
 }

@@ -35,8 +35,8 @@ export default function OnboardingStep3() {
             box-shadow: 0 0 15px rgba(192, 193, 255, 0.1);
         }
         .step-complete {
-            background: #c0c1ff;
-            color: #1000a9;
+            background: var(--color-primary);
+            color: var(--color-on-primary);
         }
         .step-active {
             border: 2px solid #c0c1ff;
@@ -44,7 +44,7 @@ export default function OnboardingStep3() {
         }
         .gradient-border {
             position: relative;
-            background: #1f1f27;
+            background: var(--color-surface-container);
             border-radius: 1.5rem;
         }
         .gradient-border::before {
@@ -69,7 +69,7 @@ export default function OnboardingStep3() {
         }
       `}</style>
       <header className="flex justify-between items-center w-full px-margin-desktop max-w-container-max mx-auto h-16 border-b border-outline-variant sticky top-0 z-40">
-        <a href="/" className="font-display text-headline-md font-extrabold text-primary dark:text-primary">Botimi</a>
+        <a href="/" className="font-display text-headline-md font-extrabold text-primary dark:text-primary">botimi</a>
         <div className="flex items-center gap-4">
           <span className="font-label-md text-label-md text-on-surface-variant">Step 3 of 3</span>
           <button onClick={() => window.location.href = "/dashboard"} className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors cursor-pointer">close</button>
@@ -109,7 +109,7 @@ export default function OnboardingStep3() {
             <div className="md:col-span-7 space-y-stack-md">
               <div className="space-y-stack-sm">
                 <h1 className="font-headline-lg text-headline-lg text-on-surface">Embed your Bot</h1>
-                <p className="font-body-md text-body-md text-on-surface-variant">Paste the following snippet into your website's HTML to activate the Botimi AI concierge. We recommend placing it just before the closing <code className="bg-surface-container px-1 rounded text-primary">&lt;/body&gt;</code> tag for optimal performance.</p>
+                <p className="font-body-md text-body-md text-on-surface-variant">Paste the following snippet into your website's HTML to activate the botimi AI concierge. We recommend placing it just before the closing <code className="bg-surface-container px-1 rounded text-primary">&lt;/body&gt;</code> tag for optimal performance.</p>
               </div>
               <div ref={glowRef} onMouseMove={handleMouseMove} className="relative bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden code-glow group">
                 <div className="flex items-center justify-between px-stack-md py-stack-sm bg-surface-container-high border-b border-outline-variant">
@@ -129,14 +129,14 @@ export default function OnboardingStep3() {
                 </div>
                 <div className="p-stack-md font-code-sm text-code-sm text-on-surface-variant overflow-x-auto leading-relaxed">
                   <pre><code id="snippet-content">{`<script>
-  window.BotimiConfig = {
+  window.botimiConfig = {
     appId: "BH-9921-X4",
     theme: "midnight",
     features: ["voice", "translation"],
-    onLoad: () => console.log("Botimi Initialized")
+    onLoad: () => console.log("botimi Initialized")
   };
 </script>
-<script src="https://cdn.Botimi.ai/v2/widget.js" async></script>`}</code></pre>
+<script src="https://cdn.botimi.ai/v2/widget.js" async></script>`}</code></pre>
                 </div>
               </div>
             </div>
@@ -150,7 +150,7 @@ export default function OnboardingStep3() {
                   <p className="font-body-sm text-body-sm text-on-surface-variant">We haven't received any pings from your website yet. Check your code implementation and try again.</p>
                 </div>
                 <div className="space-y-stack-sm">
-                  <button onClick={() => window.location.href = "/dashboard"} className="w-full bg-primary text-on-primary py-stack-sm rounded-lg font-label-md text-label-md font-bold flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all">
+                  <button onClick={() => window.location.href = "/dashboard"} className="w-full bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all py-3 flex items-center justify-center gap-2">
                     <span className="material-symbols-outlined">check_circle</span>
                     Verify Installation
                   </button>
@@ -171,15 +171,15 @@ export default function OnboardingStep3() {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-stack-md pt-stack-xl border-t border-outline-variant">
-            <button onClick={() => window.location.href = "/onboarding-customize"} className="flex items-center gap-2 font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors">
+              <button onClick={() => window.location.href = "/onboarding-customize"} className="flex items-center gap-2 text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-xl px-3 py-2 transition-all">
               <span className="material-symbols-outlined">arrow_back</span>
               Back to Bot Persona
             </button>
             <div className="flex items-center gap-stack-md w-full sm:w-auto">
-              <button onClick={() => window.location.href = "/dashboard"} className="flex-grow sm:flex-none px-stack-lg py-stack-sm bg-surface-container border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors">
+              <button onClick={() => window.location.href = "/dashboard"} className="flex-grow sm:flex-none border border-outline/10 bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all px-5 py-3">
                 Skip for Now
               </button>
-              <button onClick={() => window.location.href = "/dashboard"} className="flex-grow sm:flex-none px-stack-xl py-stack-sm bg-secondary-container text-on-secondary-container rounded-lg font-label-md text-label-md font-extrabold hover:scale-[1.02] active:scale-95 transition-all">
+              <button onClick={() => window.location.href = "/dashboard"} className="flex-grow sm:flex-none px-6 py-3 bg-secondary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all">
                 Finish Setup
               </button>
             </div>
@@ -188,13 +188,13 @@ export default function OnboardingStep3() {
       </main>
       <footer className="w-full py-stack-xl bg-surface-container-lowest border-t border-outline-variant mt-auto">
         <div className="flex flex-col md:flex-row justify-between items-center px-margin-desktop max-w-container-max mx-auto gap-stack-md">
-          <a href="/" className="font-display text-headline-md text-primary">Botimi</a>
+          <a href="/" className="font-display text-headline-md text-primary">botimi</a>
           <div className="flex gap-stack-lg">
             <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/dashboard">Dashboard</a>
             <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/support">Support</a>
             <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/chat-widget">Chat Widget</a>
           </div>
-          <p className="font-body-sm text-body-sm text-on-surface-variant">&copy; 2024 Botimi AI Ecosystem. All rights reserved.</p>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">&copy; 2024 botimi AI Ecosystem. All rights reserved.</p>
         </div>
       </footer>
     </div>

@@ -1,13 +1,182 @@
+/* ═══════════════════════════════════════════════
+   botimi Design System — Light & Dark Theme
+   ═══════════════════════════════════════════════ */
+
 :root {
+  color-scheme: light;
+
+  /* ── Light Theme (default) ── */
+  --color-background: #f8f9fc;
+  --color-surface: #ffffff;
+  --color-surface-dim: #e0e4ea;
+  --color-surface-bright: #ffffff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f4f5f9;
+  --color-surface-container: #eeeff4;
+  --color-surface-container-high: #e8ebf0;
+  --color-surface-container-highest: #e0e4ea;
+  --color-surface-variant: #e0e4ea;
+  --color-on-surface: #1a1a2e;
+  --color-on-surface-variant: #5a5a72;
+  --color-on-background: #1a1a2e;
+
+  --color-primary: #4A1A8A;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #EDE4FF;
+  --color-on-primary-container: #1A0038;
+  --color-primary-fixed: #EDE4FF;
+  --color-primary-fixed-dim: #C4A0FF;
+  --color-on-primary-fixed: #120024;
+  --color-on-primary-fixed-variant: #3A0A6A;
+  --color-inverse-primary: #C4A0FF;
+
+  --color-secondary: #6A2BC2;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #EDE4FF;
+  --color-on-secondary-container: #1A0038;
+  --color-secondary-fixed: #EDE4FF;
+  --color-secondary-fixed-dim: #B88AFF;
+  --color-on-secondary-fixed: #120024;
+  --color-on-secondary-fixed-variant: #3A0A6A;
+
+  --color-tertiary: #B87E1A;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #FFE4B8;
+  --color-on-tertiary-container: #3A2500;
+  --color-tertiary-fixed: #FFE4B8;
+  --color-tertiary-fixed-dim: #FFC977;
+  --color-on-tertiary-fixed: #2B1800;
+  --color-on-tertiary-fixed-variant: #8B5F00;
+
+  --color-error: #d32f2f;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #410002;
+
+  --color-outline: #c4c8d4;
+  --color-outline-variant: #e0e4ea;
+  --color-inverse-surface: #303038;
+  --color-inverse-on-surface: #f0f0f8;
+  --color-surface-tint: #4A1A8A;
+
+  /* Legacy CSS variables (for non-tailwind parts of globals.css) */
+  --text: #1a1a2e;
+  --muted: #5a5a72;
+  --primary: #4A1A8A;
+  --secondary: #6A2BC2;
+  --background: #f8f9fc;
+  --surface: #ffffff;
+  --surface-high: #e8ebf0;
+  --outline: #c4c8d4;
+
+  /* Glass panel backgrounds (light) */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-hover-bg: rgba(238, 239, 244, 0.85);
+  --glass-strong-bg: rgba(224, 228, 234, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.06);
+  --glass-border-hover: rgba(0, 0, 0, 0.12);
+
+  /* Code block background */
+  --code-bg: #eef0f4;
+
+  /* Scrollbar thumb */
+  --scrollbar-thumb: #c4c8d4;
+
+  /* Shimmer effect */
+  --shimmer-light: rgba(0, 0, 0, 0.03);
+  --shimmer-mid: rgba(0, 0, 0, 0.05);
+
+  /* Dot pattern */
+  --dot-color: rgba(0, 0, 0, 0.05);
+}
+
+/* ── Dark Theme ── */
+:root.dark,
+.dark {
   color-scheme: dark;
+
+  --color-background: #13131b;
+  --color-surface: #1f1f27;
+  --color-surface-dim: #13131b;
+  --color-surface-bright: #393841;
+  --color-surface-container-lowest: #0d0d15;
+  --color-surface-container-low: #1b1b23;
+  --color-surface-container: #1f1f27;
+  --color-surface-container-high: #292932;
+  --color-surface-container-highest: #34343d;
+  --color-surface-variant: #34343d;
+  --color-on-surface: #e4e1ed;
+  --color-on-surface-variant: #c7c4d7;
+  --color-on-background: #e4e1ed;
+
+  --color-primary: #C4A0FF;
+  --color-on-primary: #1A0038;
+  --color-primary-container: #3A0A6A;
+  --color-on-primary-container: #1A0038;
+  --color-primary-fixed: #EDE4FF;
+  --color-primary-fixed-dim: #C4A0FF;
+  --color-on-primary-fixed: #120024;
+  --color-on-primary-fixed-variant: #3A0A6A;
+  --color-inverse-primary: #4A1A8A;
+
+  --color-secondary: #B88AFF;
+  --color-on-secondary: #1A0038;
+  --color-secondary-container: #4A1A8A;
+  --color-on-secondary-container: #1A0038;
+  --color-secondary-fixed: #EDE4FF;
+  --color-secondary-fixed-dim: #B88AFF;
+  --color-on-secondary-fixed: #120024;
+  --color-on-secondary-fixed-variant: #3A0A6A;
+
+  --color-tertiary: #FFC977;
+  --color-on-tertiary: #2B1800;
+  --color-tertiary-container: #8B5F00;
+  --color-on-tertiary-container: #3A2500;
+  --color-tertiary-fixed: #FFE4B8;
+  --color-tertiary-fixed-dim: #FFC977;
+  --color-on-tertiary-fixed: #2B1800;
+  --color-on-tertiary-fixed-variant: #8B5F00;
+
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+
+  --color-outline: #908fa0;
+  --color-outline-variant: #464554;
+  --color-inverse-surface: #e4e1ed;
+  --color-inverse-on-surface: #303038;
+  --color-surface-tint: #C4A0FF;
+
+  /* Legacy CSS variables */
+  --text: #e4e1ed;
+  --muted: #c7c4d7;
+  --primary: #C4A0FF;
+  --secondary: #B88AFF;
   --background: #13131b;
   --surface: #1f1f27;
   --surface-high: #292932;
   --outline: #464554;
-  --text: #e4e1ed;
-  --muted: #c7c4d7;
-  --primary: #c0c1ff;
-  --secondary: #4cd7f6;
+
+  /* Glass panel backgrounds (dark) */
+  --glass-bg: rgba(17, 17, 24, 0.8);
+  --glass-hover-bg: rgba(31, 31, 39, 0.8);
+  --glass-strong-bg: rgba(41, 41, 50, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-border-hover: rgba(255, 255, 255, 0.1);
+
+  /* Code block background */
+  --code-bg: #0a0a0f;
+
+  /* Scrollbar thumb */
+  --scrollbar-thumb: #334155;
+
+  /* Shimmer effect */
+  --shimmer-light: rgba(255, 255, 255, 0.04);
+  --shimmer-mid: rgba(255, 255, 255, 0.06);
+
+  /* Dot pattern */
+  --dot-color: rgba(255, 255, 255, 0.03);
 }
 
 * {
@@ -23,7 +192,7 @@ body {
 body {
   background: var(--background);
   color: var(--text);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "DM Sans", sans-serif;
 }
 
 a {
@@ -56,7 +225,7 @@ a {
 .index-title {
   max-width: 760px;
   margin: 14px 0 12px;
-  font-family: "Plus Jakarta Sans", Inter, sans-serif;
+  font-family: "DM Sans", sans-serif;
   font-size: clamp(40px, 7vw, 76px);
   line-height: 0.98;
   letter-spacing: 0;
@@ -81,20 +250,20 @@ a {
   padding: 20px;
   border: 1px solid var(--outline);
   border-radius: 8px;
-  background: rgba(31, 31, 39, 0.86);
+  background: var(--glass-bg);
   transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
 }
 
 .screen-card:hover {
   transform: translateY(-2px);
   border-color: var(--primary);
-  background: rgba(41, 41, 50, 0.94);
+  background: var(--glass-hover-bg);
 }
 
 .screen-card h2 {
   margin: 0 0 10px;
   color: var(--primary);
-  font-family: "Plus Jakarta Sans", Inter, sans-serif;
+  font-family: "DM Sans", sans-serif;
   font-size: 22px;
   letter-spacing: 0;
 }
@@ -171,3 +340,36 @@ a {
   display: inline-block;
   vertical-align: middle;
 }
+
+/* ── Animations ── */
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-20px) scale(1.02); }
+}
+
+@keyframes float-reverse {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(16px) scale(0.98); }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-float       { animation: float 7s ease-in-out infinite; }
+.animate-float-reverse { animation: float-reverse 9s ease-in-out infinite; }
+.animate-float-slow   { animation: float 11s ease-in-out infinite; }
+.animate-fade-in-up  { animation: fade-in-up 0.7s ease-out both; }
+.animate-fade-in     { animation: fade-in 0.8s ease-out both; }
+
+.delay-0   { animation-delay: 0s; }
+.delay-1   { animation-delay: 0.15s; }
+.delay-2   { animation-delay: 0.3s; }
+.delay-3   { animation-delay: 0.45s; }
+.delay-4   { animation-delay: 0.6s; }

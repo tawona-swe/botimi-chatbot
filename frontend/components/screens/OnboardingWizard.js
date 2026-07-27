@@ -1,14 +1,30 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import api from "../../lib/api";
 
 export default function OnboardingWizard() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [transitioning, setTransitioning] = useState(true);
   const [selectedFileName, setSelectedFileName] = useState(null);
   const [verifyState, setVerifyState] = useState("idle");
   const [copied, setCopied] = useState(false);
   const initialized = useRef(false);
+
+  // API‑integrated state
+  const [botId, setBotId] = useState(null);
+  const [embedCode, setEmbedCode] = useState("");
+  const [embedLoading, setEmbedLoading] = useState(false);
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [botName, setBotName] = useState("botimi AI");
+  const [welcomeMessage, setWelcomeMessage] = useState("Hello! I'm your AI assistant. How can I help you today?");
+  const [accentColor, setAccentColor] = useState("#c0c1ff");
+  const [crawlStatus, setCrawlStatus] = useState("idle"); // idle | crawling | done | error
+  const [crawlError, setCrawlError] = useState("");
+  const [onboardingError, setOnboardingError] = useState("");
+  const [loadingBots, setLoadingBots] = useState(true);
 
   useEffect(() => {
     if (!initialized.current) {
@@ -21,9 +37,73 @@ export default function OnboardingWizard() {
     return () => clearTimeout(timer);
   }, [currentStep]);
 
-  const nextStep = () => {
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
+  // Load existing bots on mount
+  useEffect(() => {
+    if (!api.isAuthenticated()) {
+      router.replace("/login");
+      return;
+    }
+    loadBots();
+  }, []);
+
+  const loadBots = async () => {
+    try {
+      const data = await api.getBots();
+      if (data.bots && data.bots.length > 0) {
+        const bot = data.bots[0];
+        setBotId(bot.id);
+        setBotName(bot.name || "botimi AI");
+        setWelcomeMessage(bot.welcome_message || "Hello! I'm your AI assistant. How can I help you today?");
+        setAccentColor(bot.brand_color || "#c0c1ff");
+        // Fetch embed code
+        try {
+          setEmbedLoading(true);
+          const embedData = await api.getBotEmbed(bot.id);
+          setEmbedCode(embedData.embedCode || "");
+        } catch (err) {
+          console.error("Failed to load embed code:", err);
+        } finally {
+          setEmbedLoading(false);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load bots:", err);
+    } finally {
+      setLoadingBots(false);
+    }
+  };
+
+  const nextStep = async () => {
+    if (currentStep === 1) {
+      // Start crawl if URL provided
+      if (websiteUrl && botId) {
+        setCrawlStatus("crawling");
+        setOnboardingError("");
+        try {
+          await api.crawlBot(botId, websiteUrl);
+          setCrawlStatus("done");
+        } catch (err) {
+          setCrawlError(err.message);
+          setCrawlStatus("error");
+          setOnboardingError(err.message);
+        }
+      }
+      setCurrentStep(2);
+    } else if (currentStep === 2) {
+      // Update bot settings
+      if (botId) {
+        setOnboardingError("");
+        try {
+          await api.updateBot(botId, {
+            name: botName,
+            welcome_message: welcomeMessage,
+            brand_color: accentColor,
+          });
+        } catch (err) {
+          console.error("Failed to save bot settings:", err);
+        }
+      }
+      setCurrentStep(3);
     } else {
       window.location.href = "/dashboard";
     }
@@ -36,14 +116,14 @@ export default function OnboardingWizard() {
   };
 
   const copyCode = async () => {
-    const code = `<script>
-  window.BotimiConfig = {
-    apiKey: "bh_9823x_prod_kll2",
-    botId: "asst_9x2100",
-    theme: "midnight"
+    const code = embedCode || `<script>
+  window.botimiConfig = {
+    apiKey: "${botId || 'YOUR_BOT_ID'}",
+    botId: "${botId || 'YOUR_BOT_ID'}",
+    theme: "dark"
   };
 </script>
-<script async src="https://cdn.Botimi.ai/widget.js"></script>`;
+<script async src="https://cdn.botimi.ai/widget.js"></script>`;
     try {
       await navigator.clipboard.writeText(code);
       setCopied(true);
@@ -59,11 +139,24 @@ export default function OnboardingWizard() {
     }
   };
 
-  const simulateVerify = () => {
+  const realVerify = async () => {
+    if (!botId) return;
     setVerifyState("checking");
-    setTimeout(() => {
-      setVerifyState("verified");
-    }, 2000);
+    setOnboardingError("");
+    try {
+      const siteUrl = websiteUrl || (await import("../../lib/api")).default.getBotEmbed(botId).websiteUrl || window.location.origin;
+      const result = await api.verifyBotInstall(botId, siteUrl);
+      if (result.installed) {
+        setVerifyState("verified");
+      } else {
+        setVerifyState("not-detected");
+        setTimeout(() => setVerifyState("idle"), 4000);
+      }
+    } catch (err) {
+      console.error("Verification failed:", err);
+      setOnboardingError(err.message);
+      setVerifyState("idle");
+    }
   };
 
   const totalSteps = 3;
@@ -140,10 +233,10 @@ export default function OnboardingWizard() {
       <header className="bg-background/90 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50">
         <div className="flex justify-between items-center w-full px-6 lg:px-margin-desktop max-w-container-max mx-auto h-16">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <span className="text-on-primary text-xs font-bold">B</span>
             </div>
-            <a href="/" className="font-display text-headline-md font-extrabold text-primary">Botimi</a>
+            <a href="/" className="font-display text-headline-md font-extrabold text-primary">botimi</a>
             <span className="text-xs text-on-surface-variant font-medium bg-surface-container px-2.5 py-1 rounded-full border border-outline-variant">Setup</span>
           </div>
           <div className="hidden md:flex items-center gap-6">
@@ -212,11 +305,35 @@ export default function OnboardingWizard() {
                         <span className="material-symbols-outlined text-primary">language</span>
                       </div>
                       <h3 className="font-headline-md text-on-surface mb-2">Crawl Website</h3>
-                      <p className="text-sm text-on-surface-variant mb-5">Enter your docs or homepage URL and let Botimi index it automatically.</p>
+                      <p className="text-sm text-on-surface-variant mb-5">Enter your docs or homepage URL and let botimi index it automatically.</p>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-sm text-on-surface-variant">link</span>
-                        <input className="w-full bg-surface-container-lowest border border-outline-variant pl-9 pr-3 py-2.5 rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/50" placeholder="https://docs.yourcompany.com" type="url" />
+                        <input
+                          className="w-full bg-surface-container-lowest border border-outline-variant pl-9 pr-3 py-2.5 rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/50"
+                          placeholder="https://docs.yourcompany.com"
+                          type="url"
+                          value={websiteUrl}
+                          onChange={(e) => setWebsiteUrl(e.target.value)}
+                        />
+                        {crawlStatus === "crawling" && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-sm text-secondary animate-spin">sync</span>
+                        )}
+                        {crawlStatus === "done" && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-sm text-green-400" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                        )}
                       </div>
+                      {crawlStatus === "crawling" && (
+                        <p className="mt-2 text-xs text-secondary flex items-center gap-1">
+                          <span className="material-symbols-outlined text-sm">sync</span>
+                          Crawling your website...
+                        </p>
+                      )}
+                      {crawlStatus === "error" && (
+                        <p className="mt-2 text-xs text-rose-400 flex items-center gap-1">
+                          <span className="material-symbols-outlined text-sm">error</span>
+                          {crawlError || "Crawl failed. You can continue without crawling."}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <label className="group relative p-6 bg-surface-container-high border-2 border-dashed border-outline-variant rounded-xl hover:border-primary/50 hover:bg-surface-container-highest transition-all duration-300 cursor-pointer text-center flex flex-col items-center justify-center glow-card">
@@ -276,12 +393,22 @@ export default function OnboardingWizard() {
                       <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Bot Name</label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-sm text-on-surface-variant">badge</span>
-                        <input className="w-full bg-surface-container-lowest border border-outline-variant pl-9 pr-3 py-2.5 rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/50" type="text" defaultValue="Botimi Assistant" />
+                        <input
+                          className="w-full bg-surface-container-lowest border border-outline-variant pl-9 pr-3 py-2.5 rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/50"
+                          type="text"
+                          value={botName}
+                          onChange={(e) => setBotName(e.target.value)}
+                        />
                       </div>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Welcome Message</label>
-                      <textarea className="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/50 resize-none" rows="3" defaultValue="Hello! I'm your AI assistant. How can I help you today?" />
+                      <textarea
+                        className="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/50 resize-none"
+                        rows="3"
+                        value={welcomeMessage}
+                        onChange={(e) => setWelcomeMessage(e.target.value)}
+                      />
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Accent Color</label>
@@ -291,9 +418,10 @@ export default function OnboardingWizard() {
                             key={color}
                             type="button"
                             className={`w-9 h-9 rounded-xl transition-all duration-200 hover:scale-110 hover:ring-2 ring-white/30 ${
-                              color === "#c0c1ff" ? "ring-2 ring-white scale-110" : ""
+                              color === accentColor ? "ring-2 ring-white scale-110" : ""
                             }`}
                             style={{ backgroundColor: color }}
+                            onClick={() => setAccentColor(color)}
                           />
                         ))}
                         <div className="w-9 h-9 rounded-xl bg-surface-container-lowest border border-dashed border-outline-variant flex items-center justify-center cursor-pointer hover:border-primary transition-colors">
@@ -308,19 +436,19 @@ export default function OnboardingWizard() {
                     </div>
                     <div className="w-[300px] bg-surface-container-high rounded-xl border border-outline-variant shadow-2xl overflow-hidden flex flex-col float-anim">
                       <div className="bg-gradient-to-r from-primary to-secondary/80 p-4 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                          <span className="text-white text-sm font-bold">B</span>
+                        <div className="w-10 h-10 rounded-full bg-on-primary/20 flex items-center justify-center">
+                          <span className="text-on-primary text-sm font-bold">B</span>
                         </div>
                         <div className="flex-1">
-                          <h4 className="text-sm font-semibold text-white">Botimi Assistant</h4>
+                          <h4 className="text-sm font-semibold text-on-primary">botimi Assistant</h4>
                           <div className="flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                            <span className="text-[10px] text-white/70">Online</span>
+                            <span className="text-[10px] text-on-primary/70">Online</span>
                           </div>
                         </div>
-                        <span className="material-symbols-outlined text-white/60 text-sm">more_vert</span>
+                        <span className="material-symbols-outlined text-on-primary/60 text-sm">more_vert</span>
                       </div>
-                      <div className="p-4 space-y-3.5 flex-grow min-h-[180px] flex flex-col justify-end bg-[#0d0d15]">
+                      <div className="p-4 space-y-3.5 flex-grow min-h-[180px] flex flex-col justify-end bg-surface-container-lowest">
                         <div className="bg-surface-variant/50 p-3 rounded-xl rounded-bl-none text-sm text-on-surface max-w-[85%]">
                           Hello! I&apos;m your AI assistant. How can I help you today?
                         </div>
@@ -376,35 +504,33 @@ export default function OnboardingWizard() {
                       {copied ? "Copied!" : "Copy code"}
                     </button>
                   </div>
-                  <pre className="p-5 text-sm text-on-surface overflow-x-auto hide-scrollbar bg-[#0a0a0f]">
-                    <code>{`<script>
-  window.BotimiConfig = {
-    apiKey: "bh_9823x_prod_kll2",
-    botId: "asst_9x2100",
-    theme: "midnight"
+                  <pre className="p-5 text-sm text-on-surface overflow-x-auto hide-scrollbar" style={{backgroundColor: "var(--code-bg)"}}>
+                    <code>{embedLoading ? "Loading embed code..." : (embedCode || `<script>
+  window.botimiConfig = {
+    apiKey: "${botId || 'YOUR_BOT_ID'}",
+    botId: "${botId || 'YOUR_BOT_ID'}",
+    theme: "dark"
   };
 </script>
-<script async src="https://cdn.Botimi.ai/widget.js"></script>`}</code>
+<script async src="https://cdn.botimi.ai/widget.js"></script>`)}</code>
                   </pre>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-5 bg-primary/5 border border-primary/20 rounded-xl flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-primary">published_with_changes</span>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-on-surface text-sm">Auto-Verification</h4>
-                      <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">We&apos;ll automatically detect when the script goes live on your domain.</p>
-                    </div>
+                <div className="p-5 bg-primary/5 border border-primary/20 rounded-xl flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-primary">published_with_changes</span>
                   </div>
-                  <div className="p-5 bg-secondary/5 border border-secondary/20 rounded-xl flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-secondary">bolt</span>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-on-surface text-sm">Instant Activation</h4>
-                      <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">No waiting — your bot becomes available as soon as the snippet loads.</p>
-                    </div>
+                  <div>
+                    <h4 className="font-semibold text-on-surface text-sm">Your Bot ID</h4>
+                    <p className="text-xs text-on-surface-variant mt-1 leading-relaxed font-mono">{botId || "Loading..."}</p>
+                  </div>
+                </div>
+                <div className="p-5 bg-secondary/5 border border-secondary/20 rounded-xl flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-secondary">bolt</span>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-on-surface text-sm">Instant Activation</h4>
+                    <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">No waiting — your bot becomes available as soon as the snippet loads.</p>
                   </div>
                 </div>
                 <button
@@ -412,9 +538,11 @@ export default function OnboardingWizard() {
                   className={`w-full h-12 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm ${
                     verifyState === "verified"
                       ? "bg-green-500/10 border border-green-500/40 text-green-400 verify-pulse"
-                      : "bg-gradient-to-r from-primary to-secondary text-on-primary hover:opacity-90 active:scale-[0.98] shadow-lg shadow-primary/20"
+                      : verifyState === "not-detected"
+                      ? "bg-amber-500/10 border border-amber-500/40 text-amber-400"
+                      : "bg-primary text-on-primary shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98]"
                   }`}
-                  onClick={simulateVerify}
+                  onClick={realVerify}
                   disabled={verifyState === "checking" || verifyState === "verified"}
                 >
                   {verifyState === "idle" && (
@@ -426,11 +554,20 @@ export default function OnboardingWizard() {
                   {verifyState === "verified" && (
                     <><span className="material-symbols-outlined text-green-400" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span> Connected & Live</>
                   )}
+                  {verifyState === "not-detected" && (
+                    <><span className="material-symbols-outlined text-amber-400">visibility_off</span> Not detected - try again</>
+                  )}
                 </button>
               </div>
             </section>
 
             <div className="mt-auto pt-8 flex justify-between items-center border-t border-outline-variant/20">
+              {onboardingError && (
+                <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-lg px-4 py-2 flex items-center gap-2 max-w-md">
+                  <span className="material-symbols-outlined text-sm">error</span>
+                  {onboardingError}
+                </div>
+              )}
               <button
                 type="button"
                 className={`px-5 py-2.5 rounded-xl text-sm font-semibold text-on-surface-variant hover:bg-surface-variant transition-all flex items-center gap-1.5 ${currentStep === 1 ? "invisible" : ""}`}
@@ -445,8 +582,8 @@ export default function OnboardingWizard() {
                   type="button"
                   className={`px-6 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 text-sm ${
                     currentStep === totalSteps
-                      ? "bg-gradient-to-r from-secondary to-secondary/80 text-on-secondary-container hover:opacity-90 active:scale-[0.98]"
-                      : "bg-gradient-to-r from-primary to-primary/80 text-on-primary hover:opacity-90 active:scale-[0.98] shadow-lg shadow-primary/20"
+                      ? "bg-secondary text-on-primary shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98]"
+                      : "bg-primary text-on-primary shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98]"
                   }`}
                   onClick={nextStep}
                 >
@@ -465,7 +602,7 @@ export default function OnboardingWizard() {
 
       <footer className="bg-surface-container-lowest/80 border-t border-outline-variant py-6 mt-8">
         <div className="flex flex-col md:flex-row justify-between items-center px-6 lg:px-margin-desktop max-w-container-max mx-auto w-full gap-4">
-          <span className="text-xs text-on-surface-variant/60">&copy; 2024 Botimi AI Ecosystem. All rights reserved.</span>
+          <span className="text-xs text-on-surface-variant/60">&copy; 2024 botimi AI Ecosystem. All rights reserved.</span>
           <div className="flex gap-6">
             <a className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/dashboard">Dashboard</a>
             <a className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/support">Support</a>
