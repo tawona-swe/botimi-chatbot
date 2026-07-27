@@ -165,7 +165,7 @@ export default function LandingPage() {
                 </span>
               </div>
               <h1 className="font-display text-display text-on-surface leading-tight tracking-tighter">
-                Low-Cost AI Chatbots <br />
+                Top-Notch AI Chatbots <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
                   For Every Business.
                 </span>
@@ -179,7 +179,7 @@ export default function LandingPage() {
                   className="bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-8 py-4 text-lg"
                   onClick={() => (window.location.href = "/login")}
                 >
-                  Get Started Free
+                  Get Started
                 </button>
                 <button
                   className="border border-outline/10 bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all px-8 py-4 text-lg"
@@ -286,7 +286,7 @@ export default function LandingPage() {
         <section className="py-stack-xl px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
           <div className="text-center mb-16">
             <h2 className="font-display text-headline-lg text-on-surface mb-4">
-              Powerful Features, Zero Complexity
+              Powerful Features, Built for Simplicity
             </h2>
             <p className="text-on-surface-variant max-w-2xl mx-auto">
               Everything you need to automate your customer support and sales funnel with world-class AI agents.
@@ -347,10 +347,10 @@ export default function LandingPage() {
               <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center text-primary mb-6">
                 <span className="material-symbols-outlined text-3xl">payments</span>
               </div>
-              <h3 className="font-headline-md text-headline-md text-on-surface mb-3">Zero API Costs</h3>
+              <h3 className="font-headline-md text-headline-md text-on-surface mb-3">Top-Notch AI Models</h3>
               <p className="text-on-surface-variant">
-                Using our shared inference pool, small businesses pay $0 in additional token fees. Pure
-                efficiency.
+                Access industry-leading language models optimized for speed, accuracy, and reliability — no
+                hidden upsells.
               </p>
             </div>
             <div className="col-span-12 lg:col-span-8 bg-surface-container border border-outline-variant p-8 rounded-xl group hover:border-primary/50 transition-colors">
@@ -454,7 +454,7 @@ export default function LandingPage() {
                 className="w-full border border-outline/10 bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all py-3"
                 onClick={() => (window.location.href = "/onboarding")}
               >
-                Start Free Trial
+                Start Trial
               </button>
             </div>
             <div className="bg-surface-container border-2 border-primary p-8 rounded-xl flex flex-col shadow-xl shadow-primary/10 relative transform md:-translate-y-4">
@@ -528,14 +528,14 @@ export default function LandingPage() {
             <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-secondary/20 blur-[100px] rounded-full"></div>
             <h2 className="font-display text-display text-on-surface mb-6 relative z-10">Ready to automate?</h2>
             <p className="text-on-surface-variant text-body-lg max-w-xl mx-auto mb-10 relative z-10">
-              Join 500+ businesses saving thousands on support costs with botimi. Deployment takes less than 5 minutes.
+              Join 500+ businesses automating their support with botimi. Deployment takes less than 5 minutes.
             </p>
             <div className="flex flex-col md:flex-row gap-4 justify-center relative z-10">
               <button
                 className="bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-10 py-4 text-lg"
                 onClick={() => (window.location.href = "/onboarding")}
               >
-                Start Free Deployment
+                Start Deployment
               </button>
               <button
                 className="border border-outline/10 bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all px-10 py-4 text-lg"
