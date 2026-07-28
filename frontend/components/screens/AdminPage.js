@@ -131,7 +131,7 @@ export default function AdminPage() {
         <div className="absolute inset-0 bg-dot pointer-events-none" />
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-500/4 rounded-full blur-[100px] pointer-events-none" />
 
-        <header className="h-16 flex items-center justify-between px-6 lg:px-8 bg-background/80 backdrop-blur-md border-b border-outline/10 sticky top-0 z-40">
+        <header className="h-16 flex items-center justify-between px-6 lg:px-8 bg-background/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-40">
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-amber-400">admin_panel_settings</span>
             <h1 className="font-display text-lg font-bold text-on-surface">Admin Panel</h1>
@@ -143,7 +143,7 @@ export default function AdminPage() {
         </header>
 
         {/* Tab Navigation */}
-        <div className="flex gap-2 px-6 lg:px-8 py-3 border-b border-outline/10 bg-surface-container-lowest/50">
+        <div className="flex gap-2 px-6 lg:px-8 py-3 border-b border-outline-variant bg-surface-container-lowest/50">
           {[
             { id: "overview", label: "Overview", icon: "dashboard" },
             { id: "vendors", label: "Vendors", icon: "groups" },
@@ -173,7 +173,7 @@ export default function AdminPage() {
                   { label: "Conversations", value: formatNumber(overview.totalConversations), sub: `${overview.todayConversations} today · ${overview.resolutionRate}% resolved`, icon: "forum", color: "text-tertiary" },
                   { label: "Open Tickets", value: formatNumber(overview.openTickets), sub: `${overview.flaggedMessages} flagged messages`, icon: "confirmation_number", color: "text-amber-400" },
                 ].map(card => (
-                  <div key={card.label} className="bg-surface-container border border-outline/10 rounded-2xl p-5">
+                  <div key={card.label} className="bg-surface-container border border-outline-variant rounded-2xl p-5">
                     <div className="flex justify-between items-start mb-3">
                       <span className="font-label-md text-[11px] text-on-surface-variant font-medium tracking-wide uppercase">{card.label}</span>
                       <span className={`material-symbols-outlined text-sm ${card.color} opacity-80`}>{card.icon}</span>
@@ -185,7 +185,7 @@ export default function AdminPage() {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-surface-container border border-outline/10 rounded-2xl p-6">
+                <div className="bg-surface-container border border-outline-variant rounded-2xl p-6">
                   <h3 className="font-display text-sm font-bold text-on-surface mb-4">Vendors by Plan</h3>
                   {overview.byPlan.length === 0 ? (
                     <p className="text-sm text-on-surface-variant">No data yet</p>
@@ -206,7 +206,7 @@ export default function AdminPage() {
                   )}
                 </div>
 
-                <div className="bg-surface-container border border-outline/10 rounded-2xl p-6">
+                <div className="bg-surface-container border border-outline-variant rounded-2xl p-6">
                   <h3 className="font-display text-sm font-bold text-on-surface mb-4">Model Usage</h3>
                   {overview.modelUsage.length === 0 ? (
                     <p className="text-sm text-on-surface-variant">No data yet</p>
@@ -248,11 +248,11 @@ export default function AdminPage() {
                 </button>
               </div>
 
-              <div className="bg-surface-container border border-outline/10 rounded-2xl overflow-hidden">
+              <div className="bg-surface-container border border-outline-variant rounded-2xl overflow-hidden">
                 <div className="overflow-x-auto scrollbar-thin">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-outline/10 bg-surface-container-high">
+                      <tr className="border-b border-outline-variant bg-surface-container-high">
                         <th className="text-left p-4 font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Company</th>
                         <th className="text-left p-4 font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Email</th>
                         <th className="text-left p-4 font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Plan</th>
@@ -276,7 +276,7 @@ export default function AdminPage() {
                               v.subscription_plan === "scale" ? "text-primary border-primary/20 bg-primary/10"
                               : v.subscription_plan === "growth" ? "text-secondary border-secondary/20 bg-secondary/10"
                               : v.subscription_plan === "starter" ? "text-tertiary border-tertiary/20 bg-tertiary/10"
-                              : "text-on-surface-variant border-outline/10 bg-surface-container-highest"
+                              : "text-on-surface-variant border-outline-variant bg-surface-container-highest"
                             }`}>{v.subscription_plan}</span>
                           </td>
                           <td className="p-4">
@@ -316,8 +316,8 @@ export default function AdminPage() {
 
           {/* === MODERATION TAB === */}
           {activeTab === "moderation" && (
-            <div className="bg-surface-container border border-outline/10 rounded-2xl overflow-hidden">
-              <div className="p-5 border-b border-outline/10">
+            <div className="bg-surface-container border border-outline-variant rounded-2xl overflow-hidden">
+              <div className="p-5 border-b border-outline-variant">
                 <h3 className="font-display text-sm font-bold text-on-surface">Flagged Messages ({flaggedMessages.length})</h3>
                 <p className="text-xs text-on-surface-variant mt-1">Messages flagged by the AI for potential policy violations</p>
               </div>

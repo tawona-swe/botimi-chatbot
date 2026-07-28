@@ -98,12 +98,12 @@ export default function AnalyticsPage() {
         <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-primary/3 rounded-full blur-[80px] pointer-events-none" />
 
         {/* Header */}
-        <div className="px-8 py-6 bg-surface-container-lowest/80 backdrop-blur-sm border-b border-outline/10 flex items-center justify-between shrink-0 z-10">
+        <div className="px-8 py-6 bg-surface-container-lowest/80 backdrop-blur-sm border-b border-outline-variant flex items-center justify-between shrink-0 z-10">
           <div>
             <h1 className="font-display text-2xl font-bold text-on-surface">Analytics</h1>
             <p className="text-sm text-on-surface-variant mt-1">Deep insights into your chatbot performance</p>
           </div>
-          <div className="flex items-center gap-2 bg-surface-container rounded-xl p-1 border border-outline/10">
+          <div className="flex items-center gap-2 bg-surface-container rounded-xl p-1 border border-outline-variant">
             {["7d", "30d", "90d"].map(r => (
               <button key={r} onClick={() => setTimeRange(r)} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${timeRange === r ? "bg-primary text-on-primary shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98]" : "text-on-surface-variant hover:text-on-surface"}`}>{r}</button>
             ))}
@@ -120,7 +120,7 @@ export default function AnalyticsPage() {
               { label: "Active Sessions", value: formatNumber(analytics?.activeSessions), icon: "bolt", change: "Last 30 min", color: "tertiary" },
               { label: "Avg Response Time", value: analytics?.avgResponseTime || "—", icon: "timer", change: "Last 100 msgs", color: "primary" },
             ].map(card => (
-              <div key={card.label} className="bg-surface-container border border-outline/10 rounded-2xl p-6 hover:border-outline/20 transition-all">
+              <div key={card.label} className="bg-surface-container border border-outline-variant rounded-2xl p-6 hover:border-outline/20 transition-all">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{card.label}</span>
                   <div className={`w-9 h-9 rounded-xl bg-${card.color}/10 flex items-center justify-center`}>
@@ -134,7 +134,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Conversation Volume Chart */}
-          <div className="bg-surface-container border border-outline/10 rounded-2xl p-6">
+          <div className="bg-surface-container border border-outline-variant rounded-2xl p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-display font-bold text-on-surface">Conversation Volume</h2>
               <div className="flex items-center gap-2">
@@ -150,7 +150,7 @@ export default function AnalyticsPage() {
                     const height = Math.max((d.count / max) * 100, d.count > 0 ? 8 : 2);
                     return (
                       <div key={d.date} className="flex-1 flex flex-col items-center gap-1 group relative" title={`${d.date}: ${d.count} conversations`}>
-                        <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-surface-container-high text-on-surface text-[10px] px-2 py-1 rounded-lg border border-outline/10 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">{d.date}: {d.count}</div>
+                        <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-surface-container-high text-on-surface text-[10px] px-2 py-1 rounded-lg border border-outline-variant opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">{d.date}: {d.count}</div>
                         <div className="w-full bg-gradient-to-t from-primary/40 to-primary rounded-t-lg transition-all duration-300 hover:from-primary/60 hover:to-primary min-h-[2px]" style={{ height: `${height}%` }} />
                       </div>
                     );
@@ -168,7 +168,7 @@ export default function AnalyticsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             {/* Top Questions */}
-            <div className="bg-surface-container border border-outline/10 rounded-2xl p-6">
+            <div className="bg-surface-container border border-outline-variant rounded-2xl p-6">
               <h2 className="font-display font-bold text-on-surface mb-4">Top Questions</h2>
               {analytics?.topQuestions?.length > 0 ? (
                 <div className="space-y-2">
@@ -193,7 +193,7 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Bot Resolution */}
-            <div className="bg-surface-container border border-outline/10 rounded-2xl p-6">
+            <div className="bg-surface-container border border-outline-variant rounded-2xl p-6">
               <h2 className="font-display font-bold text-on-surface mb-4">Bot Resolution Performance</h2>
               {analytics?.totalConversations > 0 ? (
                 <div className="space-y-6">
@@ -227,7 +227,7 @@ export default function AnalyticsPage() {
 
           {/* Ticket Analytics */}
           {ticketAnalytics && (
-            <div className="bg-surface-container border border-outline/10 rounded-2xl p-6">
+            <div className="bg-surface-container border border-outline-variant rounded-2xl p-6">
               <h2 className="font-display font-bold text-on-surface mb-4">Ticket Overview</h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[

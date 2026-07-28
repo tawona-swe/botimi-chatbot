@@ -25,7 +25,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();
-  const { loginWithGoogleCredential } = useAuth();
+  const { signup, loginWithGoogleCredential } = useAuth();
 
   const {
     register,
@@ -37,19 +37,9 @@ export default function RegisterPage() {
 
   const onSubmit = async (data) => {
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          password: data.password,
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || 'Registration failed');
-      toast.success('Account created! Please log in.');
-      router.push('/login');
+      await signup(data.email, data.password, '', data.name, '');
+      toast.success('Welcome to botimi!');
+      router.push('/dashboard');
     } catch (err) {
       toast.error(err.message || 'Registration failed');
     }

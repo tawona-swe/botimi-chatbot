@@ -139,7 +139,7 @@ export default function SettingsPage() {
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/4 rounded-full blur-[100px] pointer-events-none" />
 
         {/* Header */}
-        <div className="px-8 py-6 bg-surface-container-lowest/80 backdrop-blur-sm border-b border-outline/10 shrink-0 z-10">
+        <div className="px-8 py-6 bg-surface-container-lowest/80 backdrop-blur-sm border-b border-outline-variant shrink-0 z-10">
           <h1 className="font-display text-2xl font-bold text-on-surface">Settings</h1>
           <p className="text-sm text-on-surface-variant mt-1">Manage your account, plan, and preferences</p>
         </div>
@@ -147,7 +147,7 @@ export default function SettingsPage() {
         <div className="flex-1 overflow-y-auto scrollbar-thin p-8 space-y-8">
 
           {/* Profile Section */}
-          <div className="bg-surface-container border border-outline/10 rounded-2xl p-8 max-w-3xl">
+          <div className="bg-surface-container border border-outline-variant rounded-2xl p-8 max-w-3xl">
             <div className="flex items-center gap-4 mb-6">
               <div className={`w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-on-primary text-xl font-bold`}>
                 {profile?.company_name?.charAt(0) || profile?.email?.charAt(0)?.toUpperCase() || "B"}
@@ -161,15 +161,15 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Your Name</label>
-                <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="w-full bg-surface-container-lowest border border-outline/10 p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" placeholder="John Doe" />
+                <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" placeholder="John Doe" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Company</label>
-                <input type="text" value={form.company_name} onChange={e => setForm(f => ({ ...f, company_name: e.target.value }))} className="w-full bg-surface-container-lowest border border-outline/10 p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" placeholder="Acme Inc." />
+                <input type="text" value={form.company_name} onChange={e => setForm(f => ({ ...f, company_name: e.target.value }))} className="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" placeholder="Acme Inc." />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Industry</label>
-                <select value={form.industry} onChange={e => setForm(f => ({ ...f, industry: e.target.value }))} className="w-full bg-surface-container-lowest border border-outline/10 p-3 rounded-xl text-sm text-on-surface">
+                <select value={form.industry} onChange={e => setForm(f => ({ ...f, industry: e.target.value }))} className="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface">
                   <option value="">Select industry</option>
                   <option value="technology">Technology</option>
                   <option value="ecommerce">E-Commerce</option>
@@ -183,12 +183,12 @@ export default function SettingsPage() {
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Country</label>
-                <input type="text" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))} className="w-full bg-surface-container-lowest border border-outline/10 p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" placeholder="United States" />
+                <input type="text" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))} className="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" placeholder="United States" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Brand Color</label>
                 <div className="flex items-center gap-3">
-                  <input type="color" value={form.brand_color} onChange={e => setForm(f => ({ ...f, brand_color: e.target.value }))} className="w-10 h-10 rounded-xl border border-outline/10 cursor-pointer bg-transparent" />
+                  <input type="color" value={form.brand_color} onChange={e => setForm(f => ({ ...f, brand_color: e.target.value }))} className="w-10 h-10 rounded-xl border border-outline-variant cursor-pointer bg-transparent" />
                   <span className="text-xs text-on-surface-variant font-mono">{form.brand_color}</span>
                 </div>
               </div>
@@ -208,7 +208,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Plan Section */}
-          <div className="bg-surface-container border border-outline/10 rounded-2xl p-8 max-w-3xl">
+          <div className="bg-surface-container border border-outline-variant rounded-2xl p-8 max-w-3xl">
             <h2 className="font-display text-lg font-bold text-on-surface mb-2">Plan & Billing</h2>
             <p className="text-xs text-on-surface-variant mb-6">
               You are currently on the <strong className="text-primary capitalize">{currentPlan}</strong> plan.
@@ -220,7 +220,7 @@ export default function SettingsPage() {
               {PLANS.map(plan => {
                 const isCurrent = plan.id === currentPlan;
                 return (
-                  <div key={plan.id} className={`relative bg-surface-container-lowest rounded-2xl border p-5 transition-all ${isCurrent ? "border-primary ring-1 ring-primary/30" : "border-outline/10 hover:border-outline/30"}`}>
+                  <div key={plan.id} className={`relative bg-surface-container-lowest rounded-2xl border p-5 transition-all ${isCurrent ? "border-primary ring-1 ring-primary/30" : "border-outline-variant hover:border-outline/30"}`}>
                     {isCurrent && (
                       <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-secondary text-on-primary text-[10px] font-bold px-3 py-0.5 rounded-full">Current</div>
                     )}
@@ -248,7 +248,7 @@ export default function SettingsPage() {
                       </li>
                     </ul>
                     {!isCurrent && (
-                      <button onClick={() => handleCheckout(plan.id)} disabled={checkoutLoading} className="w-full mt-5 py-2.5 border border-outline/10 bg-surface-container text-on-surface rounded-xl text-xs font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all disabled:opacity-50">
+                      <button onClick={() => handleCheckout(plan.id)} disabled={checkoutLoading} className="w-full mt-5 py-2.5 border border-outline-variant bg-surface-container text-on-surface rounded-xl text-xs font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all disabled:opacity-50">
                         {checkoutLoading ? "Redirecting..." : `Upgrade to ${plan.name}`}
                       </button>
                     )}
@@ -259,15 +259,15 @@ export default function SettingsPage() {
           </div>
 
           {/* API Keys Section */}
-          <div className="bg-surface-container border border-outline/10 rounded-2xl p-8 max-w-3xl">
+          <div className="bg-surface-container border border-outline-variant rounded-2xl p-8 max-w-3xl">
             <h2 className="font-display text-lg font-bold text-on-surface mb-2">API Access</h2>
             <p className="text-xs text-on-surface-variant mb-6">Use your bot ID as the API key to authenticate chat requests from your widget.</p>
             {profile?.email && (
               <div className="space-y-4">
-                <div className="bg-surface-container-lowest border border-outline/10 rounded-xl p-4">
+                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
                   <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider block mb-2">Bot ID (API Key)</label>
                   <div className="flex items-center gap-2">
-                    <code className="flex-1 text-on-surface text-sm font-mono px-4 py-2.5 rounded-lg border border-outline/10 select-all truncate" style={{backgroundColor: "var(--code-bg)"}}>
+                    <code className="flex-1 text-on-surface text-sm font-mono px-4 py-2.5 rounded-lg border border-outline-variant select-all truncate" style={{backgroundColor: "var(--code-bg)"}}>
                       {vendor?.id || profile?.id || "Loading..."}
                     </code>
                     <button
@@ -275,7 +275,7 @@ export default function SettingsPage() {
                         navigator.clipboard.writeText(vendor?.id || profile?.id || "");
                         alert("Bot ID copied to clipboard!");
                       }}
-                      className="px-3 py-2.5 bg-surface-container border border-outline/10 rounded-lg text-xs font-bold text-on-surface hover:bg-surface-container-high transition-all"
+                      className="px-3 py-2.5 bg-surface-container border border-outline-variant rounded-lg text-xs font-bold text-on-surface hover:bg-surface-container-high transition-all"
                     >
                       <span className="material-symbols-outlined text-sm">content_copy</span>
                     </button>

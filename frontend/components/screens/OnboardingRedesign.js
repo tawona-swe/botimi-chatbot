@@ -141,7 +141,7 @@ export default function OnboardingRedesign() {
         }
       `}</style>
 
-      <header className="bg-background/80 backdrop-blur-md border-b border-outline/10 sticky top-0 z-50">
+      <header className="bg-background/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50">
         <div className="flex justify-between items-center w-full px-margin-desktop max-w-container-max mx-auto h-16">
           <div className="flex items-center gap-stack-sm">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -182,7 +182,7 @@ export default function OnboardingRedesign() {
           </div>
         </div>
 
-        <div className="w-full max-w-5xl glass-panel rounded-2xl overflow-hidden ai-glow z-10 border border-outline/10 flex flex-col">
+        <div className="w-full max-w-5xl glass-panel rounded-2xl overflow-hidden ai-glow z-10 border border-outline-variant flex flex-col">
           <div className="p-8 md:p-12 min-h-[520px] flex-grow">
             {currentStep === 1 && (
               <section className="step-transition">
@@ -192,7 +192,7 @@ export default function OnboardingRedesign() {
                     <p className="text-on-surface-variant mt-3 text-body-lg max-w-xl mx-auto">Sync your documentation to build a custom knowledge base for your AI assistant.</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="group p-8 bg-surface-container-low border border-outline/10 rounded-2xl hover:border-primary/50 transition-all duration-300 flex flex-col">
+                    <div className="group p-8 bg-surface-container-low border border-outline-variant rounded-2xl hover:border-primary/50 transition-all duration-300 flex flex-col">
                       <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                         <span className="material-symbols-outlined text-primary text-3xl">language</span>
                       </div>
@@ -229,7 +229,7 @@ export default function OnboardingRedesign() {
                       </div>
                     </div>
 
-                    <div className="group p-8 bg-surface-container-low border border-outline/10 border-dashed rounded-2xl hover:bg-surface-container-high transition-all duration-300 cursor-pointer flex flex-col items-center justify-center text-center">
+                    <div className="group p-8 bg-surface-container-low border border-outline-variant border-dashed rounded-2xl hover:bg-surface-container-high transition-all duration-300 cursor-pointer flex flex-col items-center justify-center text-center">
                       <input
                         className="hidden"
                         id="file-upload"
@@ -247,7 +247,7 @@ export default function OnboardingRedesign() {
                       </label>
                       <div className={uploadedFiles.length > 0 ? "w-full mt-6 space-y-2 text-left" : "hidden w-full mt-6 space-y-2 text-left"} id="upload-list">
                         {uploadedFiles.map((file, idx) => (
-                          <div key={idx} className="p-3 bg-background rounded-lg border border-outline/10 flex items-center gap-3">
+                          <div key={idx} className="p-3 bg-background rounded-lg border border-outline-variant flex items-center gap-3">
                             <span className="material-symbols-outlined text-primary text-sm">description</span>
                             <span className="text-xs text-on-surface flex-grow truncate">{file.name}</span>
                             <span className="material-symbols-outlined text-xs text-green-500">check_circle</span>
@@ -297,12 +297,12 @@ export default function OnboardingRedesign() {
                     </div>
                   </div>
 
-                  <div className="lg:col-span-7 bg-background/50 rounded-2xl border border-outline/10 p-8 flex flex-col items-center justify-center relative min-h-[440px]">
-                    <div className="absolute top-6 left-6 flex items-center gap-2 px-3 py-1 bg-surface-container-highest/50 rounded-full border border-outline/10">
+                  <div className="lg:col-span-7 bg-background/50 rounded-2xl border border-outline-variant p-8 flex flex-col items-center justify-center relative min-h-[440px]">
+                    <div className="absolute top-6 left-6 flex items-center gap-2 px-3 py-1 bg-surface-container-highest/50 rounded-full border border-outline-variant">
                       <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Live Widget Preview</span>
                     </div>
-                    <div className="w-[340px] bg-surface-container border border-outline/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col transform hover:scale-[1.02] transition-transform">
+                    <div className="w-[340px] bg-surface-container border border-outline-variant rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col transform hover:scale-[1.02] transition-transform">
                       <div className="bg-primary p-5 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-on-primary/10 flex items-center justify-center">
@@ -316,14 +316,14 @@ export default function OnboardingRedesign() {
                         <span className="material-symbols-outlined text-on-primary/50 text-sm">close</span>
                       </div>
                       <div className="p-5 space-y-4 flex-grow h-48 bg-surface-container-highest/30">
-                        <div className="bg-surface-container p-3 rounded-2xl rounded-bl-none text-xs text-on-surface max-w-[85%] border border-outline/10">
+                        <div className="bg-surface-container p-3 rounded-2xl rounded-bl-none text-xs text-on-surface max-w-[85%] border border-outline-variant">
                           Hi there! 👋 I'm your dedicated AI assistant. How can I help you today?
                         </div>
                         <div className="bg-primary/20 border border-primary/30 p-3 rounded-2xl rounded-br-none text-xs text-on-surface self-end max-w-[85%]">
                           Tell me about your pricing plans.
                         </div>
                       </div>
-                      <div className="p-4 bg-surface-container border-t border-outline/10 flex gap-3">
+                      <div className="p-4 bg-surface-container border-t border-outline-variant flex gap-3">
                         <div className="flex-grow bg-background rounded-lg px-4 py-2 text-xs text-on-surface-variant border border-outline/5 italic">Type a message...</div>
                         <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-on-primary">
                           <span className="material-symbols-outlined text-sm">send</span>
@@ -383,7 +383,7 @@ export default function OnboardingRedesign() {
                       className={`w-full h-full flex flex-col items-center justify-center p-6 rounded-2xl transition-all group ${
                         verifyState === "verified"
                           ? "bg-green-500/5 border border-green-500/50"
-                          : "bg-surface-container-low border border-outline/10 hover:border-primary"
+                          : "bg-surface-container-low border border-outline-variant hover:border-primary"
                       }`}
                       id="verify-btn"
                       onClick={simulateVerify}
@@ -414,7 +414,7 @@ export default function OnboardingRedesign() {
             )}
           </div>
 
-          <div className="px-8 py-6 bg-surface-container-highest/20 border-t border-outline/10 flex justify-between items-center">
+          <div className="px-8 py-6 bg-surface-container-highest/20 border-t border-outline-variant flex justify-between items-center">
             <button
               type="button"
               className={`px-6 py-2.5 rounded-xl font-bold text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all ${currentStep === 1 ? "invisible" : ""}`}
@@ -451,7 +451,7 @@ export default function OnboardingRedesign() {
           <div className="flex gap-8">
             <a className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/dashboard">Dashboard</a>
             <a className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/support">Support</a>
-            <a className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/chat-widget">Chat Widget</a>
+            <a className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/docs">Docs</a>
           </div>
         </div>
       </footer>

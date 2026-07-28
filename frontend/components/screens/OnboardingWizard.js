@@ -606,7 +606,7 @@ export default function OnboardingWizard() {
           <div className="flex gap-6">
             <a className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/dashboard">Dashboard</a>
             <a className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/support">Support</a>
-            <a className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/chat-widget">Chat Widget</a>
+            <a className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/docs">Docs</a>
           </div>
         </div>
       </footer>

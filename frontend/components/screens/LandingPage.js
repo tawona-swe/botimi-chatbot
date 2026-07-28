@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 
 export default function LandingPage() {
+  const { vendor } = useAuth();
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -103,25 +105,34 @@ export default function LandingPage() {
             <div className="hidden md:flex gap-6">
               <a
                 className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200"
-                href="/dashboard"
+                href="/how-it-works"
                 target="_top"
               >
-                Dashboard
+                How It Works
               </a>
               <a
                 className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200"
-                href="/support"
+                href="/pricing"
                 target="_top"
               >
-                Support
+                Pricing
               </a>
               <a
                 className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200"
-                href="/chat-widget"
+                href="/docs"
                 target="_top"
               >
-                Chat Widget
+                Docs
               </a>
+              {vendor && (
+                <a
+                  className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200"
+                  href="/dashboard"
+                  target="_top"
+                >
+                  Dashboard
+                </a>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -135,24 +146,28 @@ export default function LandingPage() {
                 {isDark ? "light_mode" : "dark_mode"}
               </span>
             </button>
-            <button
-              className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 px-4 py-2"
-              onClick={() => (window.location.href = "/login")}
-            >
-              Log In
-            </button>
-            <button
-              className="bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-6 py-2"
-              onClick={() => (window.location.href = "/login")}
-            >
-              Get Started
-            </button>
+            {!vendor && (
+              <button
+                className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 px-4 py-2"
+                onClick={() => (window.location.href = "/login")}
+              >
+                Log In
+              </button>
+            )}
+            {!vendor && (
+              <button
+                className="bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-6 py-2"
+                onClick={() => (window.location.href = "/how-it-works")}
+              >
+                Get Started
+              </button>
+            )}
           </div>
         </nav>
       </header>
       <main>
         <section className="relative min-h-[85vh] px-margin-mobile md:px-margin-desktop pt-24 md:pt-32">
-          <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none opacity-20">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary rounded-full blur-[120px] animate-pulse"></div>
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary rounded-full blur-[120px] delay-1000 animate-pulse"></div>
           </div>
@@ -177,15 +192,15 @@ export default function LandingPage() {
               <div className="flex flex-wrap gap-4 mt-4">
                 <button
                   className="bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-8 py-4 text-lg"
-                  onClick={() => (window.location.href = "/login")}
+                  onClick={() => (window.location.href = "/how-it-works")}
                 >
                   Get Started
                 </button>
                 <button
-                  className="border border-outline/10 bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all px-8 py-4 text-lg"
-                  onClick={() => (window.location.href = "/login")}
+                  className="border border-outline-variant bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all px-8 py-4 text-lg"
+                  onClick={() => (window.location.href = "/register")}
                 >
-                  Book a Demo
+                  Create Free Account
                 </button>
               </div>
               <div className="flex items-center gap-4 mt-8 opacity-60">
@@ -216,7 +231,7 @@ export default function LandingPage() {
                 <div className="gradient-border-content p-6 flex flex-col h-[500px]">
                   <div className="flex items-center justify-between border-b border-outline-variant pb-4 mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container">
+                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary">
                         <span className="material-symbols-outlined">smart_toy</span>
                       </div>
                       <div>
@@ -237,7 +252,7 @@ export default function LandingPage() {
                         Hello! I've analyzed your product documentation. How can I assist your customers today?
                       </p>
                     </div>
-                    <div className="bg-primary/20 p-3 rounded-lg rounded-tr-none self-end max-w-[80%] border border-primary/30">
+                    <div className="bg-primary/20 p-3 rounded-lg rounded-tr-none self-end max-w-[80%] border border-primary-container">
                       <p className="font-body-sm text-body-sm text-on-surface">
                         How do I set up the AI integration for instant replies?
                       </p>
@@ -299,10 +314,10 @@ export default function LandingPage() {
                   <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center text-primary mb-6">
                     <span className="material-symbols-outlined text-3xl">psychology</span>
                   </div>
-                  <h3 className="font-headline-md text-headline-md text-on-surface mb-3">AI-Powered RAG</h3>
+                  <h3 className="font-headline-md text-headline-md text-on-surface mb-3">Smart Context Engine</h3>
                   <p className="text-on-surface-variant mb-6">
-                    Our advanced Retrieval-Augmented Generation (RAG) system processes your PDFs, URLs, and docs to
-                    ensure your bot never hallucinates and always provides accurate, brand-safe answers.
+                    Your chatbot processes PDFs, URLs, and docs to understand your business inside out —
+                    so it never hallucinates and always provides accurate, brand-safe answers.
                   </p>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2 text-on-surface-variant font-label-md">
@@ -320,7 +335,7 @@ export default function LandingPage() {
                     <div className="h-4 bg-primary/10 rounded w-3/4"></div>
                     <div className="h-4 bg-outline-variant/20 rounded w-full"></div>
                     <div className="h-4 bg-outline-variant/20 rounded w-5/6"></div>
-                    <div className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                    <div className="mt-4 p-3 bg-primary/5 border border-primary-container rounded-lg">
                       <div className="flex gap-2 items-center mb-2">
                         <div className="w-2 h-2 rounded-full bg-primary"></div>
                         <span className="text-[10px] font-code-sm text-primary">
@@ -381,40 +396,52 @@ export default function LandingPage() {
         </section>
         <section className="py-stack-xl bg-surface-container-lowest">
           <div className="max-w-container-max mx-auto px-margin-desktop">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-              <div
-                className="rounded-2xl border border-outline-variant shadow-2xl relative overflow-hidden group animate-tilt-sway"
-              >
-                <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-10 pointer-events-none"></div>
-                <div className="relative scale-110">
-                  <img
-                    src="/taxcul.png"
-                    alt="Taxcul project dashboard showing AI-powered tax calculation"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    style={{ minHeight: "300px" }}
-                  />
-                </div>
+            {/* Section heading */}
+            <div className="text-center mb-16">
+              <p className="font-label-md text-label-md text-primary mb-3 tracking-wider">TRUSTED BY GROWING BUSINESSES</p>
+              <h2 className="font-display text-headline-lg text-on-surface">Results that speak for themselves</h2>
+            </div>
+
+            {/* Stats grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
+              <div className="text-center">
+                <p className="font-display text-5xl font-bold text-primary">70%</p>
+                <p className="text-on-surface-variant text-sm mt-1">Fewer support tickets</p>
               </div>
-              <div className="flex flex-col gap-6">
-                <span className="material-symbols-outlined text-primary text-5xl opacity-100">format_quote</span>
-                <h3 className="font-headline-lg text-headline-lg text-on-surface italic leading-tight">
-                  &quot;botimi transformed our support desk. We reduced human intervention by 70% in the first month
-                  without losing customer satisfaction.&quot;
-                </h3>
-                <p className="text-on-surface-variant font-body-lg">
-                  We were skeptical about AI hallucinations, but botimi&apos;s RAG system is bulletproof. It&apos;s
-                  like having our best support rep working 24/7 for a fraction of the cost.
-                </p>
-                <div className="flex items-center gap-3">
-                  <img
-                    src="/culverwell.png"
-                    alt="Culverwell Venge"
-                    className="w-12 h-12 rounded-full object-cover border-2 border-surface"
-                  />
-                  <div>
-                    <p className="text-on-surface font-bold text-sm">Culverwell Venge</p>
-                    <p className="text-primary text-xs">CEO, Taxcul</p>
-                  </div>
+              <div className="text-center">
+                <p className="font-display text-5xl font-bold text-primary">10K+</p>
+                <p className="text-on-surface-variant text-sm mt-1">Conversations handled</p>
+              </div>
+              <div className="text-center">
+                <p className="font-display text-5xl font-bold text-primary">99.7%</p>
+                <p className="text-on-surface-variant text-sm mt-1">Accuracy rate</p>
+              </div>
+              <div className="text-center">
+                <p className="font-display text-5xl font-bold text-primary">3min</p>
+                <p className="text-on-surface-variant text-sm mt-1">Avg. response time</p>
+              </div>
+            </div>
+
+            {/* Featured quote */}
+            <div className="max-w-3xl mx-auto text-center">
+              <span className="material-symbols-outlined text-primary text-4xl opacity-60 mb-4 block">format_quote</span>
+              <h3 className="font-headline-lg text-headline-lg text-on-surface italic leading-tight mb-6">
+                &quot;botimi transformed our support desk. We reduced human intervention by 70% in the first month
+                without losing customer satisfaction.&quot;
+              </h3>
+              <p className="text-on-surface-variant font-body-lg mb-6">
+                We were skeptical about AI chatbots, but botimi delivers. It&apos;s
+                like having our best support rep working 24/7 for a fraction of the cost.
+              </p>
+              <div className="flex items-center justify-center gap-3">
+                <img
+                  src="/culverwell.png"
+                  alt="Culverwell Venge"
+                  className="w-12 h-12 rounded-full object-cover border-2 border-surface"
+                />
+                <div className="text-left">
+                  <p className="text-on-surface font-bold text-sm">Culverwell Venge</p>
+                  <p className="text-primary text-xs">CEO, Taxcul</p>
                 </div>
               </div>
             </div>
@@ -451,8 +478,8 @@ export default function LandingPage() {
                 </li>
               </ul>
               <button
-                className="w-full border border-outline/10 bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all py-3"
-                onClick={() => (window.location.href = "/onboarding")}
+                className="w-full border border-outline-variant bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all py-3"
+                onClick={() => (window.location.href = "/register")}
               >
                 Start Trial
               </button>
@@ -485,7 +512,7 @@ export default function LandingPage() {
               </ul>
               <button
                 className="w-full bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all py-3"
-                onClick={() => (window.location.href = "/onboarding")}
+                onClick={() => (window.location.href = "/register")}
               >
                 Get Growth
               </button>
@@ -514,16 +541,26 @@ export default function LandingPage() {
                 </li>
               </ul>
               <button
-                className="w-full border border-outline/10 bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all py-3"
-                onClick={() => (window.location.href = "/onboarding")}
+                className="w-full border border-outline-variant bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all py-3"
+                onClick={() => (window.location.href = "/register")}
               >
                 Contact Sales
               </button>
             </div>
           </div>
+          <div className="text-center mt-10">
+            <a
+              href="/pricing"
+              target="_top"
+              className="inline-flex items-center gap-2 font-body-md text-body-md text-primary font-semibold hover:brightness-110 transition-all"
+            >
+              Compare all features & plan details
+              <span className="material-symbols-outlined text-lg">arrow_forward</span>
+            </a>
+          </div>
         </section>
         <section className="py-stack-xl px-margin-mobile">
-          <div className="max-w-container-max mx-auto bg-gradient-to-br from-primary-container/20 to-secondary-container/20 border border-primary/20 rounded-3xl p-12 text-center overflow-hidden relative">
+          <div className="max-w-container-max mx-auto bg-gradient-to-br from-primary-container/20 to-secondary-container/20 border border-primary-container rounded-3xl p-12 text-center overflow-hidden relative">
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/20 blur-[100px] rounded-full"></div>
             <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-secondary/20 blur-[100px] rounded-full"></div>
             <h2 className="font-display text-display text-on-surface mb-6 relative z-10">Ready to automate?</h2>
@@ -533,12 +570,12 @@ export default function LandingPage() {
             <div className="flex flex-col md:flex-row gap-4 justify-center relative z-10">
               <button
                 className="bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-10 py-4 text-lg"
-                onClick={() => (window.location.href = "/onboarding")}
+                onClick={() => (window.location.href = "/register")}
               >
                 Start Deployment
               </button>
               <button
-                className="border border-outline/10 bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all px-10 py-4 text-lg"
+                className="border border-outline-variant bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all px-10 py-4 text-lg"
                 onClick={() => (window.location.href = "/dashboard")}
               >
                 Talk to an Expert
@@ -560,31 +597,24 @@ export default function LandingPage() {
           <div className="flex flex-wrap justify-center gap-8">
             <a
               className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors"
-              href="/dashboard"
+              href="/how-it-works"
               target="_top"
             >
-              Dashboard
+              How It Works
             </a>
             <a
               className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors"
-              href="/support"
+              href="/pricing"
               target="_top"
             >
-              Support
+              Pricing
             </a>
             <a
               className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors"
-              href="/onboarding"
+              href="/docs"
               target="_top"
             >
-              Get Started
-            </a>
-            <a
-              className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors"
-              href="/chat-widget"
-              target="_top"
-            >
-              Chat Widget
+              Docs
             </a>
           </div>
           <div className="flex gap-4">

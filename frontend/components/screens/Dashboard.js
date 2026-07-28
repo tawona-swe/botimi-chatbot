@@ -138,10 +138,10 @@ export default function Dashboard() {
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute top-1/2 left-1/4 w-[400px] h-[400px] bg-secondary/3 rounded-full blur-[100px] pointer-events-none" />
 
-      <header className="h-16 flex items-center justify-between px-6 lg:px-8 bg-background/80 backdrop-blur-md border-b border-outline/10 sticky top-0 z-40">
+      <header className="h-16 flex items-center justify-between px-6 lg:px-8 bg-background/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-40">
         <div className="flex items-center gap-3">
           <h1 className="font-display text-lg font-bold text-on-surface">Dashboard</h1>
-          <span className="font-label-md text-[11px] text-on-surface-variant bg-surface-container-highest px-2 py-0.5 rounded-md border border-outline/10 hidden sm:inline">Overview</span>
+          <span className="font-label-md text-[11px] text-on-surface-variant bg-surface-container-highest px-2 py-0.5 rounded-md border border-outline-variant hidden sm:inline">Overview</span>
         </div>
         <div className="flex items-center gap-4">
           <button onClick={loadAnalytics} className="text-on-surface-variant hover:text-on-surface transition-colors" title="Refresh">
@@ -193,11 +193,11 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 glass-panel rounded-2xl p-6 overflow-hidden relative border border-outline/10">
+          <div className="lg:col-span-2 glass-panel rounded-2xl p-6 overflow-hidden relative border border-outline-variant">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/[0.02] rounded-full blur-[60px] pointer-events-none" />
             <div className="flex justify-between items-center mb-6 relative z-10">
               <h3 className="font-display text-sm font-bold text-on-surface">Conversation Volume</h3>
-              <div className="flex gap-1.5 bg-surface-container-highest/50 p-0.5 rounded-lg border border-outline/10">
+              <div className="flex gap-1.5 bg-surface-container-highest/50 p-0.5 rounded-lg border border-outline-variant">
                 {["7D", "30D", "1Y"].map((t) => (
                   <button key={t} className={`px-3 py-1 font-label-md text-[10px] font-semibold rounded-md transition-all ${t === "7D" ? "bg-primary text-on-primary shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}>{t}</button>
                 ))}
@@ -232,7 +232,7 @@ export default function Dashboard() {
           </div>
 
           <div className="space-y-6">
-            <div className="glass-panel rounded-2xl p-6 relative overflow-hidden ai-glow border border-outline/10">
+            <div className="glass-panel rounded-2xl p-6 relative overflow-hidden ai-glow border border-outline-variant">
               <div className="absolute top-0 right-0 opacity-[0.04]">
                 <span className="material-symbols-outlined text-[80px] text-on-surface">health_and_safety</span>
               </div>
@@ -263,7 +263,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="glass-panel rounded-2xl p-6 border border-outline/10">
+            <div className="glass-panel rounded-2xl p-6 border border-outline-variant">
               <h4 className="font-label-md text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-4">Top Questions</h4>
               <div className="space-y-3">
                 {(analytics?.topQuestions?.length > 0 ? analytics.topQuestions : []).slice(0, 6).map((item) => (
@@ -280,7 +280,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="glass-panel rounded-2xl p-6 relative overflow-hidden border border-outline/10">
+        <div className="glass-panel rounded-2xl p-6 relative overflow-hidden border border-outline-variant">
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/[0.02] rounded-full blur-[80px] pointer-events-none" />
           <div className="flex justify-between items-center mb-5 relative z-10">
             <h3 className="font-display text-sm font-bold text-on-surface">Recent Conversations</h3>
@@ -292,7 +292,7 @@ export default function Dashboard() {
           <div className="overflow-x-auto scrollbar-thin relative z-10">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-outline/10">
+                <tr className="border-b border-outline-variant">
                   {["User", "Bot", "Duration", "Outcome", ""].map((h) => (
                     <th key={h} className="pb-3 font-label-md text-[10px] font-semibold text-on-surface-variant uppercase tracking-widest pr-4 last:pr-0">{h}</th>
                   ))}
@@ -334,7 +334,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <footer className="border-t border-outline/10 py-6 px-6 lg:px-8 bg-background relative z-10 mt-auto">
+      <footer className="border-t border-outline-variant py-6 px-6 lg:px-8 bg-background relative z-10 mt-auto">
         <div className="max-w-container-max mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4">
             <span className="font-display text-sm font-bold text-gradient-primary">botimi</span>

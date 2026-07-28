@@ -219,13 +219,13 @@ export default function SupportInbox() {
       <main className={`flex-1 ${sidebarCollapsed ? 'ml-[80px]' : 'ml-[260px]'} max-lg:ml-0 flex flex-col h-screen bg-background text-on-background overflow-hidden transition-all duration-300`}>
 
         {/* HEADER */}
-        <header className="h-14 flex items-center justify-between px-6 border-b border-outline/10 shrink-0">
+        <header className="h-14 flex items-center justify-between px-6 border-b border-outline-variant shrink-0">
           <div className="flex items-center gap-3">
             <button className="lg:hidden text-on-surface-variant hover:text-on-surface" onClick={() => setSidebarOpen(!sidebarOpen)}>
               <span className="material-symbols-outlined">menu</span>
             </button>
             <h1 className="text-base font-bold text-on-surface tracking-tight">Support Inbox</h1>
-            <span className="text-xs text-on-surface-variant/50 px-2 py-0.5 bg-surface-container-low rounded-md border border-outline/10">{tickets.length} tickets</span>
+            <span className="text-xs text-on-surface-variant/50 px-2 py-0.5 bg-surface-container-low rounded-md border border-outline-variant">{tickets.length} tickets</span>
           </div>
           <div className="flex items-center gap-4">
             <div className="relative">
@@ -240,12 +240,12 @@ export default function SupportInbox() {
         <div className="flex flex-1 overflow-hidden">
 
           {/* ─── LEFT: TICKET LIST ─── */}
-          <aside className="w-[300px] max-lg:w-full border-r border-outline/10 flex flex-col shrink-0 bg-surface-container-lowest/40" style={{ display: isMobile && selectedTicket ? "none" : "flex" }}>
+          <aside className="w-[300px] max-lg:w-full border-r border-outline-variant flex flex-col shrink-0 bg-surface-container-lowest/40" style={{ display: isMobile && selectedTicket ? "none" : "flex" }}>
             {/* Search + Filters */}
-            <div className="p-3 border-b border-outline/10 space-y-2">
+            <div className="p-3 border-b border-outline-variant space-y-2">
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/30 text-sm">search</span>
-                <input className="w-full bg-surface-container-low border border-outline/10 rounded-lg pl-8 pr-3 py-2 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 transition-all" placeholder="Search tickets..." />
+                <input className="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-8 pr-3 py-2 text-xs text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 transition-all" placeholder="Search tickets..." />
               </div>
               <div className="flex gap-1.5">
                 {["all", "unassigned", "mine"].map((f) => (
@@ -306,14 +306,14 @@ export default function SupportInbox() {
             ) : (
               <>
               {/* Ticket header */}
-              <div className="px-5 py-3 border-b border-outline/10 flex items-center justify-between bg-surface-container-lowest/30">
+              <div className="px-5 py-3 border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest/30">
                 <div className="flex items-center gap-3 min-w-0">
                   {isMobile && (
                     <button onClick={() => { setSelectedTicket(null); setIsMobilePanel("list"); }} className="p-1 text-on-surface-variant hover:text-on-surface">
                       <span className="material-symbols-outlined text-lg">arrow_back</span>
                     </button>
                   )}
-                  <div className="w-9 h-9 rounded-lg bg-surface-container-high border border-outline/10 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center shrink-0">
                     <span className="material-symbols-outlined text-primary text-lg">person</span>
                   </div>
                   <div className="min-w-0">
@@ -327,7 +327,7 @@ export default function SupportInbox() {
                 </div>
                 <div className="flex items-center gap-1">
                   {selectedTicket.status !== "resolved" && selectedTicket.status !== "closed" && (
-                    <button onClick={handleResolve} className="px-3 py-1.5 border border-outline/10 bg-surface-container text-on-surface rounded-lg text-[10px] font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all whitespace-nowrap">
+                    <button onClick={handleResolve} className="px-3 py-1.5 border border-outline-variant bg-surface-container text-on-surface rounded-lg text-[10px] font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all whitespace-nowrap">
                       Resolve
                     </button>
                   )}
@@ -338,7 +338,7 @@ export default function SupportInbox() {
               </div>
 
               {/* Tabs: Conversation | Details */}
-              <div className="flex gap-0 px-5 border-b border-outline/10 bg-surface-container-lowest/20">
+              <div className="flex gap-0 px-5 border-b border-outline-variant bg-surface-container-lowest/20">
                 <button onClick={() => setActivePanel("conversation")} className={`px-4 py-2.5 text-[11px] font-semibold border-b-2 transition-colors ${activePanel === "conversation" ? "border-primary text-primary" : "border-transparent text-on-surface-variant/60 hover:text-on-surface"}`}>
                   Conversation
                 </button>
@@ -359,7 +359,7 @@ export default function SupportInbox() {
                     ) : (
                       messages.map((msg, idx) => (
                         <div key={msg.id || idx} className={`convo-enter flex gap-3 max-w-[640px] ${msg.role === "agent" || msg.is_internal_note ? "ml-auto flex-row-reverse" : ""}`} style={{ animationDelay: `${idx * 30}ms` }}>
-                          <div className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center border border-outline/10 ${msg.role === "agent" || msg.is_internal_note ? "bg-primary" : "bg-surface-container-high"}`}>
+                          <div className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center border border-outline-variant ${msg.role === "agent" || msg.is_internal_note ? "bg-primary" : "bg-surface-container-high"}`}>
                             <span className="text-[8px] font-bold text-on-surface-variant">{msg.role === "agent" || msg.is_internal_note ? "A" : "U"}</span>
                           </div>
                           <div className="min-w-0">
@@ -374,7 +374,7 @@ export default function SupportInbox() {
                               </div>
                             ) : (
                               <>
-                                <div className={`p-4 rounded-xl shadow-sm ${msg.role === "agent" ? "bg-primary/10 border border-primary/15 rounded-tr-none" : "bg-surface-container border border-outline/10 rounded-tl-none"}`}>
+                                <div className={`p-4 rounded-xl shadow-sm ${msg.role === "agent" ? "bg-primary/10 border border-primary/15 rounded-tr-none" : "bg-surface-container border border-outline-variant rounded-tl-none"}`}>
                                   <p className="text-sm text-on-surface leading-relaxed whitespace-pre-wrap">{msg.body || msg.content}</p>
                                 </div>
                                 <span className="text-[9px] text-on-surface-variant/40 mt-1.5 block ml-1">{formatDate(msg.created_at)}</span>
@@ -387,8 +387,8 @@ export default function SupportInbox() {
                   </div>
 
                   {/* Reply box */}
-                  <div className="p-3 border-t border-outline/10 bg-surface-container-lowest/50">
-                    <div className="border border-outline/10 rounded-xl overflow-hidden focus-within:border-primary/30 transition-colors bg-surface-container-low">
+                  <div className="p-3 border-t border-outline-variant bg-surface-container-lowest/50">
+                    <div className="border border-outline-variant rounded-xl overflow-hidden focus-within:border-primary/30 transition-colors bg-surface-container-low">
                       <div className="flex gap-1 px-3 pt-2.5 pb-1.5 border-b border-outline/5">
                         <button onClick={() => setReplyMode("public")} className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors ${replyMode === "public" ? "text-primary bg-primary/10" : "text-on-surface-variant/60 hover:text-on-surface"}`}>Reply</button>
                         <button onClick={() => setReplyMode("internal")} className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors ${replyMode === "internal" ? "text-tertiary bg-tertiary/10" : "text-on-surface-variant/60 hover:text-on-surface"}`}>Note</button>
@@ -414,7 +414,7 @@ export default function SupportInbox() {
                   {/* Ticket Info */}
                   <div>
                     <h5 className="text-[9px] font-bold text-on-surface-variant/50 uppercase tracking-widest mb-2.5">Ticket Info</h5>
-                    <div className="bg-surface-container border border-outline/10 rounded-xl overflow-hidden">
+                    <div className="bg-surface-container border border-outline-variant rounded-xl overflow-hidden">
                       {[
                         { label: "Ticket #", val: selectedTicket.ticket_number || selectedTicket.id?.slice(0, 8) || "—" },
                         { label: "Status", val: selectedTicket.status || "—" },
@@ -434,7 +434,7 @@ export default function SupportInbox() {
                   <div>
                     <h5 className="text-[9px] font-bold text-on-surface-variant/50 uppercase tracking-widest mb-2.5">Assignment</h5>
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-surface-container border border-outline/10 rounded-xl cursor-pointer hover:border-primary/30 transition-colors" onClick={handleAssign}>
+                      <div className="flex items-center justify-between p-3 bg-surface-container border border-outline-variant rounded-xl cursor-pointer hover:border-primary/30 transition-colors" onClick={handleAssign}>
                         <div className="flex items-center gap-2.5">
                           <div className="w-7 h-7 rounded-full bg-primary text-[9px] flex items-center justify-center font-bold text-on-primary">
                             {selectedTicket.assigned_to ? selectedTicket.assigned_to.charAt(0).toUpperCase() : "?"}
@@ -443,7 +443,7 @@ export default function SupportInbox() {
                         </div>
                         <span className="material-symbols-outlined text-base text-on-surface-variant/60 hover:text-primary">edit</span>
                       </div>
-                      <div className="p-3 bg-surface-container border border-outline/10 rounded-xl">
+                      <div className="p-3 bg-surface-container border border-outline-variant rounded-xl">
                         <span className="text-sm text-on-surface font-medium block">{selectedTicket.customer_name || "Anonymous"}</span>
                         {selectedTicket.customer_email && <span className="text-[10px] text-on-surface-variant/60">{selectedTicket.customer_email}</span>}
                       </div>
@@ -453,11 +453,11 @@ export default function SupportInbox() {
                   {/* Actions */}
                   <div className="flex flex-col gap-2 pt-2">
                     {selectedTicket.status !== "resolved" && selectedTicket.status !== "closed" && (
-                      <button onClick={handleResolve} className="w-full py-2.5 border border-outline/10 bg-surface-container text-on-surface rounded-xl text-xs font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all">
+                      <button onClick={handleResolve} className="w-full py-2.5 border border-outline-variant bg-surface-container text-on-surface rounded-xl text-xs font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all">
                         ✓ Mark Resolved
                       </button>
                     )}
-                    <button className="w-full py-2.5 border border-outline/10 bg-surface-container text-on-surface rounded-xl text-xs font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all">
+                    <button className="w-full py-2.5 border border-outline-variant bg-surface-container text-on-surface rounded-xl text-xs font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all">
                       ↑ Escalate to Dev
                     </button>
                   </div>

@@ -241,8 +241,8 @@ export default function BotsPage() {
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/4 rounded-full blur-[100px] pointer-events-none" />
 
         {/* Bot List Panel */}
-        <div className="w-80 max-lg:w-full border-r border-outline/10 flex flex-col bg-surface-container-lowest/80 backdrop-blur-sm shrink-0 max-lg:border-r-0">
-          <div className="p-5 border-b border-outline/10">
+        <div className="w-80 max-lg:w-full border-r border-outline-variant flex flex-col bg-surface-container-lowest/80 backdrop-blur-sm shrink-0 max-lg:border-r-0">
+          <div className="p-5 border-b border-outline-variant">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-display text-lg font-bold text-on-surface">My Bots</h2>
               <div className="flex items-center gap-2">
@@ -296,7 +296,7 @@ export default function BotsPage() {
         {/* Create Bot Modal */}
         {showCreateModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-surface-container border border-outline/10 rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+            <div className="bg-surface-container border border-outline-variant rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="font-display text-lg font-bold text-on-surface">Create New Bot</h3>
                 <button onClick={() => setShowCreateModal(false)} className="text-on-surface-variant hover:text-on-surface">
@@ -306,11 +306,11 @@ export default function BotsPage() {
               <div className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Bot Name</label>
-                  <input type="text" value={createForm.name} onChange={e => setCreateForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Customer Support Bot" className="w-full bg-surface-container-lowest border border-outline/10 p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
+                  <input type="text" value={createForm.name} onChange={e => setCreateForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Customer Support Bot" className="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Website URL (optional)</label>
-                  <input type="url" value={createForm.websiteUrl} onChange={e => setCreateForm(f => ({ ...f, websiteUrl: e.target.value }))} placeholder="https://docs.yourcompany.com" className="w-full bg-surface-container-lowest border border-outline/10 p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
+                  <input type="url" value={createForm.websiteUrl} onChange={e => setCreateForm(f => ({ ...f, websiteUrl: e.target.value }))} placeholder="https://docs.yourcompany.com" className="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
                   <p className="text-[10px] text-on-surface-variant/50">If provided, we'll crawl and index your website content automatically.</p>
                 </div>
                 <div className="flex gap-3 pt-2">
@@ -336,7 +336,7 @@ export default function BotsPage() {
           ) : (
             <>
               {/* Header */}
-              <div className="px-8 py-5 bg-surface-container-lowest/80 backdrop-blur-sm border-b border-outline/10 flex items-center justify-between shrink-0">
+              <div className="px-8 py-5 bg-surface-container-lowest/80 backdrop-blur-sm border-b border-outline-variant flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-4">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${selectedBot.is_active ? "bg-gradient-to-br from-primary to-secondary" : "bg-surface-container-high"}`}>
                     <span className="material-symbols-outlined text-on-primary text-xl">{selectedBot.avatar_icon || "smart_toy"}</span>
@@ -350,7 +350,7 @@ export default function BotsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={startEdit} className="px-4 py-2 border border-outline/10 bg-surface-container text-on-surface rounded-xl text-xs font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all">Edit Bot</button>
+                  <button onClick={startEdit} className="px-4 py-2 border border-outline-variant bg-surface-container text-on-surface rounded-xl text-xs font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all">Edit Bot</button>
                   <button onClick={loadBots} className="p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors">
                     <span className="material-symbols-outlined text-[20px]">refresh</span>
                   </button>
@@ -362,19 +362,19 @@ export default function BotsPage() {
                 {/* Edit / Info Panel */}
                 <div className="space-y-6">
                   {editMode ? (
-                    <div className="bg-surface-container border border-outline/10 rounded-2xl p-6 space-y-5">
+                    <div className="bg-surface-container border border-outline-variant rounded-2xl p-6 space-y-5">
                       <h3 className="font-display font-bold text-on-surface">Edit Settings</h3>
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Bot Name</label>
-                        <input type="text" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} className="w-full bg-surface-container-lowest border border-outline/10 p-3 rounded-xl text-sm text-on-surface" />
+                        <input type="text" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} className="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface" />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Welcome Message</label>
-                        <textarea rows={3} value={editForm.welcome_message} onChange={e => setEditForm(f => ({ ...f, welcome_message: e.target.value }))} className="w-full bg-surface-container-lowest border border-outline/10 p-3 rounded-xl text-sm text-on-surface resize-none" />
+                        <textarea rows={3} value={editForm.welcome_message} onChange={e => setEditForm(f => ({ ...f, welcome_message: e.target.value }))} className="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface resize-none" />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Response Tone</label>
-                        <select value={editForm.response_tone} onChange={e => setEditForm(f => ({ ...f, response_tone: e.target.value }))} className="w-full bg-surface-container-lowest border border-outline/10 p-3 rounded-xl text-sm text-on-surface">
+                        <select value={editForm.response_tone} onChange={e => setEditForm(f => ({ ...f, response_tone: e.target.value }))} className="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface">
                           <option value="professional">Professional</option>
                           <option value="friendly">Friendly</option>
                           <option value="concise">Concise</option>
@@ -383,11 +383,11 @@ export default function BotsPage() {
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Brand Color</label>
                         <div className="flex items-center gap-3">
-                          <input type="color" value={editForm.brand_color} onChange={e => setEditForm(f => ({ ...f, brand_color: e.target.value }))} className="w-10 h-10 rounded-xl border border-outline/10 cursor-pointer bg-transparent" />
+                          <input type="color" value={editForm.brand_color} onChange={e => setEditForm(f => ({ ...f, brand_color: e.target.value }))} className="w-10 h-10 rounded-xl border border-outline-variant cursor-pointer bg-transparent" />
                           <span className="text-xs text-on-surface-variant font-mono">{editForm.brand_color}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 p-3 bg-surface-container-lowest border border-outline/10 rounded-xl">
+                      <div className="flex items-center gap-3 p-3 bg-surface-container-lowest border border-outline-variant rounded-xl">
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input type="checkbox" checked={!!editForm.is_active} onChange={e => setEditForm(f => ({ ...f, is_active: e.target.checked ? 1 : 0 }))} className="sr-only peer" />
                           <div className="w-9 h-5 bg-surface-variant rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
@@ -402,7 +402,7 @@ export default function BotsPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-surface-container border border-outline/10 rounded-2xl p-6 space-y-4">
+                    <div className="bg-surface-container border border-outline-variant rounded-2xl p-6 space-y-4">
                       <h3 className="font-display font-bold text-on-surface">Bot Details</h3>
                       {[
                         { label: "Model", val: `${selectedBot.model_provider} / ${selectedBot.model_name}` },
@@ -422,17 +422,17 @@ export default function BotsPage() {
                   )}
 
                   {/* Test Console */}
-                  <div className="bg-surface-container border border-outline/10 rounded-2xl p-6 space-y-4">
+                  <div className="bg-surface-container border border-outline-variant rounded-2xl p-6 space-y-4">
                     <h3 className="font-display font-bold text-on-surface">Test Bot</h3>
                     <div className="flex gap-2">
-                      <input type="text" value={testQuestion} onChange={e => setTestQuestion(e.target.value)} placeholder="Ask your bot a question..." className="flex-1 bg-surface-container-lowest border border-outline/10 p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" onKeyDown={e => e.key === "Enter" && handleTest()} />
+                      <input type="text" value={testQuestion} onChange={e => setTestQuestion(e.target.value)} placeholder="Ask your bot a question..." className="flex-1 bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" onKeyDown={e => e.key === "Enter" && handleTest()} />
                       <button onClick={handleTest} disabled={testLoading || !testQuestion.trim()} className="px-4 py-2 bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center gap-1">
                         {testLoading ? <span className="material-symbols-outlined text-sm animate-spin">sync</span> : <span className="material-symbols-outlined text-sm">play_arrow</span>}
                         Test
                       </button>
                     </div>
                     {testResult && (
-                      <div className="bg-surface-container-lowest border border-outline/10 rounded-xl p-4">
+                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
                         {testResult.error ? (
                           <p className="text-sm text-rose-400">{testResult.error}</p>
                         ) : (
@@ -461,7 +461,7 @@ export default function BotsPage() {
                 <div className="space-y-6">
 
                   {/* Health Score */}
-                  <div className="bg-surface-container border border-outline/10 rounded-2xl p-6">
+                  <div className="bg-surface-container border border-outline-variant rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-display font-bold text-on-surface">Training Health</h3>
                       {trainingLoading ? (
@@ -488,15 +488,15 @@ export default function BotsPage() {
                       />
                     </div>
                     <div className="grid grid-cols-3 gap-3 text-center">
-                      <div className="bg-surface-container-lowest border border-outline/10 rounded-xl p-3">
+                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-3">
                         <div className="text-xl font-bold text-on-surface">{trainingData?.totalSources ?? 0}</div>
                         <div className="text-[10px] text-on-surface-variant mt-1">Sources</div>
                       </div>
-                      <div className="bg-surface-container-lowest border border-outline/10 rounded-xl p-3">
+                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-3">
                         <div className="text-xl font-bold text-on-surface">{trainingData?.totalChunks ?? 0}</div>
                         <div className="text-[10px] text-on-surface-variant mt-1">Chunks</div>
                       </div>
-                      <div className="bg-surface-container-lowest border border-outline/10 rounded-xl p-3">
+                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-3">
                         <div className="text-xl font-bold text-on-surface">{trainingData?.indexedSources ?? 0}</div>
                         <div className="text-[10px] text-on-surface-variant mt-1">Indexed</div>
                       </div>
@@ -504,11 +504,11 @@ export default function BotsPage() {
                   </div>
 
                   {/* Crawl Panel */}
-                  <div className="bg-surface-container border border-outline/10 rounded-2xl p-6 space-y-4">
+                  <div className="bg-surface-container border border-outline-variant rounded-2xl p-6 space-y-4">
                     <h3 className="font-display font-bold text-on-surface">Train Bot</h3>
                     <p className="text-xs text-on-surface-variant">Enter a URL to crawl and index your website content.</p>
                     <div className="flex gap-2">
-                      <input type="url" value={crawlUrl} onChange={e => setCrawlUrl(e.target.value)} placeholder="https://docs.yourcompany.com" className="flex-1 bg-surface-container-lowest border border-outline/10 p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
+                      <input type="url" value={crawlUrl} onChange={e => setCrawlUrl(e.target.value)} placeholder="https://docs.yourcompany.com" className="flex-1 bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
                       <button onClick={handleCrawl} disabled={crawlLoading || !crawlUrl.trim()} className="px-4 py-2 bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center gap-1">
                         {crawlLoading ? <span className="material-symbols-outlined text-sm animate-spin">sync</span> : <span className="material-symbols-outlined text-sm">language</span>}
                         Crawl
@@ -518,7 +518,7 @@ export default function BotsPage() {
                   </div>
 
                   {/* Document Upload */}
-                  <div className="bg-surface-container border border-outline/10 rounded-2xl p-6 space-y-4">
+                  <div className="bg-surface-container border border-outline-variant rounded-2xl p-6 space-y-4">
                     <h3 className="font-display font-bold text-on-surface">Upload Documents</h3>
                     <p className="text-xs text-on-surface-variant">Upload PDF, DOCX, or TXT files for your bot to learn from.</p>
                     <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-outline/20 rounded-xl cursor-pointer hover:border-primary/40 hover:bg-surface-container-lowest/50 transition-all">
@@ -533,7 +533,7 @@ export default function BotsPage() {
                   </div>
 
                   {/* Sources List */}
-                  <div className="bg-surface-container border border-outline/10 rounded-2xl p-6 space-y-4">
+                  <div className="bg-surface-container border border-outline-variant rounded-2xl p-6 space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="font-display font-bold text-on-surface">Knowledge Sources</h3>
                       <span className="text-xs text-on-surface-variant bg-surface-container-lowest px-2 py-1 rounded-full">{sources.length}</span>
@@ -546,7 +546,7 @@ export default function BotsPage() {
                     ) : (
                       <div className="space-y-2 max-h-[300px] overflow-y-auto scrollbar-thin">
                         {sources.map(source => (
-                          <div key={source.id} className="bg-surface-container-lowest border border-outline/10 rounded-xl p-4 flex items-start justify-between gap-3">
+                          <div key={source.id} className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className="material-symbols-outlined text-sm text-primary">
@@ -559,7 +559,7 @@ export default function BotsPage() {
                                   source.status === "indexed" ? "bg-green-500/10 text-green-400 border-green-500/20" :
                                   source.status === "processing" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
                                   source.status === "error" ? "bg-rose-500/10 text-rose-400 border-rose-500/20" :
-                                  "bg-surface-container text-on-surface-variant border-outline/10"
+                                  "bg-surface-container text-on-surface-variant border-outline-variant"
                                 }`}>{source.status}</span>
                                 {source.chunk_count > 0 && <span>{source.chunk_count} chunks</span>}
                                 <span>{formatDate(source.created_at)}</span>

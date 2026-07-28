@@ -176,7 +176,7 @@ export default function OnboardingStep3() {
               Back to Bot Persona
             </button>
             <div className="flex items-center gap-stack-md w-full sm:w-auto">
-              <button onClick={() => window.location.href = "/dashboard"} className="flex-grow sm:flex-none border border-outline/10 bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all px-5 py-3">
+              <button onClick={() => window.location.href = "/dashboard"} className="flex-grow sm:flex-none border border-outline-variant bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all px-5 py-3">
                 Skip for Now
               </button>
               <button onClick={() => window.location.href = "/dashboard"} className="flex-grow sm:flex-none px-6 py-3 bg-secondary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all">
@@ -192,7 +192,7 @@ export default function OnboardingStep3() {
           <div className="flex gap-stack-lg">
             <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/dashboard">Dashboard</a>
             <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/support">Support</a>
-            <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/chat-widget">Chat Widget</a>
+            <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/docs">Docs</a>
           </div>
           <p className="font-body-sm text-body-sm text-on-surface-variant">&copy; 2024 botimi AI Ecosystem. All rights reserved.</p>
         </div>

@@ -176,9 +176,9 @@ export default function LoginPage() {
           </div>
 
           <h2 className="text-4xl font-semibold leading-tight text-white delay-1 animate-fade-in-up">
-            Multi-Vendor AI
+            AI Chatbots
             <br />
-            <span className="font-light">Chatbot Platform</span>
+            <span className="font-light">for Your Business</span>
           </h2>
 
           <p className="mt-4 text-gray-300 text-sm delay-2 animate-fade-in-up">

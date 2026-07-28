@@ -102,7 +102,7 @@ export default function OnboardingStep2() {
             animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
       `}</style>
-      <header className="bg-background/80 backdrop-blur-md border-b border-outline/10 sticky top-0 z-50">
+      <header className="bg-background/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50">
         <div className="flex justify-between items-center w-full px-margin-desktop max-w-container-max mx-auto h-16">
           <div className="flex items-center gap-stack-sm">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -156,7 +156,7 @@ export default function OnboardingStep2() {
             </div>
           </div>
         </div>
-        <div className="w-full max-w-5xl glass-panel rounded-2xl overflow-hidden ai-glow z-10 border border-outline/10 flex flex-col">
+        <div className="w-full max-w-5xl glass-panel rounded-2xl overflow-hidden ai-glow z-10 border border-outline-variant flex flex-col">
           <div className="p-8 md:p-12 min-h-[520px] flex-grow" id="wizard-content">
             <section className={`step-transition ${currentStep !== 1 ? "hidden opacity-0 translate-y-8" : ""}`} id="step-1">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -180,7 +180,7 @@ export default function OnboardingStep2() {
                           <div className="w-12 h-12 rounded-xl bg-surface-container-highest flex items-center justify-center cursor-pointer border border-primary">
                             <span className="material-symbols-outlined text-primary">smart_toy</span>
                           </div>
-                          <div className="w-12 h-12 rounded-xl bg-surface-container-highest flex items-center justify-center cursor-pointer border border-outline/10">
+                          <div className="w-12 h-12 rounded-xl bg-surface-container-highest flex items-center justify-center cursor-pointer border border-outline-variant">
                             <span className="material-symbols-outlined text-on-surface-variant">support_agent</span>
                           </div>
                         </div>
@@ -190,8 +190,8 @@ export default function OnboardingStep2() {
                       <label className="font-label-md text-xs uppercase tracking-widest text-on-surface-variant">Response Tone</label>
                       <div className="grid grid-cols-3 gap-2">
                         <button className="p-3 rounded-xl border border-primary bg-primary/10 text-primary text-xs font-bold">Professional</button>
-                        <button className="p-3 rounded-xl border border-outline/10 bg-surface-container-low text-on-surface-variant text-xs font-bold hover:border-primary/50">Friendly</button>
-                        <button className="p-3 rounded-xl border border-outline/10 bg-surface-container-low text-on-surface-variant text-xs font-bold hover:border-primary/50">Concise</button>
+                        <button className="p-3 rounded-xl border border-outline-variant bg-surface-container-low text-on-surface-variant text-xs font-bold hover:border-primary/50">Friendly</button>
+                        <button className="p-3 rounded-xl border border-outline-variant bg-surface-container-low text-on-surface-variant text-xs font-bold hover:border-primary/50">Concise</button>
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -200,12 +200,12 @@ export default function OnboardingStep2() {
                     </div>
                   </div>
                 </div>
-                <div className="lg:col-span-7 bg-background/50 rounded-2xl border border-outline/10 p-8 flex flex-col items-center justify-center relative min-h-[440px]">
-                  <div className="absolute top-6 left-6 flex items-center gap-2 px-3 py-1 bg-surface-container-highest/50 rounded-full border border-outline/10">
+                <div className="lg:col-span-7 bg-background/50 rounded-2xl border border-outline-variant p-8 flex flex-col items-center justify-center relative min-h-[440px]">
+                  <div className="absolute top-6 left-6 flex items-center gap-2 px-3 py-1 bg-surface-container-highest/50 rounded-full border border-outline-variant">
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Live Widget Preview</span>
                   </div>
-                  <div className="w-[340px] bg-surface-container border border-outline/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col transform hover:scale-[1.02] transition-transform">
+                  <div className="w-[340px] bg-surface-container border border-outline-variant rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col transform hover:scale-[1.02] transition-transform">
                     <div className="bg-primary p-5 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-on-primary/10 flex items-center justify-center">
@@ -219,9 +219,9 @@ export default function OnboardingStep2() {
                       <span className="material-symbols-outlined text-on-primary/50 text-sm">close</span>
                     </div>
                     <div className="p-5 space-y-4 flex-grow h-48 bg-surface-container-highest/30">
-                      <div className="bg-surface-container p-3 rounded-2xl rounded-bl-none text-xs text-on-surface max-w-[85%] border border-outline/10">Hello! I&apos;ve analyzed your documentation. How can I help you today?</div>
+                      <div className="bg-surface-container p-3 rounded-2xl rounded-bl-none text-xs text-on-surface max-w-[85%] border border-outline-variant">Hello! I&apos;ve analyzed your documentation. How can I help you today?</div>
                     </div>
-                    <div className="p-4 bg-surface-container border-t border-outline/10 flex gap-3">
+                    <div className="p-4 bg-surface-container border-t border-outline-variant flex gap-3">
                       <div className="flex-grow bg-background rounded-lg px-4 py-2 text-xs text-on-surface-variant border border-outline/5 italic">Type a message...</div>
                       <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-on-primary">
                         <span className="material-symbols-outlined text-sm">send</span>
@@ -262,12 +262,12 @@ export default function OnboardingStep2() {
                     </div>
                   </div>
                 </div>
-                <div className="lg:col-span-7 bg-background/50 rounded-2xl border border-outline/10 p-8 flex flex-col items-center justify-center relative min-h-[440px]">
-                  <div className="absolute top-6 left-6 flex items-center gap-2 px-3 py-1 bg-surface-container-highest/50 rounded-full border border-outline/10">
+                <div className="lg:col-span-7 bg-background/50 rounded-2xl border border-outline-variant p-8 flex flex-col items-center justify-center relative min-h-[440px]">
+                  <div className="absolute top-6 left-6 flex items-center gap-2 px-3 py-1 bg-surface-container-highest/50 rounded-full border border-outline-variant">
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Live Widget Preview</span>
                   </div>
-                  <div className="w-[340px] bg-surface-container border border-outline/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col transform hover:scale-[1.02] transition-transform">
+                  <div className="w-[340px] bg-surface-container border border-outline-variant rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col transform hover:scale-[1.02] transition-transform">
                     <div className="bg-primary p-5 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-on-primary/10 flex items-center justify-center">
@@ -281,10 +281,10 @@ export default function OnboardingStep2() {
                       <span className="material-symbols-outlined text-on-primary/50 text-sm">close</span>
                     </div>
                     <div className="p-5 space-y-4 flex-grow h-48 bg-surface-container-highest/30">
-                      <div className="bg-surface-container p-3 rounded-2xl rounded-bl-none text-xs text-on-surface max-w-[85%] border border-outline/10">Hi there! 👋 I&apos;m your dedicated AI assistant. How can I help you today?</div>
+                      <div className="bg-surface-container p-3 rounded-2xl rounded-bl-none text-xs text-on-surface max-w-[85%] border border-outline-variant">Hi there! 👋 I&apos;m your dedicated AI assistant. How can I help you today?</div>
                       <div className="bg-primary/20 border border-primary/30 p-3 rounded-2xl rounded-br-none text-xs text-on-surface self-end max-w-[85%]">Tell me about your pricing plans.</div>
                     </div>
-                    <div className="p-4 bg-surface-container border-t border-outline/10 flex gap-3">
+                    <div className="p-4 bg-surface-container border-t border-outline-variant flex gap-3">
                       <div className="flex-grow bg-background rounded-lg px-4 py-2 text-xs text-on-surface-variant border border-outline/5 italic">Type a message...</div>
                       <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-on-primary">
                         <span className="material-symbols-outlined text-sm">send</span>
@@ -332,7 +332,7 @@ export default function OnboardingStep2() {
                     </div>
                   </div>
                   <button
-                    className="w-full h-full flex flex-col items-center justify-center p-6 bg-surface-container-low border border-outline/10 rounded-2xl hover:border-primary transition-all group"
+                    className="w-full h-full flex flex-col items-center justify-center p-6 bg-surface-container-low border border-outline-variant rounded-2xl hover:border-primary transition-all group"
                     id="verify-btn"
                     onClick={simulateVerify}
                     disabled={verifyState !== "idle"}
@@ -360,7 +360,7 @@ export default function OnboardingStep2() {
               </div>
             </section>
           </div>
-          <div className="px-8 py-6 bg-surface-container-highest/20 border-t border-outline/10 flex justify-between items-center">
+          <div className="px-8 py-6 bg-surface-container-highest/20 border-t border-outline-variant flex justify-between items-center">
             <button
               className={`px-6 py-2.5 rounded-xl font-bold text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-all ${currentStep === 1 ? "invisible" : ""}`}
               id="back-btn"
@@ -392,7 +392,7 @@ export default function OnboardingStep2() {
           <div className="flex gap-8">
             <a className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/dashboard">Dashboard</a>
             <a className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/support">Support</a>
-            <a className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/chat-widget">Chat Widget</a>
+            <a className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/docs">Docs</a>
           </div>
         </div>
       </footer>
