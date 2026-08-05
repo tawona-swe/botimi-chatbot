@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, User, Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import toast from 'react-hot-toast';
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton';
@@ -59,10 +59,13 @@ export default function RegisterPage() {
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-20 bg-white">
       {/* LEFT — REGISTER FORM */}
       <div className="lg:col-span-9 relative flex items-center justify-center px-8 lg:px-16 xl:px-24 py-6 bg-white overflow-hidden">
-        {/* Subtle left-side decoration */}
+        {/* Left-side decoration */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/5 blur-[100px]" />
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-secondary/5 blur-[100px]" />
+          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary opacity-[0.08] blur-[100px]" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-secondary opacity-[0.08] blur-[100px]" />
+          <div className="absolute top-[15%] left-[8%] w-3 h-3 rounded-full bg-primary opacity-20 animate-float-slow" />
+          <div className="absolute top-[68%] right-[10%] w-2 h-2 rounded-full bg-secondary opacity-25 animate-float-reverse" />
+          <div className="absolute bottom-[14%] left-[18%] w-2.5 h-2.5 rounded-full bg-primary opacity-15 animate-float" />
         </div>
 
         <div className="relative z-10 w-full max-w-md space-y-4">
@@ -81,12 +84,15 @@ export default function RegisterPage() {
             {/* Name */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full name</label>
-              <input
-                type="text"
-                {...register('name')}
-                placeholder="John Doe"
-                className="w-full border border-gray-200 rounded-xl py-2.5 px-4 text-sm text-gray-900 bg-gray-50/50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all"
-              />
+              <div className="relative">
+                <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  {...register('name')}
+                  placeholder="John Doe"
+                  className="w-full border border-gray-200 rounded-xl py-2.5 pr-4 pl-11 text-sm text-gray-900 bg-gray-50/50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all"
+                />
+              </div>
               {errors.name && (
                 <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
                   <span>•</span> {errors.name.message}
@@ -97,12 +103,15 @@ export default function RegisterPage() {
             {/* Email */}
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1">Email</label>
-              <input
-                type="email"
-                {...register('email')}
-                placeholder="you@example.com"
-                className="w-full border border-gray-200 rounded-xl py-2.5 px-4 text-sm text-gray-900 bg-gray-50/50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all"
-              />
+              <div className="relative">
+                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="email"
+                  {...register('email')}
+                  placeholder="you@example.com"
+                  className="w-full border border-gray-200 rounded-xl py-2.5 pr-4 pl-11 text-sm text-gray-900 bg-gray-50/50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all"
+                />
+              </div>
               {errors.email && (
                 <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
                   <span>•</span> {errors.email.message}
@@ -114,11 +123,12 @@ export default function RegisterPage() {
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1">Password</label>
               <div className="relative">
+                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   {...register('password')}
                   placeholder="Create a strong password"
-                  className="w-full border border-gray-200 rounded-xl py-2.5 pr-12 pl-4 text-sm text-gray-900 bg-gray-50/50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all"
+                  className="w-full border border-gray-200 rounded-xl py-2.5 pr-12 pl-11 text-sm text-gray-900 bg-gray-50/50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all"
                 />
                 <button
                   type="button"
@@ -140,11 +150,12 @@ export default function RegisterPage() {
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1">Confirm password</label>
               <div className="relative">
+                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   type={showConfirm ? 'text' : 'password'}
                   {...register('confirmPassword')}
                   placeholder="Repeat your password"
-                  className="w-full border border-gray-200 rounded-xl py-2.5 pr-12 pl-4 text-sm text-gray-900 bg-gray-50/50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all"
+                  className="w-full border border-gray-200 rounded-xl py-2.5 pr-12 pl-11 text-sm text-gray-900 bg-gray-50/50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all"
                 />
                 <button
                   type="button"

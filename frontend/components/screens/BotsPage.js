@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import Sidebar from "../ui/Sidebar";
 import api from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
@@ -236,12 +238,12 @@ export default function BotsPage() {
         .bg-dot { background-image: radial-gradient(var(--dot-color) 1px, transparent 1px); background-size: 24px 24px; }
       `}</style>
       <Sidebar activeLabel="Bots" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} />
-      <main className={`flex-1 ${sidebarCollapsed ? 'ml-[80px]' : 'ml-[260px]'} max-lg:ml-0 min-h-screen flex bg-background text-on-background font-body-md relative transition-all duration-300`}>
+      <main className={`flex-1 ${sidebarCollapsed ? 'ml-[80px]' : 'ml-[260px]'} max-lg:ml-0 min-h-screen flex flex-col lg:flex-row bg-background text-on-background font-body-md relative transition-all duration-300`}>
         <div className="absolute inset-0 bg-dot pointer-events-none" />
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/4 rounded-full blur-[100px] pointer-events-none" />
 
         {/* Bot List Panel */}
-        <div className="w-80 max-lg:w-full border-r border-outline-variant flex flex-col bg-surface-container-lowest/80 backdrop-blur-sm shrink-0 max-lg:border-r-0">
+        <div className="w-80 max-lg:w-full border-r border-outline-variant flex flex-col bg-surface-container-lowest/80 backdrop-blur-sm lg:shrink-0 max-lg:border-r-0 max-lg:border-b max-lg:max-h-[45vh]">
           <div className="p-5 border-b border-outline-variant">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-display text-lg font-bold text-on-surface">My Bots</h2>
@@ -325,7 +327,7 @@ export default function BotsPage() {
         )}
 
         {/* Bot Detail Panel */}
-        <div className="flex-1 flex flex-col overflow-y-auto scrollbar-thin">
+        <div className="flex-1 min-w-0 flex flex-col overflow-y-auto scrollbar-thin">
           {!selectedBot ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
@@ -405,7 +407,6 @@ export default function BotsPage() {
                     <div className="bg-surface-container border border-outline-variant rounded-2xl p-6 space-y-4">
                       <h3 className="font-display font-bold text-on-surface">Bot Details</h3>
                       {[
-                        { label: "Model", val: `${selectedBot.model_provider} / ${selectedBot.model_name}` },
                         { label: "Tone", val: selectedBot.response_tone },
                         { label: "Welcome Message", val: selectedBot.welcome_message },
                         { label: "Color", val: selectedBot.brand_color || "#c0c1ff" },
@@ -422,29 +423,48 @@ export default function BotsPage() {
                   )}
 
                   {/* Test Console */}
-                  <div className="bg-surface-container border border-outline-variant rounded-2xl p-6 space-y-4">
+                  <div className="bg-surface-container border border-outline-variant rounded-2xl p-6 space-y-4 min-w-0">
                     <h3 className="font-display font-bold text-on-surface">Test Bot</h3>
                     <div className="flex gap-2">
-                      <input type="text" value={testQuestion} onChange={e => setTestQuestion(e.target.value)} placeholder="Ask your bot a question..." className="flex-1 bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" onKeyDown={e => e.key === "Enter" && handleTest()} />
-                      <button onClick={handleTest} disabled={testLoading || !testQuestion.trim()} className="px-4 py-2 bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center gap-1">
+                      <input type="text" value={testQuestion} onChange={e => setTestQuestion(e.target.value)} placeholder="Ask your bot a question..." className="flex-1 min-w-0 bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" onKeyDown={e => e.key === "Enter" && handleTest()} />
+                      <button onClick={handleTest} disabled={testLoading || !testQuestion.trim()} className="shrink-0 px-4 py-2 bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center gap-1">
                         {testLoading ? <span className="material-symbols-outlined text-sm animate-spin">sync</span> : <span className="material-symbols-outlined text-sm">play_arrow</span>}
                         Test
                       </button>
                     </div>
                     {testResult && (
-                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
+                      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 min-w-0 overflow-hidden">
                         {testResult.error ? (
                           <p className="text-sm text-rose-400">{testResult.error}</p>
                         ) : (
                           <>
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+                              <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
                                 <span className="material-symbols-outlined text-xs text-primary">auto_awesome</span>
                               </span>
-                              <span className="text-xs text-on-surface-variant">Response ({testResult.model || "GPT-OSS 120B"})</span>
-                              {testResult.latencyMs && <span className="text-[10px] text-on-surface-variant/50 ml-auto">{(testResult.latencyMs / 1000).toFixed(1)}s</span>}
+                              <span className="text-xs text-on-surface-variant">Response</span>
+                              {testResult.latencyMs && <span className="text-[10px] text-on-surface-variant/50 ml-auto shrink-0">{(testResult.latencyMs / 1000).toFixed(1)}s</span>}
                             </div>
-                            <p className="text-sm text-on-surface leading-relaxed whitespace-pre-wrap">{testResult.content || testResult.reply}</p>
+                            <div className="text-sm text-on-surface leading-relaxed break-words [&_p]:my-2 [&_p]:first:mt-0 [&_p]:last:mb-0 [&_ul]:my-2 [&_ul]:pl-5 [&_ul]:list-disc [&_ol]:my-2 [&_ol]:pl-5 [&_ol]:list-decimal [&_li]:my-0.5 [&_strong]:font-bold [&_strong]:text-on-surface [&_em]:italic [&_a]:text-primary [&_a]:underline [&_code]:bg-surface-container [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono [&_pre]:bg-surface-container [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:overflow-x-auto [&_pre]:my-2 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_h1]:text-base [&_h1]:font-bold [&_h1]:mt-3 [&_h1]:mb-1 [&_h2]:text-sm [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_blockquote]:border-l-2 [&_blockquote]:border-outline-variant [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-on-surface-variant">
+                              <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                  table: ({ children }) => (
+                                    <div className="my-2 overflow-x-auto scrollbar-thin">
+                                      <table className="w-full text-xs border-collapse">{children}</table>
+                                    </div>
+                                  ),
+                                  th: ({ children }) => (
+                                    <th className="border border-outline-variant bg-surface-container px-2 py-1.5 text-left font-semibold text-on-surface whitespace-nowrap">{children}</th>
+                                  ),
+                                  td: ({ children }) => (
+                                    <td className="border border-outline-variant px-2 py-1.5 align-top">{children}</td>
+                                  ),
+                                }}
+                              >
+                                {testResult.content || testResult.reply}
+                              </ReactMarkdown>
+                            </div>
                             {testResult.sources?.length > 0 && (
                               <div className="mt-3 pt-3 border-t border-outline/5">
                                 <span className="text-[10px] text-on-surface-variant font-semibold uppercase">Sources: {testResult.sources.length}</span>
@@ -508,8 +528,8 @@ export default function BotsPage() {
                     <h3 className="font-display font-bold text-on-surface">Train Bot</h3>
                     <p className="text-xs text-on-surface-variant">Enter a URL to crawl and index your website content.</p>
                     <div className="flex gap-2">
-                      <input type="url" value={crawlUrl} onChange={e => setCrawlUrl(e.target.value)} placeholder="https://docs.yourcompany.com" className="flex-1 bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
-                      <button onClick={handleCrawl} disabled={crawlLoading || !crawlUrl.trim()} className="px-4 py-2 bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center gap-1">
+                      <input type="url" value={crawlUrl} onChange={e => setCrawlUrl(e.target.value)} placeholder="https://docs.yourcompany.com" className="flex-1 min-w-0 bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
+                      <button onClick={handleCrawl} disabled={crawlLoading || !crawlUrl.trim()} className="shrink-0 px-4 py-2 bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center gap-1">
                         {crawlLoading ? <span className="material-symbols-outlined text-sm animate-spin">sync</span> : <span className="material-symbols-outlined text-sm">language</span>}
                         Crawl
                       </button>

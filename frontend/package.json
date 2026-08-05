@@ -16,6 +16,8 @@
     "react-dom": "19.2.7",
     "react-hook-form": "^7.83.0",
     "react-hot-toast": "^2.6.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "yup": "^1.7.1"
   },
   "devDependencies": {

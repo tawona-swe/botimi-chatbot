@@ -7,7 +7,7 @@ import api from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 
 export default function Dashboard() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { vendor, isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [analytics, setAnalytics] = useState(null);
@@ -152,7 +152,7 @@ export default function Dashboard() {
             <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-gradient-to-br from-rose-400 to-pink-600 rounded-full border-2 border-background" />
           </div>
           <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-[12px] text-on-primary font-bold shadow-lg shadow-primary/20">
-            BH
+            {vendor?.name?.slice(0, 2)?.toUpperCase() || "U"}
           </div>
         </div>
       </header>
