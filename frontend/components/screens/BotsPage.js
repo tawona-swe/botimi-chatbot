@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Sidebar from "../ui/Sidebar";
@@ -11,6 +11,7 @@ import { useAuth } from "../../context/AuthContext";
 export default function BotsPage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [bots, setBots] = useState([]);
@@ -40,6 +41,14 @@ export default function BotsPage() {
     const saved = localStorage.getItem("botimiSidebarCollapsed");
     if (saved) setSidebarCollapsed(saved === "true");
   }, []);
+
+  // Auto-open the create modal when arriving via the Dashboard Guide's navigate action
+  useEffect(() => {
+    if (searchParams.get("action") === "create-bot") {
+      setShowCreateModal(true);
+      router.replace("/bots");
+    }
+  }, [searchParams, router]);
 
   // Auth guard
   useEffect(() => {

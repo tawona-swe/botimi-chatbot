@@ -7,3 +7,4 @@ export { default as ticketRoutes } from "./tickets.js";
 export { default as webhookRoutes } from "./webhooks.js";
 export { default as adminRoutes } from "./admin.js";
 export { default as widgetRoutes } from "./widget.js";
+export { default as assistantRoutes } from "./assistant.js";

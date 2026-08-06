@@ -3,6 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import api from "../../lib/api";
+import { getContrastColor } from "../../lib/color";
+
+const BOT_ICONS = ["smart_toy", "support_agent", "forum", "psychology", "auto_awesome", "bolt", "favorite", "rocket_launch", "headset_mic", "hub"];
 
 export default function OnboardingWizard() {
   const router = useRouter();
@@ -21,6 +24,7 @@ export default function OnboardingWizard() {
   const [botName, setBotName] = useState("botimi AI");
   const [welcomeMessage, setWelcomeMessage] = useState("Hello! I'm your AI assistant. How can I help you today?");
   const [accentColor, setAccentColor] = useState("#c0c1ff");
+  const [botIcon, setBotIcon] = useState("smart_toy");
   const [crawlStatus, setCrawlStatus] = useState("idle"); // idle | crawling | done | error
   const [crawlError, setCrawlError] = useState("");
   const [onboardingError, setOnboardingError] = useState("");
@@ -55,6 +59,7 @@ export default function OnboardingWizard() {
         setBotName(bot.name || "botimi AI");
         setWelcomeMessage(bot.welcome_message || "Hello! I'm your AI assistant. How can I help you today?");
         setAccentColor(bot.brand_color || "#c0c1ff");
+        setBotIcon(bot.avatar_icon || "smart_toy");
         // Fetch embed code
         try {
           setEmbedLoading(true);
@@ -98,6 +103,7 @@ export default function OnboardingWizard() {
             name: botName,
             welcome_message: welcomeMessage,
             brand_color: accentColor,
+            avatar_icon: botIcon,
           });
         } catch (err) {
           console.error("Failed to save bot settings:", err);
@@ -413,20 +419,63 @@ export default function OnboardingWizard() {
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Accent Color</label>
                       <div className="flex gap-3 flex-wrap">
-                        {["#c0c1ff", "#4cd7f6", "#ffb783", "#f87171", "#a78bfa", "#34d399", "#fbbf24"].map((color) => (
-                          <button
-                            key={color}
-                            type="button"
-                            className={`w-9 h-9 rounded-xl transition-all duration-200 hover:scale-110 hover:ring-2 ring-white/30 ${
-                              color === accentColor ? "ring-2 ring-white scale-110" : ""
-                            }`}
-                            style={{ backgroundColor: color }}
-                            onClick={() => setAccentColor(color)}
-                          />
-                        ))}
+                        {["#c0c1ff", "#4cd7f6", "#ffb783", "#f87171", "#a78bfa", "#34d399", "#fbbf24"].map((color) => {
+                          const active = color === accentColor;
+                          return (
+                            <button
+                              key={color}
+                              type="button"
+                              aria-label={`Use accent color ${color}`}
+                              aria-pressed={active}
+                              className={`relative w-9 h-9 rounded-xl transition-all duration-200 hover:scale-110 ${
+                                active
+                                  ? "ring-2 ring-offset-2 ring-offset-surface-container-lowest ring-primary scale-110"
+                                  : "ring-1 ring-outline-variant/40 hover:ring-2 hover:ring-white/40"
+                              }`}
+                              style={{ backgroundColor: color }}
+                              onClick={() => setAccentColor(color)}
+                            >
+                              {active && (
+                                <span className="absolute inset-0 flex items-center justify-center">
+                                  <span className="material-symbols-outlined text-[16px]" style={{ color: getContrastColor(color) }}>check</span>
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
                         <div className="w-9 h-9 rounded-xl bg-surface-container-lowest border border-dashed border-outline-variant flex items-center justify-center cursor-pointer hover:border-primary transition-colors">
                           <span className="material-symbols-outlined text-sm text-on-surface-variant">add</span>
                         </div>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Bot Icon</label>
+                      <div className="flex gap-3 flex-wrap">
+                        {BOT_ICONS.map((icon) => {
+                          const active = icon === botIcon;
+                          return (
+                            <button
+                              key={icon}
+                              type="button"
+                              aria-label={`Use ${icon.replace(/_/g, " ")} icon`}
+                              aria-pressed={active}
+                              className={`relative w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-110 ${
+                                active
+                                  ? "ring-2 ring-offset-2 ring-offset-surface-container-lowest ring-primary scale-110"
+                                  : "ring-1 ring-outline-variant/40 hover:ring-2 hover:ring-white/40"
+                              }`}
+                              style={{ backgroundColor: accentColor }}
+                              onClick={() => setBotIcon(icon)}
+                            >
+                              <span className="material-symbols-outlined text-[18px]" style={{ color: getContrastColor(accentColor) }}>{icon}</span>
+                              {active && (
+                                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-primary flex items-center justify-center">
+                                  <span className="material-symbols-outlined text-[10px] text-on-primary">check</span>
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -435,24 +484,24 @@ export default function OnboardingWizard() {
                       <span className="material-symbols-outlined text-sm">preview</span> Live Preview
                     </div>
                     <div className="w-[300px] bg-surface-container-high rounded-xl border border-outline-variant shadow-2xl overflow-hidden flex flex-col float-anim">
-                      <div className="bg-gradient-to-r from-primary to-secondary/80 p-4 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-on-primary/20 flex items-center justify-center">
-                          <span className="text-on-primary text-sm font-bold">B</span>
+                      <div className="p-4 flex items-center gap-3" style={{ background: accentColor }}>
+                        <div className="w-10 h-10 rounded-full bg-black/10 flex items-center justify-center">
+                          <span className="material-symbols-outlined text-[20px]" style={{ color: getContrastColor(accentColor) }}>{botIcon}</span>
                         </div>
                         <div className="flex-1">
-                          <h4 className="text-sm font-semibold text-on-primary">botimi Assistant</h4>
+                          <h4 className="text-sm font-semibold" style={{ color: getContrastColor(accentColor) }}>{botName || "botimi Assistant"}</h4>
                           <div className="flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                            <span className="text-[10px] text-on-primary/70">Online</span>
+                            <span className="text-[10px]" style={{ color: getContrastColor(accentColor), opacity: 0.7 }}>Online</span>
                           </div>
                         </div>
-                        <span className="material-symbols-outlined text-on-primary/60 text-sm">more_vert</span>
+                        <span className="material-symbols-outlined text-sm" style={{ color: getContrastColor(accentColor), opacity: 0.6 }}>more_vert</span>
                       </div>
                       <div className="p-4 space-y-3.5 flex-grow min-h-[180px] flex flex-col justify-end bg-surface-container-lowest">
                         <div className="bg-surface-variant/50 p-3 rounded-xl rounded-bl-none text-sm text-on-surface max-w-[85%]">
-                          Hello! I&apos;m your AI assistant. How can I help you today?
+                          {welcomeMessage || "Hello! I'm your AI assistant. How can I help you today?"}
                         </div>
-                        <div className="bg-primary/10 border border-primary/20 p-3 rounded-xl rounded-br-none text-sm text-on-surface self-end max-w-[85%]">
+                        <div className="p-3 rounded-xl rounded-br-none text-sm self-end max-w-[85%]" style={{ backgroundColor: accentColor + "1a", borderWidth: 1, borderColor: accentColor + "40", color: "var(--color-on-surface)" }}>
                           What can you do?
                         </div>
                         <div className="bg-surface-variant/30 p-2 rounded-xl rounded-bl-none text-xs text-on-surface-variant max-w-[60%] flex items-center gap-1.5">
@@ -463,8 +512,8 @@ export default function OnboardingWizard() {
                       </div>
                       <div className="p-3 border-t border-outline-variant bg-surface-container flex items-center gap-2">
                         <div className="flex-1 bg-surface-container-lowest rounded-lg px-3.5 py-2 text-xs text-on-surface-variant/60">Type a message...</div>
-                        <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
-                          <span className="material-symbols-outlined text-xs text-on-primary" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: accentColor }}>
+                          <span className="material-symbols-outlined text-xs" style={{ color: getContrastColor(accentColor), fontVariationSettings: "'FILL' 1" }}>send</span>
                         </div>
                       </div>
                     </div>

@@ -1,5 +1,7 @@
 import "./globals.css";
 import { AuthProvider } from "../context/AuthContext";
+import { AssistantProvider } from "../context/AssistantContext";
+import DashboardAssistant from "../components/ui/DashboardAssistant";
 import { Toaster } from "react-hot-toast";
 
 export const metadata = {
@@ -85,7 +87,7 @@ export default function RootLayout({ children }) {
                     borderRadius: {
                       DEFAULT: "0.5rem",
                       lg: "1rem",
-                      xl: "1.5rem",
+                      xl: "0.625rem",
                       full: "9999px"
                     },
                     gridTemplateColumns: {
@@ -135,7 +137,10 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <AuthProvider>
-          {children}
+          <AssistantProvider>
+            {children}
+            <DashboardAssistant />
+          </AssistantProvider>
           <Toaster
             position="top-right"
             toastOptions={{

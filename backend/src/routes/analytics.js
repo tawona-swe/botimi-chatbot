@@ -12,6 +12,7 @@ router.use(authenticate);
  */
 router.get("/overview", (req, res) => {
   const vendorId = req.vendor.id;
+  const volumeDays = Math.min(Math.max(parseInt(req.query.days, 10) || 14, 1), 365);
 
   // Total conversations
   const totalConversations = db.prepare(
@@ -63,12 +64,12 @@ router.get("/overview", (req, res) => {
     GROUP BY content ORDER BY count DESC LIMIT 10
   `).all(vendorId);
 
-  // Conversation volume by day (last 14 days)
+  // Conversation volume by day (defaults to last 14 days; ?days= widens the window)
   const volumeByDay = db.prepare(`
     SELECT date(created_at) as date, COUNT(*) as count
-    FROM conversations WHERE vendor_id = ? AND created_at >= datetime('now', '-14 days')
+    FROM conversations WHERE vendor_id = ? AND created_at >= datetime('now', ?)
     GROUP BY date(created_at) ORDER BY date ASC
-  `).all(vendorId);
+  `).all(vendorId, `-${volumeDays} days`);
 
   // Bot resolution stats
   const botResolution = db.prepare(

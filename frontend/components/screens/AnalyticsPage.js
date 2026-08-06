@@ -14,6 +14,7 @@ export default function AnalyticsPage() {
   const [analytics, setAnalytics] = useState(null);
   const [ticketAnalytics, setTicketAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [chartLoading, setChartLoading] = useState(false);
   const [timeRange, setTimeRange] = useState("7d"); // 7d | 30d | 90d
 
   useEffect(() => {
@@ -33,6 +34,13 @@ export default function AnalyticsPage() {
       loadData();
     }
   }, [isAuthenticated]);
+
+  // Re-fetch just the volume chart when the range selector changes
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90;
+    loadVolumeByDay(days);
+  }, [timeRange, isAuthenticated]);
 
   const toggleSidebar = () => {
     setSidebarCollapsed(prev => {
@@ -57,14 +65,21 @@ export default function AnalyticsPage() {
     }
   };
 
+  const loadVolumeByDay = async (days) => {
+    try {
+      setChartLoading(true);
+      const data = await api.getAnalytics({ days });
+      setAnalytics((prev) => (prev ? { ...prev, volumeByDay: data.volumeByDay } : data));
+    } catch {
+      // Non-critical — chart keeps whatever range it last had
+    } finally {
+      setChartLoading(false);
+    }
+  };
+
   const formatNumber = (n) => {
     if (n === null || n === undefined) return "—";
     return n.toLocaleString();
-  };
-
-  const formatPct = (n) => {
-    if (n === null || n === undefined) return "—";
-    return `${n}%`;
   };
 
   if (loading) {
@@ -90,6 +105,21 @@ export default function AnalyticsPage() {
         .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; opacity: 0.6; }
         .scrollbar-thin::-webkit-scrollbar-thumb:hover { opacity: 1; }
         .bg-dot { background-image: radial-gradient(var(--dot-color) 1px, transparent 1px); background-size: 24px 24px; }
+        .glass-panel {
+          background: var(--glass-bg);
+          backdrop-filter: blur(12px);
+          border: 1px solid var(--glass-border);
+        }
+        .glass-hover:hover {
+          background: var(--glass-hover-bg);
+          border-color: var(--glass-border-hover);
+        }
+        .ai-glow {
+          box-shadow: 0 0 40px -10px rgba(192, 193, 255, 0.15);
+        }
+        .ai-glow-hover:hover {
+          box-shadow: 0 0 40px -10px rgba(192, 193, 255, 0.25);
+        }
       `}</style>
       <Sidebar activeLabel="Analytics" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} />
       <main className={`flex-1 ${sidebarCollapsed ? 'ml-[80px]' : 'ml-[260px]'} max-lg:ml-0 min-h-screen flex flex-col bg-background text-on-background font-body-md relative transition-all duration-300`}>
@@ -105,7 +135,7 @@ export default function AnalyticsPage() {
           </div>
           <div className="flex items-center gap-2 bg-surface-container rounded-xl p-1 border border-outline-variant">
             {["7d", "30d", "90d"].map(r => (
-              <button key={r} onClick={() => setTimeRange(r)} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${timeRange === r ? "bg-primary text-on-primary shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98]" : "text-on-surface-variant hover:text-on-surface"}`}>{r}</button>
+              <button key={r} onClick={() => setTimeRange(r)} disabled={chartLoading} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-60 ${timeRange === r ? "bg-primary text-on-primary shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98]" : "text-on-surface-variant hover:text-on-surface"}`}>{r}</button>
             ))}
           </div>
         </div>
@@ -113,14 +143,13 @@ export default function AnalyticsPage() {
         <div className="flex-1 overflow-y-auto scrollbar-thin p-8 space-y-8">
 
           {/* Metric Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {[
               { label: "Total Conversations", value: formatNumber(analytics?.totalConversations), icon: "forum", change: `+${formatNumber(analytics?.todayConversations || 0)} today`, color: "primary" },
-              { label: "Resolution Rate", value: formatPct(analytics?.resolutionRate), icon: "task_alt", change: "Bot-auto resolved", color: "secondary" },
               { label: "Active Sessions", value: formatNumber(analytics?.activeSessions), icon: "bolt", change: "Last 30 min", color: "tertiary" },
               { label: "Avg Response Time", value: analytics?.avgResponseTime || "—", icon: "timer", change: "Last 100 msgs", color: "primary" },
             ].map(card => (
-              <div key={card.label} className="bg-surface-container border border-outline-variant rounded-2xl p-6 hover:border-outline/20 transition-all">
+              <div key={card.label} className="glass-panel glass-hover ai-glow-hover rounded-2xl p-6 transition-all duration-300">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{card.label}</span>
                   <div className={`w-9 h-9 rounded-xl bg-${card.color}/10 flex items-center justify-center`}>
@@ -134,14 +163,14 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Conversation Volume Chart */}
-          <div className="bg-surface-container border border-outline-variant rounded-2xl p-6">
+          <div className="glass-panel rounded-2xl p-6 border border-outline-variant">
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-display font-bold text-on-surface">Conversation Volume</h2>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-on-surface-variant">Last {days} days</span>
               </div>
             </div>
-            <div className="flex items-end gap-1.5 h-32">
+            <div className={`flex items-end gap-1.5 h-32 transition-opacity duration-200 ${chartLoading ? "opacity-40" : "opacity-100"}`}>
               {analytics?.volumeByDay?.length > 0 ? (
                 (() => {
                   const vol = analytics.volumeByDay;
@@ -168,7 +197,7 @@ export default function AnalyticsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             {/* Top Questions */}
-            <div className="bg-surface-container border border-outline-variant rounded-2xl p-6">
+            <div className="glass-panel rounded-2xl p-6 border border-outline-variant">
               <h2 className="font-display font-bold text-on-surface mb-4">Top Questions</h2>
               {analytics?.topQuestions?.length > 0 ? (
                 <div className="space-y-2">
@@ -193,7 +222,7 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Bot Resolution */}
-            <div className="bg-surface-container border border-outline-variant rounded-2xl p-6">
+            <div className="glass-panel rounded-2xl p-6 ai-glow border border-outline-variant">
               <h2 className="font-display font-bold text-on-surface mb-4">Bot Resolution Performance</h2>
               {analytics?.totalConversations > 0 ? (
                 <div className="space-y-6">
@@ -227,7 +256,7 @@ export default function AnalyticsPage() {
 
           {/* Ticket Analytics */}
           {ticketAnalytics && (
-            <div className="bg-surface-container border border-outline-variant rounded-2xl p-6">
+            <div className="glass-panel rounded-2xl p-6 border border-outline-variant">
               <h2 className="font-display font-bold text-on-surface mb-4">Ticket Overview</h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[

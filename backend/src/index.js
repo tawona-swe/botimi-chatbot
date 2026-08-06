@@ -20,6 +20,7 @@ import {
   webhookRoutes,
   adminRoutes,
   widgetRoutes,
+  assistantRoutes,
 } from "./routes/index.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -101,6 +102,9 @@ app.use("/api/admin", adminRoutes);
 
 // Widget loader (public, no auth)
 app.use("/api/widget", widgetRoutes);
+
+// Dashboard guide (internal-only assistant, not a deployable bot)
+app.use("/api/assistant", assistantRoutes);
 
 // --------------- Keepalive Cron ---------------
 // Periodic overage check every hour

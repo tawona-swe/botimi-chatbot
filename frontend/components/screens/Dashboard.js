@@ -11,7 +11,11 @@ export default function Dashboard() {
   const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [analytics, setAnalytics] = useState(null);
+  const [recentConversations, setRecentConversations] = useState([]);
+  const [chartRange, setChartRange] = useState("7D");
+  const [openTicketCount, setOpenTicketCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [chartLoading, setChartLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // Auth guard
@@ -25,8 +29,17 @@ export default function Dashboard() {
   useEffect(() => {
     if (isAuthenticated) {
       loadAnalytics();
+      loadRecentConversations();
+      loadOpenTicketCount();
     }
   }, [isAuthenticated]);
+
+  // Re-fetch just the volume chart when the range selector changes
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const days = { "7D": 7, "30D": 30, "1Y": 365 }[chartRange];
+    loadVolumeByDay(days);
+  }, [chartRange, isAuthenticated]);
 
   useEffect(() => {
     const saved = localStorage.getItem("botimiSidebarCollapsed");
@@ -43,6 +56,56 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadVolumeByDay = async (days) => {
+    try {
+      setChartLoading(true);
+      const data = await api.getAnalytics({ days });
+      setAnalytics((prev) => (prev ? { ...prev, volumeByDay: data.volumeByDay } : data));
+    } catch {
+      // Non-critical — chart keeps whatever range it last had
+    } finally {
+      setChartLoading(false);
+    }
+  };
+
+  const loadRecentConversations = async () => {
+    try {
+      const data = await api.getConversations({ limit: 5 });
+      setRecentConversations(data.conversations || []);
+    } catch {
+      // Non-critical — leave the table in its empty state
+    }
+  };
+
+  const loadOpenTicketCount = async () => {
+    try {
+      const data = await api.getTicketAnalytics();
+      setOpenTicketCount(data?.open || 0);
+    } catch {
+      // Non-critical — leave the badge hidden
+    }
+  };
+
+  const timeAgo = (ts) => {
+    if (!ts) return "";
+    // SQLite's datetime('now') yields a naive UTC string ("YYYY-MM-DD HH:MM:SS")
+    // with no timezone marker — without forcing UTC, JS parses it as local time.
+    const utcTs = /[Zz]|[+-]\d\d:\d\d$/.test(ts) ? ts : `${ts.replace(" ", "T")}Z`;
+    const diffMins = Math.floor((Date.now() - new Date(utcTs)) / 60000);
+    if (diffMins < 1) return "just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return new Date(utcTs).toLocaleDateString();
+  };
+
+  const STATUS_STYLE = {
+    active: { color: "text-primary", bg: "bg-primary/10 border-primary/20" },
+    resolved: { color: "text-secondary", bg: "bg-secondary/10 border-secondary/20" },
+    escalated: { color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
+    abandoned: { color: "text-on-surface-variant", bg: "bg-surface-container-highest border-outline-variant" },
   };
 
   const toggleSidebar = () => {
@@ -149,7 +212,9 @@ export default function Dashboard() {
           </button>
           <div className="relative">
             <span className="material-symbols-outlined text-on-surface-variant hover:text-on-surface cursor-pointer transition-colors text-2xl">notifications</span>
-            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-gradient-to-br from-rose-400 to-pink-600 rounded-full border-2 border-background" />
+            {openTicketCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-gradient-to-br from-rose-400 to-pink-600 rounded-full border-2 border-background" />
+            )}
           </div>
           <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-[12px] text-on-primary font-bold shadow-lg shadow-primary/20">
             {vendor?.name?.slice(0, 2)?.toUpperCase() || "U"}
@@ -197,38 +262,55 @@ export default function Dashboard() {
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/[0.02] rounded-full blur-[60px] pointer-events-none" />
             <div className="flex justify-between items-center mb-6 relative z-10">
               <h3 className="font-display text-sm font-bold text-on-surface">Conversation Volume</h3>
-              <div className="flex gap-1.5 bg-surface-container-highest/50 p-0.5 rounded-lg border border-outline-variant">
+              <div className="flex gap-1 bg-surface-container-highest/50 p-1 rounded-full border border-outline-variant">
                 {["7D", "30D", "1Y"].map((t) => (
-                  <button key={t} className={`px-3 py-1 font-label-md text-[10px] font-semibold rounded-md transition-all ${t === "7D" ? "bg-primary text-on-primary shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}>{t}</button>
+                  <button
+                    key={t}
+                    onClick={() => setChartRange(t)}
+                    disabled={chartLoading}
+                    className={`px-3 py-1 font-label-md text-[10px] font-semibold rounded-full transition-all disabled:opacity-60 ${t === chartRange ? "bg-primary text-on-primary shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}
+                  >
+                    {t}
+                  </button>
                 ))}
               </div>
             </div>
-            <div className="relative h-[280px] flex items-end gap-[3px]">
-              <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-                {[0, 25, 50, 75, 100].map((v) => (
-                  <div key={v} className="border-t border-outline/5 w-full" />
-                ))}
-              </div>
-              {(analytics?.volumeByDay?.length > 0 ? analytics.volumeByDay : [
-                { date: "Day 1", count: 0 }, { date: "Day 2", count: 0 }
-              ]).map((day, i) => {
-                const maxCount = Math.max(...analytics?.volumeByDay?.map(d => d.count) || [1], 1);
-                const heightPct = Math.max((day.count / maxCount) * 100, 2);
-                return (
-                  <div key={i} className="bar flex-1 relative group cursor-pointer" style={{ height: `${heightPct}%` }}>
-                    <div className="absolute bottom-0 w-full rounded-t-sm transition-all duration-500 bg-gradient-to-t from-primary/30 to-primary/10 group-hover:from-primary/50 group-hover:to-primary/20" style={{ height: "100%" }} />
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 glass-strong px-2 py-1 rounded font-code-sm text-[9px] text-on-surface opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 shadow-lg pointer-events-none">
-                      {day.count} convos
+            {(() => {
+              const rangeDays = { "7D": 7, "30D": 30, "1Y": 365 }[chartRange];
+              const chartData = (analytics?.volumeByDay || []).slice(-rangeDays);
+              const maxCount = Math.max(...chartData.map(d => d.count), 1);
+              return chartData.length > 0 ? (
+                <div className={`transition-opacity duration-200 ${chartLoading ? "opacity-40" : "opacity-100"}`}>
+                  <div className="relative h-[280px] flex items-end gap-[3px]">
+                    <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                      {[0, 25, 50, 75, 100].map((v) => (
+                        <div key={v} className="border-t border-outline/5 w-full" />
+                      ))}
                     </div>
+                    {chartData.map((day, i) => {
+                      const heightPct = Math.max((day.count / maxCount) * 100, 2);
+                      return (
+                        <div key={i} className="bar flex-1 relative group cursor-pointer" style={{ height: `${heightPct}%` }}>
+                          <div className="absolute bottom-0 w-full rounded-t-sm transition-all duration-500 bg-gradient-to-t from-primary/30 to-primary/10 group-hover:from-primary/50 group-hover:to-primary/20" style={{ height: "100%" }} />
+                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 glass-strong px-2 py-1 rounded font-code-sm text-[9px] text-on-surface opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 shadow-lg pointer-events-none">
+                            {day.count} convos
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
-            <div className="flex justify-between mt-3 font-label-md text-[9px] text-on-surface-variant uppercase tracking-widest font-medium relative z-10">
-              {(analytics?.volumeByDay?.length > 0 ? analytics.volumeByDay : []).slice(0, 14).map((day, i) => (
-                <span key={i}>{day.date?.slice?.(5) || day.date}</span>
-              ))}
-            </div>
+                  <div className="flex justify-between mt-3 font-label-md text-[9px] text-on-surface-variant uppercase tracking-widest font-medium relative z-10">
+                    {chartData.map((day, i) => (
+                      <span key={i}>{day.date?.slice?.(5) || day.date}</span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="h-[280px] flex items-center justify-center relative z-10">
+                  <span className="text-xs text-on-surface-variant">No conversation data yet</span>
+                </div>
+              );
+            })()}
           </div>
 
           <div className="space-y-6">
@@ -293,43 +375,45 @@ export default function Dashboard() {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-outline-variant">
-                  {["User", "Bot", "Duration", "Outcome", ""].map((h) => (
+                  {["User", "Source", "Messages", "Status", ""].map((h) => (
                     <th key={h} className="pb-3 font-label-md text-[10px] font-semibold text-on-surface-variant uppercase tracking-widest pr-4 last:pr-0">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline/5">
-                {[
-                  { user: "user_99238", src: "Web Chat", icon: "person", bot: "SupportBot_v2", dur: "4m 12s", outcome: "Resolved", color: "text-secondary", bg: "bg-secondary/10 border-secondary/20" },
-                  { user: "customer@enterprise.com", src: "Email Relay", icon: "mail", bot: "SalesConcierge", dur: "12m 45s", outcome: "Handoff", color: "text-primary", bg: "bg-primary/10 border-primary/20" },
-                  { user: "guest_88102", src: "Discord", icon: "person", bot: "FAQ_Assistant", dur: "1m 02s", outcome: "Resolved", color: "text-secondary", bg: "bg-secondary/10 border-secondary/20" },
-                ].map((row, i) => (
-                  <tr key={i} className="group hover:bg-surface-container-highest/30 transition-colors">
-                    <td className="py-3.5 pr-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-lg ${row.bg.split(' ')[0]} flex items-center justify-center`}>
-                          <span className="material-symbols-outlined text-sm text-on-surface-variant">{row.icon}</span>
+                {recentConversations.map((row) => {
+                  const style = STATUS_STYLE[row.status] || STATUS_STYLE.active;
+                  return (
+                    <tr key={row.id} className="group hover:bg-surface-container-highest/30 transition-colors">
+                      <td className="py-3.5 pr-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-lg ${style.bg.split(' ')[0]} flex items-center justify-center`}>
+                            <span className="material-symbols-outlined text-sm text-on-surface-variant">{row.visitor_email ? "mail" : "person"}</span>
+                          </div>
+                          <div>
+                            <p className="text-[13px] text-on-surface font-medium group-hover:text-primary transition-colors">{row.visitor_name || row.visitor_id}</p>
+                            <p className="text-[10px] text-on-surface-variant">{timeAgo(row.created_at)}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-[13px] text-on-surface font-medium group-hover:text-primary transition-colors">{row.user}</p>
-                          <p className="text-[10px] text-on-surface-variant">{row.src}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3.5 pr-4 text-[13px] text-on-surface-variant">{row.bot}</td>
-                    <td className="py-3.5 pr-4 text-[13px] text-on-surface-variant">{row.dur}</td>
-                    <td className="py-3.5 pr-4">
-                      <span className={`font-label-md text-[10px] font-semibold px-2 py-0.5 rounded border ${row.bg} ${row.color}`}>{row.outcome}</span>
-                    </td>
-                    <td className="py-3.5">
-                      <button className="text-on-surface-variant hover:text-primary transition-colors p-1">
-                        <span className="material-symbols-outlined text-sm">visibility</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="py-3.5 pr-4 text-[13px] text-on-surface-variant capitalize">{row.source}</td>
+                      <td className="py-3.5 pr-4 text-[13px] text-on-surface-variant">{row.message_count}</td>
+                      <td className="py-3.5 pr-4">
+                        <span className={`font-label-md text-[10px] font-semibold px-2 py-0.5 rounded border capitalize ${style.bg} ${style.color}`}>{row.status}</span>
+                      </td>
+                      <td className="py-3.5">
+                        <button className="text-on-surface-variant hover:text-primary transition-colors p-1" onClick={() => (window.location.href = "/support")}>
+                          <span className="material-symbols-outlined text-sm">visibility</span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
+            {recentConversations.length === 0 && (
+              <p className="text-[13px] text-on-surface-variant/60 text-center py-8">No conversations yet</p>
+            )}
           </div>
         </div>
       </div>

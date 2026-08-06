@@ -6,7 +6,7 @@ import api from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 
 export default function SupportInbox() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { vendor, isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const [showAiSuggestion, setShowAiSuggestion] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -230,9 +230,15 @@ export default function SupportInbox() {
           <div className="flex items-center gap-4">
             <div className="relative">
               <span className="material-symbols-outlined text-on-surface-variant/60 hover:text-on-surface cursor-pointer text-lg">notifications</span>
-              <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-rose-500 text-[7px] flex items-center justify-center rounded-full text-white font-bold">3</span>
+              {tickets.filter(t => t.status === "open").length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-rose-500 text-[7px] flex items-center justify-center rounded-full text-white font-bold">
+                  {tickets.filter(t => t.status === "open").length}
+                </span>
+              )}
             </div>
-            <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-xs">JD</div>
+            <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-xs">
+              {vendor?.name?.slice(0, 2)?.toUpperCase() || "U"}
+            </div>
           </div>
         </header>
 

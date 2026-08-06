@@ -47,6 +47,8 @@ export async function chatCompletion(messages, options = {}) {
     temperature: options.temperature ?? 0.7,
     max_tokens: options.maxTokens ?? 1024,
     stream: options.stream ?? false,
+    ...(options.tools ? { tools: options.tools } : {}),
+    ...(options.tool_choice ? { tool_choice: options.tool_choice } : {}),
   });
 
   const latencyMs = Date.now() - startTime;
@@ -57,6 +59,7 @@ export async function chatCompletion(messages, options = {}) {
 
   return {
     content: completion.choices[0]?.message?.content || "",
+    toolCalls: completion.choices[0]?.message?.tool_calls || null,
     tokensUsed: completion.usage?.total_tokens || 0,
     latencyMs,
     model: modelConfig.modelId,

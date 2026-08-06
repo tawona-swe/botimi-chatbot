@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
+import { useAssistant } from "../../context/AssistantContext";
 import { useState, useEffect } from "react";
 
 const navItems = [
@@ -16,6 +17,7 @@ export default function Sidebar({ activeLabel, isCollapsed, onToggle }) {
   const pathname = usePathname();
   const router = useRouter();
   const { vendor, logout } = useAuth();
+  const { open: openAssistant } = useAssistant();
 
   const handleSignOut = async (e) => {
     e.preventDefault();
@@ -114,10 +116,10 @@ export default function Sidebar({ activeLabel, isCollapsed, onToggle }) {
             <span className="material-symbols-outlined shrink-0">home</span>
             {!isCollapsed && <span className="font-label-md text-label-md whitespace-nowrap">Home</span>}
           </Link>
-          <a href="#" title={isCollapsed ? "Help" : undefined} className={`flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-3 px-3 py-2'} text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all duration-200`}>
+          <button type="button" onClick={openAssistant} title={isCollapsed ? "Help" : undefined} className={`w-full flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-3 px-3 py-2'} text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all duration-200`}>
             <span className="material-symbols-outlined shrink-0">help</span>
             {!isCollapsed && <span className="font-label-md text-label-md whitespace-nowrap">Help</span>}
-          </a>
+          </button>
           <a href="#" title={isCollapsed ? "Sign Out" : undefined} onClick={handleSignOut} className={`flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-3 px-3 py-2'} text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all duration-200`}>
             <span className="material-symbols-outlined shrink-0">logout</span>
             {!isCollapsed && <span className="font-label-md text-label-md whitespace-nowrap">Sign Out</span>}

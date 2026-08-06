@@ -160,6 +160,11 @@ class ApiClient {
     return this.request("POST", "/chat/escalate", { conversationId, name, email, description });
   }
 
+  // Dashboard guide (internal assistant, not a deployable bot)
+  assistantChat(message, history) {
+    return this.request("POST", "/assistant/chat", { message, history });
+  }
+
   // Conversations
   getConversations(params = {}) {
     const qs = new URLSearchParams(params).toString();
@@ -175,8 +180,9 @@ class ApiClient {
   }
 
   // Analytics
-  getAnalytics() {
-    return this.request("GET", "/analytics/overview");
+  getAnalytics(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return this.request("GET", `/analytics/overview${qs ? "?" + qs : ""}`);
   }
 
   getTicketAnalytics() {
