@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "../../context/AuthContext";
 
 const steps = [
@@ -47,6 +48,7 @@ const benefits = [
 export default function HowItWorks() {
   const { vendor } = useAuth();
   const [isDark, setIsDark] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"));
@@ -90,39 +92,46 @@ export default function HowItWorks() {
       <header className="fixed top-0 left-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant">
         <nav className="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto h-16">
           <div className="flex items-center gap-8">
-            <a href="/" target="_top" className="font-display text-headline-md font-extrabold text-primary">
+            <Link href="/" target="_top" className="font-display text-headline-md font-extrabold text-primary">
               botimi
-            </a>
+            </Link>
             <div className="hidden md:flex gap-6">
-              <a
+              <Link
                 className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200"
                 href="/"
                 target="_top"
               >
                 Home
-              </a>
-              <a
+              </Link>
+              <Link
                 className="font-body-md text-body-md text-primary font-semibold transition-colors duration-200"
                 href="/how-it-works"
                 target="_top"
               >
                 How It Works
-              </a>
-              <a
+              </Link>
+              <Link
                 className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200"
                 href="/pricing"
                 target="_top"
               >
                 Pricing
-              </a>
+              </Link>
+              <Link
+                className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200"
+                href="/enterprise"
+                target="_top"
+              >
+                Enterprise
+              </Link>
               {vendor && (
-                <a
+                <Link
                   className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200"
                   href="/dashboard"
                   target="_top"
                 >
                   Dashboard
-                </a>
+                </Link>
               )}
             </div>
           </div>
@@ -136,30 +145,104 @@ export default function HowItWorks() {
                 {isDark ? "light_mode" : "dark_mode"}
               </span>
             </button>
-            {!vendor && (
-              <button
-                className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 px-4 py-2"
-                onClick={() => (window.location.href = "/login")}
-              >
-                Log In
-              </button>
-            )}
-            {!vendor && (
-              <button
-                className="bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-6 py-2"
-                onClick={() => (window.location.href = "/register")}
-              >
-                Get Started
-              </button>
-            )}
+            <div className="hidden md:flex items-center gap-2">
+              {!vendor && (
+                <button
+                  className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 px-4 py-2"
+                  onClick={() => (window.location.href = "/login")}
+                >
+                  Log In
+                </button>
+              )}
+              {!vendor && (
+                <button
+                  className="bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-6 py-2"
+                  onClick={() => (window.location.href = "/register")}
+                >
+                  Get Started
+                </button>
+              )}
+            </div>
+            <button
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              className="md:hidden w-10 h-10 rounded-xl flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container transition-all duration-200"
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileMenuOpen}
+            >
+              <span className="material-symbols-outlined text-xl">
+                {mobileMenuOpen ? "close" : "menu"}
+              </span>
+            </button>
           </div>
         </nav>
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-outline-variant bg-background px-margin-mobile py-4 flex flex-col gap-1">
+            <Link
+              className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary hover:bg-surface-container rounded-lg px-3 py-3 transition-colors duration-200"
+              href="/"
+              target="_top"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Home
+            </Link>
+            <Link
+              className="font-body-md text-body-md text-primary font-semibold rounded-lg px-3 py-3 transition-colors duration-200"
+              href="/how-it-works"
+              target="_top"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              How It Works
+            </Link>
+            <Link
+              className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary hover:bg-surface-container rounded-lg px-3 py-3 transition-colors duration-200"
+              href="/pricing"
+              target="_top"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Pricing
+            </Link>
+            <Link
+              className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary hover:bg-surface-container rounded-lg px-3 py-3 transition-colors duration-200"
+              href="/enterprise"
+              target="_top"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Enterprise
+            </Link>
+            {vendor && (
+              <Link
+                className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary hover:bg-surface-container rounded-lg px-3 py-3 transition-colors duration-200"
+                href="/dashboard"
+                target="_top"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Dashboard
+              </Link>
+            )}
+            {!vendor && (
+              <div className="flex flex-col gap-2 mt-2 pt-3 border-t border-outline-variant">
+                <button
+                  className="w-full text-center font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 px-4 py-3"
+                  onClick={() => (window.location.href = "/login")}
+                >
+                  Log In
+                </button>
+                <button
+                  className="w-full bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-6 py-3"
+                  onClick={() => (window.location.href = "/register")}
+                >
+                  Get Started
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
       <main>
         {/* ── Hero ── */}
         <section className="relative pt-32 pb-16 px-margin-mobile md:px-margin-desktop">
-          <div className="absolute inset-0 pointer-events-none opacity-20">
+          <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary rounded-full blur-[120px] animate-pulse"></div>
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary rounded-full blur-[120px] delay-1000 animate-pulse"></div>
           </div>
@@ -257,19 +340,20 @@ export default function HowItWorks() {
       </main>
 
       <footer className="bg-surface-container-lowest border-t border-outline-variant py-stack-xl">
-        <div className="flex flex-col md:flex-row justify-between items-center px-margin-desktop max-w-container-max mx-auto gap-8">
+        <div className="flex flex-col md:flex-row justify-between items-center px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto gap-8">
           <div className="flex flex-col gap-4 items-center md:items-start">
-            <a href="/" target="_top" className="font-display text-headline-md text-primary font-bold">
+            <Link href="/" target="_top" className="font-display text-headline-md text-primary font-bold">
               botimi
-            </a>
+            </Link>
             <p className="font-body-sm text-body-sm text-on-surface-variant text-center md:text-left">
               &copy; 2024 botimi AI Ecosystem. All rights reserved.
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-8">
-            <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/pricing" target="_top">Pricing</a>
-            <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/how-it-works" target="_top">How It Works</a>
-            <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/dashboard" target="_top">Dashboard</a>
+            <Link className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/pricing" target="_top">Pricing</Link>
+            <Link className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/how-it-works" target="_top">How It Works</Link>
+            <Link className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/enterprise" target="_top">Enterprise</Link>
+            <Link className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/dashboard" target="_top">Dashboard</Link>
           </div>
           <div className="flex gap-4">
             <a className="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant hover:text-primary transition-all" href="#">

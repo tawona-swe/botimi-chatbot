@@ -15,16 +15,20 @@ function getClient() {
   return { apiKey: config.gemini.apiKey };
 }
 
+// Using Google's "-latest" aliases (rather than pinned version numbers like
+// "gemini-1.5-flash") so this doesn't silently go stale again as Google
+// retires older dated models — Google keeps these pointed at their current
+// flash/pro model.
 const MODELS = {
-  "gemini-1.5-flash": {
-    modelId: "gemini-1.5-flash",
+  "gemini-flash": {
+    modelId: "gemini-flash-latest",
     contextWindow: 1_048_576,
     priority: 1,
     cost: "free",
   },
-  "gemini-1.5-pro": {
-    modelId: "gemini-1.5-pro",
-    contextWindow: 32_768,
+  "gemini-pro": {
+    modelId: "gemini-pro-latest",
+    contextWindow: 1_048_576,
     priority: 2,
     cost: "free",
   },
@@ -42,8 +46,8 @@ function checkRateLimit(modelKey) {
 
   // Free tier: 15 req/min for Flash, 2 req/min for Pro
   const limits = {
-    "gemini-1.5-flash": config.limits.geminiRequestsPerMin || 15,
-    "gemini-1.5-pro": 2,
+    "gemini-flash": config.limits.geminiRequestsPerMin || 15,
+    "gemini-pro": 2,
   };
   const limit = limits[modelKey] || 15;
 
@@ -98,8 +102,8 @@ function buildRequestBody(messages, options) {
  */
 export async function chatCompletion(messages, options = {}) {
   const client = getClient();
-  const modelKey = options.model || "gemini-1.5-flash";
-  const modelConfig = MODELS[modelKey] || MODELS["gemini-1.5-flash"];
+  const modelKey = options.model || "gemini-flash";
+  const modelConfig = MODELS[modelKey] || MODELS["gemini-flash"];
 
   checkRateLimit(modelKey);
 
@@ -111,6 +115,7 @@ export async function chatCompletion(messages, options = {}) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(20000),
   });
 
   const latencyMs = Date.now() - startTime;
@@ -139,8 +144,8 @@ export async function chatCompletion(messages, options = {}) {
  */
 export async function streamChat(messages, options = {}) {
   const client = getClient();
-  const modelKey = options.model || "gemini-1.5-flash";
-  const modelConfig = MODELS[modelKey] || MODELS["gemini-1.5-flash"];
+  const modelKey = options.model || "gemini-flash";
+  const modelConfig = MODELS[modelKey] || MODELS["gemini-flash"];
 
   checkRateLimit(modelKey);
 
@@ -167,15 +172,16 @@ export async function streamChat(messages, options = {}) {
  */
 export async function getEmbedding(text) {
   const client = getClient();
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${client.apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${client.apiKey}`;
 
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "models/text-embedding-004",
+      model: "models/gemini-embedding-001",
       content: { parts: [{ text }] },
     }),
+    signal: AbortSignal.timeout(20000),
   });
 
   if (!response.ok) return null;

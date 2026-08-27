@@ -16,9 +16,12 @@ yarn-error.log*
 pnpm-debug.log*
 *.log
 
-# Local env files
+# Local env files — but keep the .env.example templates tracked, they're
+# meant to be committed so anyone cloning the repo knows what to set.
 .env
-.env.*
+.env.local
+.env.*.local
+!.env.example
 
 # OS files
 .DS_Store
@@ -32,3 +35,11 @@ Thumbs.db
 out/
 dist/
 coverage/
+
+# SQLite database — local dev data, not meant to be versioned. The uploads
+# dir is recreated automatically on boot (see backend/src/routes/bots.js),
+# so it doesn't need a .gitkeep placeholder.
+backend/data/*.db
+backend/data/*.db-shm
+backend/data/*.db-wal
+backend/data/uploads/

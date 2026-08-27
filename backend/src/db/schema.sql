@@ -41,6 +41,20 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 
 -- ============================================================
+-- TEAM MEMBERS (agent seats under a vendor account)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS team_members (
+  id            TEXT PRIMARY KEY,
+  vendor_id     TEXT NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+  email         TEXT NOT NULL UNIQUE, -- globally unique, like vendors.email — keeps login-by-email unambiguous
+  password_hash TEXT NOT NULL,
+  name          TEXT NOT NULL DEFAULT '',
+  role          TEXT NOT NULL DEFAULT 'agent', -- owner | admin | agent
+  is_active     INTEGER NOT NULL DEFAULT 1,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- ============================================================
 -- BOTS (chatbot instances per vendor)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS bots (
@@ -176,6 +190,30 @@ CREATE TABLE IF NOT EXISTS ticket_replies (
 );
 
 -- ============================================================
+-- TICKET TAGS (freeform categorization, filterable)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS ticket_tags (
+  id         TEXT PRIMARY KEY,
+  ticket_id  TEXT NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
+  tag        TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(ticket_id, tag)
+);
+
+-- ============================================================
+-- CANNED RESPONSES (saved reply templates)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS canned_responses (
+  id         TEXT PRIMARY KEY,
+  vendor_id  TEXT NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+  title      TEXT NOT NULL,
+  body       TEXT NOT NULL,
+  created_by TEXT DEFAULT '', -- team_members.id if created by a team member, else blank (owner)
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- ============================================================
 -- USAGE EVENTS (conversation counting for billing)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS usage_events (
@@ -200,3 +238,6 @@ CREATE INDEX IF NOT EXISTS idx_tickets_vendor ON tickets(vendor_id);
 CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status);
 CREATE INDEX IF NOT EXISTS idx_usage_vendor ON usage_events(vendor_id);
 CREATE INDEX IF NOT EXISTS idx_usage_type ON usage_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_team_members_vendor ON team_members(vendor_id);
+CREATE INDEX IF NOT EXISTS idx_ticket_tags_ticket ON ticket_tags(ticket_id);
+CREATE INDEX IF NOT EXISTS idx_canned_responses_vendor ON canned_responses(vendor_id);

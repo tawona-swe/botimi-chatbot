@@ -1,12 +1,12 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../ui/Sidebar";
 import api from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 
 export default function SupportInbox() {
-  const { vendor, isAuthenticated, loading: authLoading } = useAuth();
+  const { vendor, teamMember, isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const [showAiSuggestion, setShowAiSuggestion] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -25,6 +25,12 @@ export default function SupportInbox() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [filter, setFilter] = useState("all"); // all | unassigned | mine
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [assignMenuOpen, setAssignMenuOpen] = useState(false);
+  const [cannedResponses, setCannedResponses] = useState([]);
+  const [cannedMenuOpen, setCannedMenuOpen] = useState(false);
+  const [newTag, setNewTag] = useState("");
+  const [suggesting, setSuggesting] = useState(false);
 
   // Auth guard
   useEffect(() => {
@@ -33,12 +39,78 @@ export default function SupportInbox() {
     }
   }, [authLoading, isAuthenticated, router]);
 
+  const loadTickets = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const params = {};
+      if (filter === "unassigned") params.status = "open";
+      else if (filter === "mine") params.assigned = "me";
+      const data = await api.getTickets(params);
+      setTickets(data.tickets || []);
+    } catch (err) {
+      console.error("Failed to load tickets:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filter]);
+
   // Only load tickets when authenticated
   useEffect(() => {
     if (isAuthenticated) {
       loadTickets();
     }
-  }, [filter, isAuthenticated]);
+  }, [isAuthenticated, loadTickets]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      api.getTeam().then((data) => {
+        const owner = data.owner ? [{ ...data.owner, isActive: true }] : [];
+        setTeamMembers([...owner, ...data.members.filter((m) => m.isActive)]);
+      }).catch(() => {});
+      api.getCannedResponses().then((data) => setCannedResponses(data.responses)).catch(() => {});
+    }
+  }, [isAuthenticated]);
+
+  const insertCannedResponse = (body) => {
+    setReplyText((prev) => (prev ? `${prev}\n\n${body}` : body));
+    setCannedMenuOpen(false);
+  };
+
+  const handleSuggestReply = async () => {
+    if (!selectedTicket) return;
+    setSuggesting(true);
+    try {
+      const data = await api.suggestTicketReply(selectedTicket.id);
+      setReplyText(data.suggestion || "");
+      setReplyMode("public");
+    } catch (err) {
+      console.error("Failed to suggest reply:", err);
+    } finally {
+      setSuggesting(false);
+    }
+  };
+
+  const handleAddTag = async (e) => {
+    e.preventDefault();
+    if (!newTag.trim() || !selectedTicket) return;
+    try {
+      const data = await api.addTicketTag(selectedTicket.id, newTag.trim());
+      setSelectedTicket((prev) => (prev ? { ...prev, tags: data.tags } : prev));
+      setNewTag("");
+    } catch (err) {
+      console.error("Failed to add tag:", err);
+    }
+  };
+
+  const handleRemoveTag = async (tag) => {
+    if (!selectedTicket) return;
+    try {
+      const data = await api.removeTicketTag(selectedTicket.id, tag);
+      setSelectedTicket((prev) => (prev ? { ...prev, tags: data.tags } : prev));
+    } catch (err) {
+      console.error("Failed to remove tag:", err);
+    }
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem("botimiSidebarCollapsed");
@@ -66,21 +138,6 @@ export default function SupportInbox() {
     }, 3000);
     return () => clearTimeout(timer);
   }, []);
-
-  const loadTickets = async () => {
-    setIsLoading(true);
-    try {
-      const params = {};
-      if (filter === "unassigned") params.status = "open";
-      else if (filter === "mine") params.assigned = "me";
-      const data = await api.getTickets(params);
-      setTickets(data.tickets || []);
-    } catch (err) {
-      console.error("Failed to load tickets:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const loadTicket = async (ticket) => {
     setSelectedTicket(ticket);
@@ -151,14 +208,13 @@ export default function SupportInbox() {
     }
   };
 
-  const handleAssign = async () => {
+  const handleAssignTo = async (teamMemberId) => {
     if (!selectedTicket) return;
+    setAssignMenuOpen(false);
     try {
-      const agentName = prompt("Assign to agent name:");
-      if (agentName) {
-        await api.assignTicket(selectedTicket.id, agentName);
-        loadTickets();
-      }
+      const data = await api.assignTicket(selectedTicket.id, teamMemberId);
+      setSelectedTicket((prev) => (prev ? { ...prev, ...data.ticket } : prev));
+      loadTickets();
     } catch (err) {
       console.error("Failed to assign ticket:", err);
     }
@@ -215,7 +271,7 @@ export default function SupportInbox() {
         .convo-enter { animation: slideUp 0.25s ease-out; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
-      <Sidebar activeLabel="Support" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+      <Sidebar activeLabel="Support" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} mobileOpen={sidebarOpen} onMobileClose={() => setSidebarOpen(false)} />
       <main className={`flex-1 ${sidebarCollapsed ? 'ml-[80px]' : 'ml-[260px]'} max-lg:ml-0 flex flex-col h-screen bg-background text-on-background overflow-hidden transition-all duration-300`}>
 
         {/* HEADER */}
@@ -236,8 +292,8 @@ export default function SupportInbox() {
                 </span>
               )}
             </div>
-            <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-xs">
-              {vendor?.name?.slice(0, 2)?.toUpperCase() || "U"}
+            <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-xs" title={teamMember ? `${teamMember.name} (${teamMember.role})` : vendor?.name}>
+              {(teamMember?.name || vendor?.name)?.slice(0, 2)?.toUpperCase() || "U"}
             </div>
           </div>
         </header>
@@ -401,13 +457,34 @@ export default function SupportInbox() {
                       </div>
                       <textarea ref={textareaRef} className="w-full bg-transparent border-none outline-none focus:ring-0 text-on-surface p-3 text-xs resize-none h-24 placeholder:text-on-surface-variant/30 scrollbar-thin" placeholder={replyMode === "public" ? "Type your reply..." : "Add an internal note (visible to your team)..."} value={replyText} onChange={(e) => { setReplyText(e.target.value); handleTextareaInput(e); }} />
                       <div className="flex items-center justify-between px-3 py-2 border-t border-outline/5">
-                        <div className="flex items-center gap-2 text-on-surface-variant/50">
+                        <div className="flex items-center gap-2 text-on-surface-variant/50 relative">
                           <button className="p-1 hover:text-on-surface transition-colors"><span className="material-symbols-outlined text-base">attachment</span></button>
                           <button className="p-1 hover:text-on-surface transition-colors"><span className="material-symbols-outlined text-base">mood</span></button>
+                          <button onClick={() => setCannedMenuOpen((v) => !v)} className="p-1 hover:text-on-surface transition-colors" title="Canned responses"><span className="material-symbols-outlined text-base">bolt</span></button>
+                          {cannedMenuOpen && (
+                            <div className="absolute z-20 bottom-full left-0 mb-1 w-64 bg-surface-container-high border border-outline-variant rounded-xl shadow-lg overflow-hidden max-h-52 overflow-y-auto">
+                              {cannedResponses.length === 0 ? (
+                                <p className="px-3 py-2 text-[11px] text-on-surface-variant/60">No canned responses yet — add some in Settings.</p>
+                              ) : (
+                                cannedResponses.map((cr) => (
+                                  <button key={cr.id} onClick={() => insertCannedResponse(cr.body)} className="w-full text-left px-3 py-2 text-xs text-on-surface hover:bg-surface-container-highest transition-colors">
+                                    <p className="font-medium">{cr.title}</p>
+                                    <p className="text-[10px] text-on-surface-variant/60 truncate">{cr.body}</p>
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          )}
                         </div>
-                        <button onClick={handleSendReply} disabled={!replyText.trim() || isSending} className="flex items-center gap-1.5 px-4 py-1.5 bg-primary text-on-primary rounded-lg text-[11px] font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                          {isSending ? <><span className="material-symbols-outlined text-sm animate-spin">sync</span> Sending</> : <><span>Send</span> <span className="material-symbols-outlined text-sm">send</span></>}
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button onClick={handleSuggestReply} disabled={suggesting} className="flex items-center gap-1 px-2.5 py-1.5 border border-outline-variant text-on-surface-variant rounded-lg text-[11px] font-semibold hover:bg-surface-container-high transition-all disabled:opacity-50" title="AI-suggested reply">
+                            <span className={`material-symbols-outlined text-sm ${suggesting ? "animate-spin" : ""}`}>{suggesting ? "sync" : "auto_awesome"}</span>
+                            {suggesting ? "Thinking..." : "Suggest"}
+                          </button>
+                          <button onClick={handleSendReply} disabled={!replyText.trim() || isSending} className="flex items-center gap-1.5 px-4 py-1.5 bg-primary text-on-primary rounded-lg text-[11px] font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            {isSending ? <><span className="material-symbols-outlined text-sm animate-spin">sync</span> Sending</> : <><span>Send</span> <span className="material-symbols-outlined text-sm">send</span></>}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -417,6 +494,16 @@ export default function SupportInbox() {
               {/* Tab: Details */}
               {activePanel === "details" && (
                 <div className="flex-1 overflow-y-auto p-5 space-y-6 scrollbar-thin">
+                  {selectedTicket.ai_summary && (
+                    <div className="p-3.5 bg-primary/5 border border-primary/20 rounded-xl">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <span className="material-symbols-outlined text-sm text-primary">auto_awesome</span>
+                        <h5 className="text-[9px] font-bold text-primary uppercase tracking-widest">AI Summary</h5>
+                      </div>
+                      <p className="text-xs text-on-surface leading-relaxed">{selectedTicket.ai_summary}</p>
+                    </div>
+                  )}
+
                   {/* Ticket Info */}
                   <div>
                     <h5 className="text-[9px] font-bold text-on-surface-variant/50 uppercase tracking-widest mb-2.5">Ticket Info</h5>
@@ -433,21 +520,72 @@ export default function SupportInbox() {
                           <span className="text-[11px] text-on-surface font-medium capitalize">{r.val}</span>
                         </div>
                       ))}
+                      {selectedTicket.sla && (
+                        <div className="flex items-center justify-between px-3.5 py-2.5 border-t border-outline/5">
+                          <span className="text-[11px] text-on-surface-variant/70">SLA</span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                            selectedTicket.sla.status === "breached" ? "bg-error/10 text-error" :
+                            selectedTicket.sla.status === "at_risk" ? "bg-amber-500/10 text-amber-400" :
+                            "bg-green-500/10 text-green-400"
+                          }`}>{selectedTicket.sla.status.replace("_", " ")}</span>
+                        </div>
+                      )}
+                      {selectedTicket.csat_rating && (
+                        <div className="flex items-center justify-between px-3.5 py-2.5 border-t border-outline/5">
+                          <span className="text-[11px] text-on-surface-variant/70">CSAT</span>
+                          <span className="text-[11px] text-amber-400 font-medium">{"★".repeat(selectedTicket.csat_rating)}{"☆".repeat(5 - selectedTicket.csat_rating)}</span>
+                        </div>
+                      )}
                     </div>
+                  </div>
+
+                  {/* Tags */}
+                  <div>
+                    <h5 className="text-[9px] font-bold text-on-surface-variant/50 uppercase tracking-widest mb-2.5">Tags</h5>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {(selectedTicket.tags || []).map((tag) => (
+                        <span key={tag} className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-full bg-secondary/10 text-secondary">
+                          {tag}
+                          <button onClick={() => handleRemoveTag(tag)} className="hover:text-error transition-colors">
+                            <span className="material-symbols-outlined text-[12px]">close</span>
+                          </button>
+                        </span>
+                      ))}
+                      {(!selectedTicket.tags || selectedTicket.tags.length === 0) && (
+                        <span className="text-[11px] text-on-surface-variant/50">No tags</span>
+                      )}
+                    </div>
+                    <form onSubmit={handleAddTag} className="flex gap-1.5">
+                      <input value={newTag} onChange={(e) => setNewTag(e.target.value)} placeholder="Add tag..." className="flex-1 bg-surface-container border border-outline-variant rounded-lg px-2.5 py-1.5 text-[11px] text-on-surface placeholder:text-on-surface-variant/40" />
+                      <button type="submit" className="px-2.5 py-1.5 bg-surface-container border border-outline-variant rounded-lg text-[11px] text-on-surface-variant hover:bg-surface-container-high transition-colors">Add</button>
+                    </form>
                   </div>
 
                   {/* Assignment */}
                   <div>
                     <h5 className="text-[9px] font-bold text-on-surface-variant/50 uppercase tracking-widest mb-2.5">Assignment</h5>
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-surface-container border border-outline-variant rounded-xl cursor-pointer hover:border-primary/30 transition-colors" onClick={handleAssign}>
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-full bg-primary text-[9px] flex items-center justify-center font-bold text-on-primary">
-                            {selectedTicket.assigned_to ? selectedTicket.assigned_to.charAt(0).toUpperCase() : "?"}
+                      <div className="relative">
+                        <div className="flex items-center justify-between p-3 bg-surface-container border border-outline-variant rounded-xl cursor-pointer hover:border-primary/30 transition-colors" onClick={() => setAssignMenuOpen((v) => !v)}>
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-full bg-primary text-[9px] flex items-center justify-center font-bold text-on-primary">
+                              {selectedTicket.assigned_to ? selectedTicket.assigned_to.charAt(0).toUpperCase() : "?"}
+                            </div>
+                            <span className="text-sm text-on-surface font-medium">{selectedTicket.assigned_to || "Unassigned"}</span>
                           </div>
-                          <span className="text-sm text-on-surface font-medium">{selectedTicket.assigned_to || "Unassigned"}</span>
+                          <span className="material-symbols-outlined text-base text-on-surface-variant/60 hover:text-primary">edit</span>
                         </div>
-                        <span className="material-symbols-outlined text-base text-on-surface-variant/60 hover:text-primary">edit</span>
+                        {assignMenuOpen && (
+                          <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-surface-container-high border border-outline-variant rounded-xl shadow-lg overflow-hidden max-h-52 overflow-y-auto">
+                            <button onClick={() => handleAssignTo(null)} className="w-full text-left px-3 py-2 text-xs text-on-surface-variant hover:bg-surface-container-highest transition-colors">Unassigned</button>
+                            {teamMembers.map((m) => (
+                              <button key={m.id} onClick={() => handleAssignTo(m.id)} className="w-full text-left px-3 py-2 text-xs text-on-surface hover:bg-surface-container-highest transition-colors flex items-center justify-between">
+                                <span>{m.name || m.email}</span>
+                                {m.role && <span className="text-[9px] text-on-surface-variant uppercase">{m.role}</span>}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className="p-3 bg-surface-container border border-outline-variant rounded-xl">
                         <span className="text-sm text-on-surface font-medium block">{selectedTicket.customer_name || "Anonymous"}</span>

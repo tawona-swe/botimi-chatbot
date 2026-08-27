@@ -89,33 +89,43 @@ export async function streamChat(messages, options = {}) {
 }
 
 /**
- * Simple embedding using Groq's embedding model.
- * Falls back to a simple hash-based embedding if not available.
+ * Embedding via Groq. Groq does not actually serve an embeddings endpoint
+ * as of this writing, so this will fail — callers should fall back to a
+ * real embedding provider (see modelRouter.js) rather than treat a null
+ * return here as "no embedding available anywhere."
  */
 export async function getEmbedding(text) {
   try {
     const client = getClient();
     const response = await client.embeddings.create({
-      model: "text-embedding-ada-002", // fallback if Groq doesn't have embeddings
+      model: "text-embedding-ada-002",
       input: text,
     });
     return response.data[0]?.embedding || null;
   } catch {
-    // Generate a simple random embedding as fallback
-    // In production, use a proper embedding model
-    const dim = 384;
-    const embedding = new Array(dim);
-    let hash = 0;
-    for (let i = 0; i < text.length; i++) {
-      hash = ((hash << 5) - hash) + text.charCodeAt(i);
-      hash |= 0;
-    }
-    for (let i = 0; i < dim; i++) {
-      const seed = Math.sin(hash * (i + 1)) * 10000;
-      embedding[i] = seed - Math.floor(seed);
-    }
-    return embedding;
+    return null;
   }
+}
+
+/**
+ * Deterministic hash-derived pseudo-embedding. NOT semantically meaningful —
+ * this is a last-resort fallback for when no real embedding provider is
+ * configured/reachable, so RAG search degrades to "no matches" instead of
+ * crashing. Never treat its output as an actual measure of relevance.
+ */
+export function hashEmbedding(text) {
+  const dim = 384;
+  const embedding = new Array(dim);
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    hash = ((hash << 5) - hash) + text.charCodeAt(i);
+    hash |= 0;
+  }
+  for (let i = 0; i < dim; i++) {
+    const seed = Math.sin(hash * (i + 1)) * 10000;
+    embedding[i] = seed - Math.floor(seed);
+  }
+  return embedding;
 }
 
 export { getClient, MODELS };

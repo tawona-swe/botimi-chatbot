@@ -22,6 +22,20 @@ const config = {
     apiKey: process.env.GEMINI_API_KEY || "",
   },
 
+  openrouter: {
+    apiKey: process.env.OPENROUTER_API_KEY || "",
+  },
+
+  opencodeZen: {
+    apiKey: process.env.OPENCODE_ZEN_API_KEY || "",
+  },
+
+  whatsapp: {
+    accessToken: process.env.WHATSAPP_ACCESS_TOKEN || "",
+    verifyToken: process.env.WHATSAPP_VERIFY_TOKEN || "",
+    apiVersion: process.env.WHATSAPP_API_VERSION || "v21.0",
+  },
+
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY || "",
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",

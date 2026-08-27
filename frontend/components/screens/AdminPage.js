@@ -10,6 +10,7 @@ export default function AdminPage() {
   const { vendor, isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [overview, setOverview] = useState(null);
   const [vendors, setVendors] = useState([]);
   const [vendorsTotal, setVendorsTotal] = useState(0);
@@ -48,7 +49,7 @@ export default function AdminPage() {
     });
   };
 
-  const loadData = async () => {
+  async function loadData() {
     setLoading(true);
     try {
       const [overviewData, vendorsData, flaggedData] = await Promise.all([
@@ -65,7 +66,7 @@ export default function AdminPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const searchVendors = async () => {
     setLoading(true);
@@ -107,7 +108,7 @@ export default function AdminPage() {
   if (loading && !overview) {
     return (
       <>
-        <Sidebar activeLabel="Admin" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+        <Sidebar activeLabel="Admin" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
         <main className={`flex-1 ${sidebarCollapsed ? 'ml-[80px]' : 'ml-[260px]'} max-lg:ml-0 min-h-screen flex items-center justify-center bg-background`}>
           <span className="material-symbols-outlined text-on-surface-variant animate-spin mr-2">sync</span>
           <span className="text-sm text-on-surface-variant">Loading admin panel...</span>
@@ -126,16 +127,21 @@ export default function AdminPage() {
         .scrollbar-thin::-webkit-scrollbar-thumb:hover { opacity: 1; }
         .bg-dot { background-image: radial-gradient(var(--dot-color) 1px, transparent 1px); background-size: 24px 24px; }
       `}</style>
-      <Sidebar activeLabel="Admin" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+      <Sidebar activeLabel="Admin" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
       <main className={`flex-1 ${sidebarCollapsed ? 'ml-[80px]' : 'ml-[260px]'} max-lg:ml-0 min-h-screen flex flex-col bg-background text-on-background font-body-md relative transition-all duration-300`}>
-        <div className="absolute inset-0 bg-dot pointer-events-none" />
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-500/4 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 bg-dot" />
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-500/4 rounded-full blur-[100px]" />
+        </div>
 
         <header className="h-16 flex items-center justify-between px-6 lg:px-8 bg-background/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-40">
           <div className="flex items-center gap-3">
+            <button onClick={() => setMobileNavOpen(true)} className="lg:hidden text-on-surface-variant hover:text-on-surface transition-colors" aria-label="Open menu">
+              <span className="material-symbols-outlined text-xl">menu</span>
+            </button>
             <span className="material-symbols-outlined text-amber-400">admin_panel_settings</span>
             <h1 className="font-display text-lg font-bold text-on-surface">Admin Panel</h1>
-            <span className="font-label-md text-[11px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">Super Admin</span>
+            <span className="font-label-md text-[11px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 hidden sm:inline">Super Admin</span>
           </div>
           <button onClick={loadData} className="text-on-surface-variant hover:text-on-surface transition-colors" title="Refresh">
             <span className="material-symbols-outlined text-lg">refresh</span>

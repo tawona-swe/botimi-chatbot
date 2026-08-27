@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
+import Link from "next/link";
 
 export default function OnboardingStep2() {
   const [currentStep, setCurrentStep] = useState(1)
@@ -20,7 +21,7 @@ export default function OnboardingStep2() {
     if (currentStep > 1) {
       setCurrentStep((prev) => prev - 1)
     }
-  }, [])
+  }, [currentStep])
 
   const copyCode = useCallback(() => {
     alert("botimi code snippet copied to clipboard!")
@@ -103,17 +104,17 @@ export default function OnboardingStep2() {
         }
       `}</style>
       <header className="bg-background/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50">
-        <div className="flex justify-between items-center w-full px-margin-desktop max-w-container-max mx-auto h-16">
+        <div className="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto h-16">
           <div className="flex items-center gap-stack-sm">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <span className="material-symbols-outlined text-on-primary text-xl">hub</span>
             </div>
-            <a href="/" className="font-display text-headline-md font-extrabold tracking-tight text-on-surface">botimi</a>
+            <Link href="/" className="font-display text-headline-md font-extrabold tracking-tight text-on-surface">botimi</Link>
             <span className="text-primary font-label-md bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20 ml-2">Setup Wizard</span>
           </div>
           <div className="hidden md:flex items-center gap-stack-lg">
             <span className="text-on-surface-variant font-label-md">Onboarding phase: 2/3</span>
-            <a href="/support" className="text-on-surface hover:text-primary transition-colors font-medium">Support</a>
+            <Link href="/support" className="text-on-surface hover:text-primary transition-colors font-medium">Support</Link>
           </div>
         </div>
       </header>
@@ -205,7 +206,7 @@ export default function OnboardingStep2() {
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Live Widget Preview</span>
                   </div>
-                  <div className="w-[340px] bg-surface-container border border-outline-variant rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col transform hover:scale-[1.02] transition-transform">
+                  <div className="w-full max-w-[340px] bg-surface-container border border-outline-variant rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col transform hover:scale-[1.02] transition-transform">
                     <div className="bg-primary p-5 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-on-primary/10 flex items-center justify-center">
@@ -267,7 +268,7 @@ export default function OnboardingStep2() {
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Live Widget Preview</span>
                   </div>
-                  <div className="w-[340px] bg-surface-container border border-outline-variant rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col transform hover:scale-[1.02] transition-transform">
+                  <div className="w-full max-w-[340px] bg-surface-container border border-outline-variant rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col transform hover:scale-[1.02] transition-transform">
                     <div className="bg-primary p-5 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-on-primary/10 flex items-center justify-center">
@@ -385,14 +386,14 @@ export default function OnboardingStep2() {
         </div>
       </main>
       <footer className="bg-surface-container-lowest/50 border-t border-outline/5 py-8 mt-auto">
-        <div className="flex flex-col md:flex-row justify-between items-center px-margin-desktop max-w-container-max mx-auto w-full gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-center px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto w-full gap-4">
           <div className="flex items-center gap-4">
             <span className="font-body-sm text-on-surface-variant">© 2024 botimi Intelligence. Built for the modern web.</span>
           </div>
           <div className="flex gap-8">
-            <a className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/dashboard">Dashboard</a>
-            <a className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/support">Support</a>
-            <a className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/docs">Docs</a>
+            <Link className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/dashboard">Dashboard</Link>
+            <Link className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/support">Support</Link>
+            <Link className="text-xs text-on-surface-variant hover:text-primary transition-colors" href="/docs">Docs</Link>
           </div>
         </div>
       </footer>

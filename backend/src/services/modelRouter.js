@@ -1,15 +1,18 @@
 import * as groq from "./groq.js";
 import * as gemini from "./gemini.js";
+import * as openrouter from "./openrouter.js";
+import * as opencodezen from "./opencodezen.js";
 import config from "../config.js";
 
 /**
  * Model routing logic per botimi spec §6.3.
  *
  * Default: GPT-OSS 120B (Groq) for best quality.
- * If Groq rate limit hit: auto-switch to Gemini 1.5 Flash.
- * If query is simple (< 100 chars, no code blocks): route to GPT-OSS 20B for speed.
- * Vendor can override default model in bot settings.
- * All model switches are invisible to the end user.
+ * Vendor can override provider + model in bot settings (model_provider,
+ * model_name). If the chosen provider isn't configured, or the call fails
+ * for any reason, this cascades: preferred provider -> Groq -> Gemini,
+ * skipping whichever of those is already the one that just failed. All
+ * model switches are invisible to the end user.
  *
  * Model IDs updated 2026-07-08 per Groq deprecation schedule.
  * llama3-70b-8192/llama3-8b-8192 deprecated Aug 2025.
@@ -18,6 +21,30 @@ import config from "../config.js";
 
 const GROQ_PROVIDER = "groq";
 const GEMINI_PROVIDER = "gemini";
+const OPENROUTER_PROVIDER = "openrouter";
+const OPENCODE_ZEN_PROVIDER = "opencodezen";
+
+const SERVICES = {
+  [GROQ_PROVIDER]: groq,
+  [GEMINI_PROVIDER]: gemini,
+  [OPENROUTER_PROVIDER]: openrouter,
+  [OPENCODE_ZEN_PROVIDER]: opencodezen,
+};
+
+const DEFAULT_MODEL_BY_PROVIDER = {
+  [GROQ_PROVIDER]: "llama3-70b",
+  [GEMINI_PROVIDER]: "gemini-flash",
+  [OPENROUTER_PROVIDER]: "auto",
+  [OPENCODE_ZEN_PROVIDER]: "mimo-v2.5",
+};
+
+function isConfigured(provider) {
+  if (provider === GROQ_PROVIDER) return !!config.groq.apiKey;
+  if (provider === GEMINI_PROVIDER) return !!config.gemini.apiKey;
+  if (provider === OPENROUTER_PROVIDER) return !!config.openrouter.apiKey;
+  if (provider === OPENCODE_ZEN_PROVIDER) return !!config.opencodeZen.apiKey;
+  return false;
+}
 
 /**
  * Determine if a query is simple (short, no context needed).
@@ -34,13 +61,30 @@ function isSimpleQuery(messages) {
  * Map provider+model to the actual service call.
  */
 async function callProvider(provider, modelKey, messages, options) {
-  const service = provider === GEMINI_PROVIDER ? gemini : groq;
+  const service = SERVICES[provider];
+  if (!service) throw new Error(`Unknown provider: ${provider}`);
 
-  if (options.stream) {
+  if (options.stream && service.streamChat) {
     return service.streamChat(messages, { ...options, model: modelKey });
   }
 
   return service.chatCompletion(messages, { ...options, model: modelKey });
+}
+
+/**
+ * Try one fallback provider, in order, skipping whichever provider just failed.
+ */
+async function tryFallback(excludeProvider, messages, options, reason) {
+  for (const candidate of [GROQ_PROVIDER, GEMINI_PROVIDER]) {
+    if (candidate === excludeProvider || !isConfigured(candidate)) continue;
+    try {
+      const result = await callProvider(candidate, DEFAULT_MODEL_BY_PROVIDER[candidate], messages, options);
+      return { ...result, provider: candidate, _routed: true, _fallbackReason: reason };
+    } catch {
+      // try the next candidate
+    }
+  }
+  return null;
 }
 
 /**
@@ -56,73 +100,31 @@ async function callProvider(provider, modelKey, messages, options) {
  * @returns {Promise<Object>} { content, tokensUsed, latencyMs, model, provider }
  */
 export async function chatCompletion(messages, options = {}) {
-  const preferredModel = options.model || "llama3-70b";
-  const preferredProvider = options.provider || GROQ_PROVIDER;
-  const startTime = Date.now();
-
-  // Determine if this is a simple query for fast-routing
-  const simple = isSimpleQuery(messages);
-  let modelKey = preferredModel;
-  let provider = preferredProvider;
+  let provider = options.provider || GROQ_PROVIDER;
+  if (!SERVICES[provider]) provider = GROQ_PROVIDER;
+  let modelKey = options.model || DEFAULT_MODEL_BY_PROVIDER[provider];
 
   // §6.3: Simple queries route to GPT-OSS 20B for speed
-  if (simple && provider === GROQ_PROVIDER && preferredModel === "llama3-70b") {
+  const simple = isSimpleQuery(messages);
+  if (simple && provider === GROQ_PROVIDER && modelKey === "llama3-70b") {
     modelKey = "llama3-8b";
   }
 
-  // If Gemini is preferred (vendor override), try that first
-  if (provider === GEMINI_PROVIDER && !config.gemini.apiKey) {
-    // Fallback to Groq if Gemini not configured
-    provider = GROQ_PROVIDER;
-    modelKey = preferredModel;
+  // If the preferred provider isn't configured at all, go straight to fallback.
+  if (!isConfigured(provider)) {
+    console.warn(`[Router] ${provider} not configured, falling back`);
+    const fallback = await tryFallback(provider, messages, options, `${provider}_not_configured`);
+    if (fallback) return fallback;
+    throw new Error(`No configured model provider available (wanted ${provider})`);
   }
 
-  // Attempt primary provider
   try {
     const result = await callProvider(provider, modelKey, messages, options);
-    return {
-      ...result,
-      provider,
-      _routed: false,
-    };
+    return { ...result, provider, _routed: false };
   } catch (err) {
-    const errMsg = err.message || "";
-
-    // §6.3: If Groq rate limit hit → auto-switch to Gemini
-    if (provider === GROQ_PROVIDER && config.gemini.apiKey &&
-        (errMsg.includes("429") || errMsg.includes("rate_limit") || errMsg.includes("RATE_LIMIT"))) {
-      console.warn("[Router] Groq rate limited, falling back to Gemini Flash");
-      try {
-        const fallbackResult = await callProvider(GEMINI_PROVIDER, "gemini-1.5-flash", messages, options);
-        return {
-          ...fallbackResult,
-          provider: GEMINI_PROVIDER,
-          _routed: true,
-          _fallbackReason: "groq_rate_limit",
-        };
-      } catch (geminiErr) {
-        // Both providers failed — throw the original error
-        console.error("[Router] Both Groq and Gemini failed");
-        throw err;
-      }
-    }
-
-    // If Gemini fails and Groq is available, fallback to Groq
-    if (provider === GEMINI_PROVIDER && config.groq.apiKey) {
-      console.warn("[Router] Gemini failed, falling back to Groq");
-      try {
-        const fallbackResult = await callProvider(GROQ_PROVIDER, "llama3-70b", messages, options);
-        return {
-          ...fallbackResult,
-          provider: GROQ_PROVIDER,
-          _routed: true,
-          _fallbackReason: "gemini_error",
-        };
-      } catch {
-        throw err;
-      }
-    }
-
+    console.warn(`[Router] ${provider} failed (${err.message}), falling back`);
+    const fallback = await tryFallback(provider, messages, options, `${provider}_error`);
+    if (fallback) return fallback;
     throw err;
   }
 }
@@ -146,8 +148,9 @@ export async function getEmbedding(text) {
     } catch { /* fall through */ }
   }
 
-  // Final fallback: Groq's hash-based embedding
-  return groq.getEmbedding(text);
+  // Final fallback: deterministic hash-based pseudo-embedding (not semantically
+  // meaningful — only reached when no real embedding provider is available).
+  return groq.hashEmbedding(text);
 }
 
-export { GROQ_PROVIDER, GEMINI_PROVIDER };
+export { GROQ_PROVIDER, GEMINI_PROVIDER, OPENROUTER_PROVIDER, OPENCODE_ZEN_PROVIDER, DEFAULT_MODEL_BY_PROVIDER };

@@ -69,6 +69,25 @@ export async function sendTicketConfirmation(email, ticketNumber, subject) {
 }
 
 /**
+ * Send a CSAT survey link once a ticket is resolved.
+ */
+export async function sendTicketResolvedWithCsat(email, ticketNumber, subject, ticketId) {
+  const ratingUrl = `${config.frontendUrl}/csat/${ticketId}`;
+  return sendEmail({
+    to: email,
+    subject: `[${ticketNumber}] Your support ticket has been resolved`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+        <h1 style="color: #c0c1ff;">Ticket Resolved</h1>
+        <p>Your support ticket <strong>${ticketNumber}</strong> (${subject}) has been marked resolved.</p>
+        <p>How did we do?</p>
+        <a href="${ratingUrl}" style="display: inline-block; background: #c0c1ff; color: #1000a9; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Rate your support experience</a>
+      </div>
+    `,
+  });
+}
+
+/**
  * Send overage alert to vendor.
  */
 export async function sendOverageAlert(vendorEmail, usagePct, planName) {

@@ -13,15 +13,25 @@ const PLANS = [
 ];
 
 export default function SettingsPage() {
-  const { vendor, refreshVendor, isAuthenticated, loading: authLoading } = useAuth();
+  const { vendor, teamMember, refreshVendor, isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [team, setTeam] = useState({ owner: null, members: [] });
+  const [teamLoading, setTeamLoading] = useState(true);
+  const [inviteForm, setInviteForm] = useState({ email: "", name: "", password: "", role: "agent" });
+  const [inviteError, setInviteError] = useState("");
+  const [inviting, setInviting] = useState(false);
+  const canManageTeam = !teamMember || teamMember.role === "owner" || teamMember.role === "admin";
+  const [cannedResponses, setCannedResponses] = useState([]);
+  const [cannedForm, setCannedForm] = useState({ title: "", body: "" });
+  const [cannedSaving, setCannedSaving] = useState(false);
 
   // Form state
   const [form, setForm] = useState({
@@ -47,8 +57,98 @@ export default function SettingsPage() {
   useEffect(() => {
     if (isAuthenticated) {
       loadProfile();
+      loadTeam();
+      loadCannedResponses();
     }
   }, [isAuthenticated]);
+
+  async function loadCannedResponses() {
+    try {
+      const data = await api.getCannedResponses();
+      setCannedResponses(data.responses);
+    } catch (err) {
+      console.error("Failed to load canned responses:", err);
+    }
+  }
+
+  const handleCreateCanned = async (e) => {
+    e.preventDefault();
+    if (!cannedForm.title.trim() || !cannedForm.body.trim()) return;
+    setCannedSaving(true);
+    try {
+      await api.createCannedResponse(cannedForm);
+      setCannedForm({ title: "", body: "" });
+      await loadCannedResponses();
+    } catch (err) {
+      console.error("Failed to create canned response:", err);
+    } finally {
+      setCannedSaving(false);
+    }
+  };
+
+  const handleDeleteCanned = async (id) => {
+    try {
+      await api.deleteCannedResponse(id);
+      await loadCannedResponses();
+    } catch (err) {
+      console.error("Failed to delete canned response:", err);
+    }
+  };
+
+  async function loadTeam() {
+    setTeamLoading(true);
+    try {
+      const data = await api.getTeam();
+      setTeam(data);
+    } catch (err) {
+      console.error("Failed to load team:", err);
+    } finally {
+      setTeamLoading(false);
+    }
+  }
+
+  const handleInvite = async (e) => {
+    e.preventDefault();
+    setInviteError("");
+    setInviting(true);
+    try {
+      await api.inviteTeamMember(inviteForm);
+      setInviteForm({ email: "", name: "", password: "", role: "agent" });
+      await loadTeam();
+    } catch (err) {
+      setInviteError(err.message || "Failed to invite team member");
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const handleRoleChange = async (id, role) => {
+    try {
+      await api.updateTeamMember(id, { role });
+      await loadTeam();
+    } catch (err) {
+      console.error("Failed to update role:", err);
+    }
+  };
+
+  const handleToggleActive = async (id, isActive) => {
+    try {
+      await api.updateTeamMember(id, { isActive: !isActive });
+      await loadTeam();
+    } catch (err) {
+      console.error("Failed to update status:", err);
+    }
+  };
+
+  const handleRemoveMember = async (id) => {
+    if (!confirm("Remove this team member? They will lose access immediately.")) return;
+    try {
+      await api.removeTeamMember(id);
+      await loadTeam();
+    } catch (err) {
+      console.error("Failed to remove team member:", err);
+    }
+  };
 
   const toggleSidebar = () => {
     setSidebarCollapsed(prev => {
@@ -57,7 +157,7 @@ export default function SettingsPage() {
     });
   };
 
-  const loadProfile = async () => {
+  async function loadProfile() {
     setLoading(true);
     try {
       const data = await api.getProfile();
@@ -74,7 +174,7 @@ export default function SettingsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const saveProfile = async () => {
     setSaving(true);
@@ -117,7 +217,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <>
-        <Sidebar activeLabel="Settings" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+        <Sidebar activeLabel="Settings" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
         <main className={`flex-1 ${sidebarCollapsed ? 'ml-[80px]' : 'ml-[260px]'} max-lg:ml-0 min-h-screen flex items-center justify-center bg-background`}>
           <span className="material-symbols-outlined text-on-surface-variant animate-spin mr-2">sync</span>
           <span className="text-sm text-on-surface-variant">Loading settings...</span>
@@ -133,14 +233,21 @@ export default function SettingsPage() {
         .bg-dot { background-image: radial-gradient(var(--dot-color) 1px, transparent 1px); background-size: 24px 24px; }
         input:focus, textarea:focus, select:focus { outline: none; border-color: #c0c1ff; box-shadow: 0 0 0 3px rgba(192,193,255,0.15); }
       `}</style>
-      <Sidebar activeLabel="Settings" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+      <Sidebar activeLabel="Settings" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
       <main className={`flex-1 ${sidebarCollapsed ? 'ml-[80px]' : 'ml-[260px]'} max-lg:ml-0 min-h-screen flex flex-col bg-background text-on-background font-body-md relative transition-all duration-300`}>
-        <div className="absolute inset-0 bg-dot pointer-events-none" />
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/4 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 bg-dot" />
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/4 rounded-full blur-[100px]" />
+        </div>
 
         {/* Header */}
         <div className="px-8 py-6 bg-surface-container-lowest/80 backdrop-blur-sm border-b border-outline-variant shrink-0 z-10">
-          <h1 className="font-display text-2xl font-bold text-on-surface">Settings</h1>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setMobileNavOpen(true)} className="lg:hidden text-on-surface-variant hover:text-on-surface transition-colors" aria-label="Open menu">
+              <span className="material-symbols-outlined text-xl">menu</span>
+            </button>
+            <h1 className="font-display text-2xl font-bold text-on-surface">Settings</h1>
+          </div>
           <p className="text-sm text-on-surface-variant mt-1">Manage your account, plan, and preferences</p>
         </div>
 
@@ -205,6 +312,121 @@ export default function SettingsPage() {
                 </span>
               )}
             </div>
+          </div>
+
+          {/* Team Section */}
+          <div className="bg-surface-container border border-outline-variant rounded-2xl p-8 max-w-3xl">
+            <h2 className="font-display text-lg font-bold text-on-surface mb-2">Team</h2>
+            <p className="text-xs text-on-surface-variant mb-6">Invite teammates to help manage bots and support tickets.</p>
+
+            {teamLoading ? (
+              <p className="text-sm text-on-surface-variant">Loading team...</p>
+            ) : (
+              <div className="space-y-2 mb-6">
+                {team.owner && (
+                  <div className="flex items-center justify-between p-3 bg-surface-container-lowest border border-outline-variant rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary text-xs font-bold">
+                        {team.owner.name?.slice(0, 2)?.toUpperCase() || team.owner.email?.slice(0, 2)?.toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-sm text-on-surface font-medium">{team.owner.name || team.owner.email}</p>
+                        <p className="text-[11px] text-on-surface-variant">{team.owner.email}</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary uppercase">Owner</span>
+                  </div>
+                )}
+                {team.members.map((m) => (
+                  <div key={m.id} className="flex items-center justify-between p-3 bg-surface-container-lowest border border-outline-variant rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-on-secondary text-xs font-bold">
+                        {m.name?.slice(0, 2)?.toUpperCase() || m.email?.slice(0, 2)?.toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-sm text-on-surface font-medium">{m.name || m.email}</p>
+                        <p className="text-[11px] text-on-surface-variant">{m.email}{!m.isActive && " · removed"}</p>
+                      </div>
+                    </div>
+                    {canManageTeam ? (
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={m.role}
+                          onChange={(e) => handleRoleChange(m.id, e.target.value)}
+                          className="text-[11px] bg-surface-container border border-outline-variant rounded-lg px-2 py-1 text-on-surface"
+                        >
+                          <option value="agent">Agent</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                        <button onClick={() => handleToggleActive(m.id, m.isActive)} className="text-[11px] px-2 py-1 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                          {m.isActive ? "Deactivate" : "Reactivate"}
+                        </button>
+                        <button onClick={() => handleRemoveMember(m.id)} className="text-on-surface-variant hover:text-error transition-colors p-1" aria-label="Remove">
+                          <span className="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant uppercase">{m.role}</span>
+                    )}
+                  </div>
+                ))}
+                {team.members.length === 0 && (
+                  <p className="text-xs text-on-surface-variant/60 text-center py-4">No teammates invited yet</p>
+                )}
+              </div>
+            )}
+
+            {canManageTeam && (
+              <form onSubmit={handleInvite} className="pt-4 border-t border-outline/5 space-y-3">
+                <p className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Invite a teammate</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input type="email" required placeholder="Email" value={inviteForm.email} onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))} className="bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
+                  <input type="text" placeholder="Name" value={inviteForm.name} onChange={e => setInviteForm(f => ({ ...f, name: e.target.value }))} className="bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
+                  <input type="text" required minLength={8} placeholder="Temporary password (min 8 chars)" value={inviteForm.password} onChange={e => setInviteForm(f => ({ ...f, password: e.target.value }))} className="bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
+                  <select value={inviteForm.role} onChange={e => setInviteForm(f => ({ ...f, role: e.target.value }))} className="bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface">
+                    <option value="agent">Agent</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+                <p className="text-[11px] text-on-surface-variant/60">There&apos;s no invite-email yet — share this password with them directly so they can log in and change it.</p>
+                {inviteError && <p className="text-[11px] text-error">{inviteError}</p>}
+                <button type="submit" disabled={inviting} className="px-5 py-2.5 bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50">
+                  {inviting ? "Inviting..." : "Invite Teammate"}
+                </button>
+              </form>
+            )}
+          </div>
+
+          {/* Canned Responses Section */}
+          <div className="bg-surface-container border border-outline-variant rounded-2xl p-8 max-w-3xl">
+            <h2 className="font-display text-lg font-bold text-on-surface mb-2">Canned Responses</h2>
+            <p className="text-xs text-on-surface-variant mb-6">Saved reply templates your team can insert with one click while replying to tickets.</p>
+
+            <div className="space-y-2 mb-6">
+              {cannedResponses.map((cr) => (
+                <div key={cr.id} className="flex items-start justify-between gap-3 p-3 bg-surface-container-lowest border border-outline-variant rounded-xl">
+                  <div className="min-w-0">
+                    <p className="text-sm text-on-surface font-medium">{cr.title}</p>
+                    <p className="text-xs text-on-surface-variant truncate">{cr.body}</p>
+                  </div>
+                  <button onClick={() => handleDeleteCanned(cr.id)} className="text-on-surface-variant hover:text-error transition-colors p-1 shrink-0" aria-label="Delete">
+                    <span className="material-symbols-outlined text-sm">delete</span>
+                  </button>
+                </div>
+              ))}
+              {cannedResponses.length === 0 && (
+                <p className="text-xs text-on-surface-variant/60 text-center py-4">No canned responses yet</p>
+              )}
+            </div>
+
+            <form onSubmit={handleCreateCanned} className="pt-4 border-t border-outline/5 space-y-3">
+              <p className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Add a template</p>
+              <input type="text" required placeholder="Title (e.g. Refund policy)" value={cannedForm.title} onChange={e => setCannedForm(f => ({ ...f, title: e.target.value }))} className="w-full bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
+              <textarea required rows={3} placeholder="Reply text..." value={cannedForm.body} onChange={e => setCannedForm(f => ({ ...f, body: e.target.value }))} className="w-full bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50 resize-none" />
+              <button type="submit" disabled={cannedSaving} className="px-5 py-2.5 bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50">
+                {cannedSaving ? "Saving..." : "Add Template"}
+              </button>
+            </form>
           </div>
 
           {/* Plan Section */}

@@ -207,8 +207,46 @@ class ApiClient {
     return this.request("POST", `/tickets/${id}/reply`, { body, isInternalNote });
   }
 
-  assignTicket(id, agentName) {
-    return this.request("POST", `/tickets/${id}/assign`, { agentName });
+  assignTicket(id, teamMemberId) {
+    return this.request("POST", `/tickets/${id}/assign`, { teamMemberId });
+  }
+
+  suggestTicketReply(id) {
+    return this.request("POST", `/tickets/${id}/suggest-reply`);
+  }
+
+  addTicketTag(id, tag) {
+    return this.request("POST", `/tickets/${id}/tags`, { tag });
+  }
+
+  removeTicketTag(id, tag) {
+    return this.request("DELETE", `/tickets/${id}/tags/${encodeURIComponent(tag)}`);
+  }
+
+  // Canned responses
+  getCannedResponses() {
+    return this.request("GET", "/canned-responses");
+  }
+
+  createCannedResponse(data) {
+    return this.request("POST", "/canned-responses", data);
+  }
+
+  updateCannedResponse(id, data) {
+    return this.request("PATCH", `/canned-responses/${id}`, data);
+  }
+
+  deleteCannedResponse(id) {
+    return this.request("DELETE", `/canned-responses/${id}`);
+  }
+
+  // Public CSAT (no auth)
+  getCsatTicket(id) {
+    return this.request("GET", `/public/tickets/${id}/csat`);
+  }
+
+  submitCsat(id, rating, comment) {
+    return this.request("POST", `/public/tickets/${id}/csat`, { rating, comment });
   }
 
   // Vendor
@@ -218,6 +256,23 @@ class ApiClient {
 
   updateProfile(data) {
     return this.request("PATCH", "/vendor/profile", data);
+  }
+
+  // Team
+  getTeam() {
+    return this.request("GET", "/team");
+  }
+
+  inviteTeamMember(data) {
+    return this.request("POST", "/team/invite", data);
+  }
+
+  updateTeamMember(id, data) {
+    return this.request("PATCH", `/team/${id}`, data);
+  }
+
+  removeTeamMember(id) {
+    return this.request("DELETE", `/team/${id}`);
   }
 
   createCheckout(planId, ticketAddon) {

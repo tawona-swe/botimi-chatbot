@@ -13,7 +13,7 @@ const navItems = [
   { label: "Settings", icon: "settings", href: "/settings" },
 ];
 
-export default function Sidebar({ activeLabel, isCollapsed, onToggle }) {
+export default function Sidebar({ activeLabel, isCollapsed, onToggle, mobileOpen, onMobileClose }) {
   const pathname = usePathname();
   const router = useRouter();
   const { vendor, logout } = useAuth();
@@ -51,7 +51,14 @@ export default function Sidebar({ activeLabel, isCollapsed, onToggle }) {
   };
 
   return (
-    <aside className={`fixed left-0 top-0 h-full ${isCollapsed ? 'w-[80px] p-2' : 'w-[260px] p-stack-md'} bg-surface-container border-r border-outline-variant flex flex-col z-50 max-lg:hidden transition-all duration-300 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`}>
+    <>
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+          onClick={onMobileClose}
+        />
+      )}
+      <aside className={`fixed left-0 top-0 h-full ${isCollapsed ? 'w-[80px] p-2' : 'w-[260px] p-stack-md'} bg-surface-container border-r border-outline-variant flex flex-col z-50 transition-all duration-300 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
       <div className={`mb-stack-xl flex items-center ${isCollapsed ? 'flex-col gap-4 mt-4' : 'justify-between px-2'}`}>
         {!isCollapsed ? (
           <Link href="/" target="_top" className="block overflow-hidden">
@@ -80,6 +87,7 @@ export default function Sidebar({ activeLabel, isCollapsed, onToggle }) {
               key={item.label}
               href={item.href}
               title={isCollapsed ? item.label : undefined}
+              onClick={onMobileClose}
               className={`flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-3 px-3 py-2'} rounded-lg transition-all duration-200 ${
                 isActive
                   ? "bg-primary/10 text-primary font-bold active:scale-[0.98]"
@@ -112,11 +120,11 @@ export default function Sidebar({ activeLabel, isCollapsed, onToggle }) {
           {!isCollapsed && <span className="font-label-md text-label-md whitespace-nowrap">{isDark ? "Light mode" : "Dark mode"}</span>}
         </button>
         <div className="pt-4 border-t border-outline-variant space-y-1">
-          <Link href="/" title={isCollapsed ? "Home" : undefined} className={`flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-3 px-3 py-2'} text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all duration-200`}>
+          <Link href="/" onClick={onMobileClose} title={isCollapsed ? "Home" : undefined} className={`flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-3 px-3 py-2'} text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all duration-200`}>
             <span className="material-symbols-outlined shrink-0">home</span>
             {!isCollapsed && <span className="font-label-md text-label-md whitespace-nowrap">Home</span>}
           </Link>
-          <button type="button" onClick={openAssistant} title={isCollapsed ? "Help" : undefined} className={`w-full flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-3 px-3 py-2'} text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all duration-200`}>
+          <button type="button" onClick={() => { onMobileClose && onMobileClose(); openAssistant(); }} title={isCollapsed ? "Help" : undefined} className={`w-full flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-3 px-3 py-2'} text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all duration-200`}>
             <span className="material-symbols-outlined shrink-0">help</span>
             {!isCollapsed && <span className="font-label-md text-label-md whitespace-nowrap">Help</span>}
           </button>
@@ -127,5 +135,6 @@ export default function Sidebar({ activeLabel, isCollapsed, onToggle }) {
         </div>
       </div>
     </aside>
+    </>
   );
 }

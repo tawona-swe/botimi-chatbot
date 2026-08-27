@@ -10,12 +10,41 @@ export default function AnalyticsPage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [analytics, setAnalytics] = useState(null);
   const [ticketAnalytics, setTicketAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [chartLoading, setChartLoading] = useState(false);
   const [timeRange, setTimeRange] = useState("7d"); // 7d | 30d | 90d
+
+  async function loadData() {
+    setLoading(true);
+    try {
+      const [overview, tickets] = await Promise.all([
+        api.getAnalytics(),
+        api.getTicketAnalytics().catch(() => null),
+      ]);
+      setAnalytics(overview);
+      setTicketAnalytics(tickets);
+    } catch (err) {
+      console.error("Failed to load analytics:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadVolumeByDay(days) {
+    try {
+      setChartLoading(true);
+      const data = await api.getAnalytics({ days });
+      setAnalytics((prev) => (prev ? { ...prev, volumeByDay: data.volumeByDay } : data));
+    } catch {
+      // Non-critical — chart keeps whatever range it last had
+    } finally {
+      setChartLoading(false);
+    }
+  }
 
   useEffect(() => {
     const saved = localStorage.getItem("botimiSidebarCollapsed");
@@ -49,34 +78,6 @@ export default function AnalyticsPage() {
     });
   };
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [overview, tickets] = await Promise.all([
-        api.getAnalytics(),
-        api.getTicketAnalytics().catch(() => null),
-      ]);
-      setAnalytics(overview);
-      setTicketAnalytics(tickets);
-    } catch (err) {
-      console.error("Failed to load analytics:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadVolumeByDay = async (days) => {
-    try {
-      setChartLoading(true);
-      const data = await api.getAnalytics({ days });
-      setAnalytics((prev) => (prev ? { ...prev, volumeByDay: data.volumeByDay } : data));
-    } catch {
-      // Non-critical — chart keeps whatever range it last had
-    } finally {
-      setChartLoading(false);
-    }
-  };
-
   const formatNumber = (n) => {
     if (n === null || n === undefined) return "—";
     return n.toLocaleString();
@@ -85,7 +86,7 @@ export default function AnalyticsPage() {
   if (loading) {
     return (
       <>
-        <Sidebar activeLabel="Analytics" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+        <Sidebar activeLabel="Analytics" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
         <main className={`flex-1 ${sidebarCollapsed ? 'ml-[80px]' : 'ml-[260px]'} max-lg:ml-0 min-h-screen flex items-center justify-center bg-background`}>
           <span className="material-symbols-outlined text-on-surface-variant animate-spin mr-2">sync</span>
           <span className="text-sm text-on-surface-variant">Loading analytics...</span>
@@ -121,17 +122,24 @@ export default function AnalyticsPage() {
           box-shadow: 0 0 40px -10px rgba(192, 193, 255, 0.25);
         }
       `}</style>
-      <Sidebar activeLabel="Analytics" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+      <Sidebar activeLabel="Analytics" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
       <main className={`flex-1 ${sidebarCollapsed ? 'ml-[80px]' : 'ml-[260px]'} max-lg:ml-0 min-h-screen flex flex-col bg-background text-on-background font-body-md relative transition-all duration-300`}>
-        <div className="absolute inset-0 bg-dot pointer-events-none" />
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-secondary/4 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-primary/3 rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 bg-dot" />
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-secondary/4 rounded-full blur-[100px]" />
+          <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-primary/3 rounded-full blur-[80px]" />
+        </div>
 
         {/* Header */}
         <div className="px-8 py-6 bg-surface-container-lowest/80 backdrop-blur-sm border-b border-outline-variant flex items-center justify-between shrink-0 z-10">
-          <div>
-            <h1 className="font-display text-2xl font-bold text-on-surface">Analytics</h1>
-            <p className="text-sm text-on-surface-variant mt-1">Deep insights into your chatbot performance</p>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setMobileNavOpen(true)} className="lg:hidden text-on-surface-variant hover:text-on-surface transition-colors" aria-label="Open menu">
+              <span className="material-symbols-outlined text-xl">menu</span>
+            </button>
+            <div>
+              <h1 className="font-display text-2xl font-bold text-on-surface">Analytics</h1>
+              <p className="text-sm text-on-surface-variant mt-1">Deep insights into your chatbot performance</p>
+            </div>
           </div>
           <div className="flex items-center gap-2 bg-surface-container rounded-xl p-1 border border-outline-variant">
             {["7d", "30d", "90d"].map(r => (

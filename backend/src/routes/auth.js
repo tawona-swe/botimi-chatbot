@@ -84,26 +84,47 @@ router.post("/login", authLimiter, async (req, res) => {
       return res.status(400).json({ error: "Email and password are required" });
     }
 
-    const vendor = db.prepare("SELECT * FROM vendors WHERE email = ?").get(email.toLowerCase());
+    let vendor = db.prepare("SELECT * FROM vendors WHERE email = ?").get(email.toLowerCase());
+    let teamMember = null;
+
     if (!vendor) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      // Not an owner account — check invited team-member seats.
+      teamMember = db.prepare("SELECT * FROM team_members WHERE email = ?").get(email.toLowerCase());
+      if (!teamMember) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+      if (!teamMember.is_active) {
+        return res.status(403).json({ error: "This team member account has been removed" });
+      }
+      const teamValid = await bcrypt.compare(password, teamMember.password_hash);
+      if (!teamValid) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+      vendor = db.prepare("SELECT * FROM vendors WHERE id = ?").get(teamMember.vendor_id);
+      if (!vendor) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+    } else {
+      const valid = await bcrypt.compare(password, vendor.password_hash);
+      if (!valid) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
     }
 
     if (vendor.is_suspended) {
       return res.status(403).json({ error: "Account has been suspended" });
     }
 
-    const valid = await bcrypt.compare(password, vendor.password_hash);
-    if (!valid) {
-      return res.status(401).json({ error: "Invalid email or password" });
-    }
-
-    const token = jwt.sign({ vendorId: vendor.id }, config.jwt.secret, { expiresIn: config.jwt.expiresIn });
+    const token = jwt.sign(
+      teamMember ? { vendorId: vendor.id, teamMemberId: teamMember.id } : { vendorId: vendor.id },
+      config.jwt.secret,
+      { expiresIn: config.jwt.expiresIn }
+    );
 
     // Store session
     const sessionId = uuidv4();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-    db.prepare("INSERT INTO sessions (id, vendor_id, token, expires_at) VALUES (?, ?, ?, ?)").run(sessionId, vendor.id, token, expiresAt);
+    db.prepare("INSERT INTO sessions (id, vendor_id, token, expires_at, team_member_id) VALUES (?, ?, ?, ?, ?)").run(sessionId, vendor.id, token, expiresAt, teamMember?.id || null);
 
     // Update last active
     db.prepare("UPDATE vendors SET last_active_at = datetime('now') WHERE id = ?").run(vendor.id);
@@ -124,6 +145,7 @@ router.post("/login", authLimiter, async (req, res) => {
         ticketAddon: !!vendor.ticket_addon,
         botId: bot?.id,
       },
+      teamMember: teamMember ? { id: teamMember.id, email: teamMember.email, name: teamMember.name, role: teamMember.role } : null,
     });
   } catch (err) {
     console.error("[Auth] Login error:", err);
@@ -250,6 +272,7 @@ router.get("/me", authenticate, (req, res) => {
       botId: bot?.id,
       botName: bot?.name,
     },
+    teamMember: req.teamMember ? { id: req.teamMember.id, email: req.teamMember.email, name: req.teamMember.name, role: req.teamMember.role } : null,
   });
 });
 

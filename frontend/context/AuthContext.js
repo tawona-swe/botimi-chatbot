@@ -7,6 +7,7 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [vendor, setVendor] = useState(null);
+  const [teamMember, setTeamMember] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -16,6 +17,7 @@ export function AuthProvider({ children }) {
       api.getMe()
         .then((data) => {
           setVendor(data.vendor);
+          setTeamMember(data.teamMember || null);
         })
         .catch(() => {
           api.setToken(null);
@@ -34,6 +36,7 @@ export function AuthProvider({ children }) {
       const data = await api.signup(email, password, companyName, name, industry);
       api.setToken(data.token);
       setVendor(data.vendor);
+      setTeamMember(null);
       return data;
     } catch (err) {
       setError(err.message);
@@ -47,6 +50,7 @@ export function AuthProvider({ children }) {
       const data = await api.login(email, password);
       api.setToken(data.token);
       setVendor(data.vendor);
+      setTeamMember(data.teamMember || null);
       return data;
     } catch (err) {
       setError(err.message);
@@ -60,6 +64,7 @@ export function AuthProvider({ children }) {
       const data = await api.googleSignIn(credential);
       api.setToken(data.token);
       setVendor(data.vendor);
+      setTeamMember(null);
       return data;
     } catch (err) {
       setError(err.message);
@@ -75,19 +80,21 @@ export function AuthProvider({ children }) {
     }
     api.setToken(null);
     setVendor(null);
+    setTeamMember(null);
   }, []);
 
   const refreshVendor = useCallback(async () => {
     try {
       const data = await api.getMe();
       setVendor(data.vendor);
+      setTeamMember(data.teamMember || null);
     } catch {
       // Ignore refresh errors
     }
   }, []);
 
   return (
-    <AuthContext.Provider value={{ vendor, loading, error, signup, login, loginWithGoogleCredential, logout, refreshVendor, isAuthenticated: !!vendor }}>
+    <AuthContext.Provider value={{ vendor, teamMember, loading, error, signup, login, loginWithGoogleCredential, logout, refreshVendor, isAuthenticated: !!vendor }}>
       {children}
     </AuthContext.Provider>
   );

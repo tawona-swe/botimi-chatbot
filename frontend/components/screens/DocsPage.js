@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import api from "../../lib/api";
 
 const DEMO_BOT_ID = "demo-bot-static";
-let demoConvId = null;
 
 const sidebarSections = [
   { id: "getting-started", label: "Getting Started", icon: "rocket_launch" },
@@ -29,6 +29,7 @@ export default function DocsPage() {
     { role: "bot", text: "Hey there! I'm your botimi assistant. I can help with pricing, integrations, documentation — pretty much anything. What's on your mind?", time: "10:02 AM" },
   ]);
   const chatRef = useRef(null);
+  const demoConvIdRef = useRef(null);
 
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"));
@@ -53,8 +54,8 @@ export default function DocsPage() {
     setInputValue("");
     setIsTyping(true);
     try {
-      const res = await api.sendMessage(DEMO_BOT_ID, text.trim(), demoConvId);
-      demoConvId = res.conversationId;
+      const res = await api.sendMessage(DEMO_BOT_ID, text.trim(), demoConvIdRef.current);
+      demoConvIdRef.current = res.conversationId;
       const replyTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
       setChatMessages((prev) => [...prev, { role: "bot", text: res.reply, time: replyTime }]);
     } catch {
@@ -121,20 +122,20 @@ export default function DocsPage() {
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden text-on-surface-variant hover:text-on-surface transition-colors">
               <span className="material-symbols-outlined text-xl">{sidebarOpen ? "close" : "menu"}</span>
             </button>
-            <a href="/" className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                 <span className="text-[10px] text-on-primary font-bold">B</span>
               </div>
               <span className="font-bold text-on-surface text-sm">botimi</span>
               <span className="hidden sm:inline ml-1.5 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded">Docs</span>
-            </a>
+            </Link>
           </div>
           <div className="flex items-center gap-3">
             <button onClick={toggleTheme} className="w-8 h-8 rounded-lg bg-surface-container-high border border-outline-variant/50 flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors" aria-label="Toggle theme">
               <span className="material-symbols-outlined text-sm">{isDark ? "light_mode" : "dark_mode"}</span>
             </button>
-            <a href="/" className="hidden sm:inline text-xs text-on-surface-variant hover:text-primary transition-colors">Home</a>
-            <a href="/register" className="text-xs bg-primary text-on-primary px-3 py-1.5 rounded-lg font-semibold hover:brightness-110 transition-all">Get Started</a>
+            <Link href="/" className="hidden sm:inline text-xs text-on-surface-variant hover:text-primary transition-colors">Home</Link>
+            <Link href="/register" className="text-xs bg-primary text-on-primary px-3 py-1.5 rounded-lg font-semibold hover:brightness-110 transition-all">Get Started</Link>
           </div>
         </div>
       </header>
@@ -159,10 +160,10 @@ export default function DocsPage() {
             ))}
           </nav>
           <div className="border-t border-outline-variant/50 p-4">
-            <a href="/" className="flex items-center gap-2 text-xs text-on-surface-variant/60 hover:text-on-surface-variant transition-colors">
+            <Link href="/" className="flex items-center gap-2 text-xs text-on-surface-variant/60 hover:text-on-surface-variant transition-colors">
               <span className="material-symbols-outlined text-sm">arrow_back</span>
               Back to Home
-            </a>
+            </Link>
           </div>
         </aside>
 
@@ -210,7 +211,7 @@ export default function DocsPage() {
                 <div className="step-num">1</div>
                 <div>
                   <h3>Create an account</h3>
-                  <p className="mb-0!">Sign up at <a href="/register" className="text-primary hover:underline">botimi.ai/register</a> with your email or Google account. No credit card required.</p>
+                  <p className="mb-0!">Sign up at <Link href="/register" className="text-primary hover:underline">botimi.ai/register</Link> with your email or Google account. No credit card required.</p>
                 </div>
               </div>
 
@@ -437,8 +438,8 @@ export default function DocsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
           <span className="text-[10px] text-on-surface-variant/40">&copy; 2024 botimi</span>
           <div className="flex gap-4">
-            <a href="/" className="text-[10px] text-on-surface-variant/40 hover:text-on-surface-variant transition-colors">Home</a>
-            <a href="/pricing" className="text-[10px] text-on-surface-variant/40 hover:text-on-surface-variant transition-colors">Pricing</a>
+            <Link href="/" className="text-[10px] text-on-surface-variant/40 hover:text-on-surface-variant transition-colors">Home</Link>
+            <Link href="/pricing" className="text-[10px] text-on-surface-variant/40 hover:text-on-surface-variant transition-colors">Pricing</Link>
           </div>
         </div>
       </footer>

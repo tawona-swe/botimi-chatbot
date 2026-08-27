@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import api from "../../lib/api";
 import { getContrastColor } from "../../lib/color";
@@ -30,27 +31,7 @@ export default function OnboardingWizard() {
   const [onboardingError, setOnboardingError] = useState("");
   const [loadingBots, setLoadingBots] = useState(true);
 
-  useEffect(() => {
-    if (!initialized.current) {
-      initialized.current = true;
-      setTransitioning(false);
-      return;
-    }
-    setTransitioning(true);
-    const timer = setTimeout(() => setTransitioning(false), 50);
-    return () => clearTimeout(timer);
-  }, [currentStep]);
-
-  // Load existing bots on mount
-  useEffect(() => {
-    if (!api.isAuthenticated()) {
-      router.replace("/login");
-      return;
-    }
-    loadBots();
-  }, []);
-
-  const loadBots = async () => {
+  async function loadBots() {
     try {
       const data = await api.getBots();
       if (data.bots && data.bots.length > 0) {
@@ -76,7 +57,27 @@ export default function OnboardingWizard() {
     } finally {
       setLoadingBots(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    if (!initialized.current) {
+      initialized.current = true;
+      setTransitioning(false);
+      return;
+    }
+    setTransitioning(true);
+    const timer = setTimeout(() => setTransitioning(false), 50);
+    return () => clearTimeout(timer);
+  }, [currentStep]);
+
+  // Load existing bots on mount
+  useEffect(() => {
+    if (!api.isAuthenticated()) {
+      router.replace("/login");
+      return;
+    }
+    loadBots();
+  }, [router]);
 
   const nextStep = async () => {
     if (currentStep === 1) {
@@ -242,12 +243,12 @@ export default function OnboardingWizard() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <span className="text-on-primary text-xs font-bold">B</span>
             </div>
-            <a href="/" className="font-display text-headline-md font-extrabold text-primary">botimi</a>
+            <Link href="/" className="font-display text-headline-md font-extrabold text-primary">botimi</Link>
             <span className="text-xs text-on-surface-variant font-medium bg-surface-container px-2.5 py-1 rounded-full border border-outline-variant">Setup</span>
           </div>
           <div className="hidden md:flex items-center gap-6">
             <span className="text-sm text-on-surface-variant">Need help?</span>
-            <a href="/support" className="text-sm text-primary font-semibold hover:text-white transition-colors">Contact Support</a>
+            <Link href="/support" className="text-sm text-primary font-semibold hover:text-white transition-colors">Contact Support</Link>
           </div>
         </div>
       </header>
@@ -483,7 +484,7 @@ export default function OnboardingWizard() {
                     <div className="absolute top-3 left-3 flex items-center gap-1.5 text-xs text-on-surface-variant/60">
                       <span className="material-symbols-outlined text-sm">preview</span> Live Preview
                     </div>
-                    <div className="w-[300px] bg-surface-container-high rounded-xl border border-outline-variant shadow-2xl overflow-hidden flex flex-col float-anim">
+                    <div className="w-full max-w-[300px] bg-surface-container-high rounded-xl border border-outline-variant shadow-2xl overflow-hidden flex flex-col float-anim">
                       <div className="p-4 flex items-center gap-3" style={{ background: accentColor }}>
                         <div className="w-10 h-10 rounded-full bg-black/10 flex items-center justify-center">
                           <span className="material-symbols-outlined text-[20px]" style={{ color: getContrastColor(accentColor) }}>{botIcon}</span>
@@ -653,9 +654,9 @@ export default function OnboardingWizard() {
         <div className="flex flex-col md:flex-row justify-between items-center px-6 lg:px-margin-desktop max-w-container-max mx-auto w-full gap-4">
           <span className="text-xs text-on-surface-variant/60">&copy; 2024 botimi AI Ecosystem. All rights reserved.</span>
           <div className="flex gap-6">
-            <a className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/dashboard">Dashboard</a>
-            <a className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/support">Support</a>
-            <a className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/docs">Docs</a>
+            <Link className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/dashboard">Dashboard</Link>
+            <Link className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/support">Support</Link>
+            <Link className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/docs">Docs</Link>
           </div>
         </div>
       </footer>

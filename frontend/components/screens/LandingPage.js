@@ -1,10 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { useAuth } from "../../context/AuthContext";
 
 export default function LandingPage() {
   const { vendor } = useAuth();
   const [isDark, setIsDark] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"));
@@ -97,41 +100,48 @@ export default function LandingPage() {
         }
       `}</style>
       <header className="fixed top-0 left-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant">
-        <nav className="flex justify-between items-center w-full px-margin-desktop max-w-container-max mx-auto h-16">
+        <nav className="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto h-16">
           <div className="flex items-center gap-8">
-            <a href="/" target="_top" className="font-display text-headline-md font-extrabold text-primary">
+            <Link href="/" target="_top" className="font-display text-headline-md font-extrabold text-primary">
               botimi
-            </a>
+            </Link>
             <div className="hidden md:flex gap-6">
-              <a
+              <Link
                 className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200"
                 href="/how-it-works"
                 target="_top"
               >
                 How It Works
-              </a>
-              <a
+              </Link>
+              <Link
                 className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200"
                 href="/pricing"
                 target="_top"
               >
                 Pricing
-              </a>
-              <a
+              </Link>
+              <Link
                 className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200"
                 href="/docs"
                 target="_top"
               >
                 Docs
-              </a>
+              </Link>
+              <Link
+                className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200"
+                href="/enterprise"
+                target="_top"
+              >
+                Enterprise
+              </Link>
               {vendor && (
-                <a
+                <Link
                   className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200"
                   href="/dashboard"
                   target="_top"
                 >
                   Dashboard
-                </a>
+                </Link>
               )}
             </div>
           </div>
@@ -146,28 +156,102 @@ export default function LandingPage() {
                 {isDark ? "light_mode" : "dark_mode"}
               </span>
             </button>
-            {!vendor && (
-              <button
-                className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 px-4 py-2"
-                onClick={() => (window.location.href = "/login")}
-              >
-                Log In
-              </button>
-            )}
-            {!vendor && (
-              <button
-                className="bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-6 py-2"
-                onClick={() => (window.location.href = "/how-it-works")}
-              >
-                Get Started
-              </button>
-            )}
+            <div className="hidden md:flex items-center gap-2">
+              {!vendor && (
+                <button
+                  className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 px-4 py-2"
+                  onClick={() => (window.location.href = "/login")}
+                >
+                  Log In
+                </button>
+              )}
+              {!vendor && (
+                <button
+                  className="bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-6 py-2"
+                  onClick={() => (window.location.href = "/how-it-works")}
+                >
+                  Get Started
+                </button>
+              )}
+            </div>
+            <button
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              className="md:hidden w-10 h-10 rounded-xl flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container transition-all duration-200"
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileMenuOpen}
+            >
+              <span className="material-symbols-outlined text-xl">
+                {mobileMenuOpen ? "close" : "menu"}
+              </span>
+            </button>
           </div>
         </nav>
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-outline-variant bg-background px-margin-mobile py-4 flex flex-col gap-1">
+            <Link
+              className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary hover:bg-surface-container rounded-lg px-3 py-3 transition-colors duration-200"
+              href="/how-it-works"
+              target="_top"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              How It Works
+            </Link>
+            <Link
+              className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary hover:bg-surface-container rounded-lg px-3 py-3 transition-colors duration-200"
+              href="/pricing"
+              target="_top"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Pricing
+            </Link>
+            <Link
+              className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary hover:bg-surface-container rounded-lg px-3 py-3 transition-colors duration-200"
+              href="/docs"
+              target="_top"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Docs
+            </Link>
+            <Link
+              className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary hover:bg-surface-container rounded-lg px-3 py-3 transition-colors duration-200"
+              href="/enterprise"
+              target="_top"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Enterprise
+            </Link>
+            {vendor && (
+              <Link
+                className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary hover:bg-surface-container rounded-lg px-3 py-3 transition-colors duration-200"
+                href="/dashboard"
+                target="_top"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Dashboard
+              </Link>
+            )}
+            {!vendor && (
+              <div className="flex flex-col gap-2 mt-2 pt-3 border-t border-outline-variant">
+                <button
+                  className="w-full text-center font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 px-4 py-3"
+                  onClick={() => (window.location.href = "/login")}
+                >
+                  Log In
+                </button>
+                <button
+                  className="w-full bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-6 py-3"
+                  onClick={() => (window.location.href = "/how-it-works")}
+                >
+                  Get Started
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </header>
       <main>
         <section className="relative min-h-[85vh] px-margin-mobile md:px-margin-desktop pt-24 md:pt-32">
-          <div className="absolute inset-0 pointer-events-none opacity-20">
+          <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary rounded-full blur-[120px] animate-pulse"></div>
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary rounded-full blur-[120px] delay-1000 animate-pulse"></div>
           </div>
@@ -205,17 +289,23 @@ export default function LandingPage() {
               </div>
               <div className="flex items-center gap-4 mt-8 opacity-60">
                 <div className="flex -space-x-3">
-                  <img
+                  <Image
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full border-2 border-background object-cover"
                     alt="Portrait of a diverse professional woman in a tech environment, representing a satisfied software engineer user, high resolution, minimalist office background, purple and blue ambient lighting."
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuDztneSctQtFe2TV2T2mOUVqKS74aLiD1LZP3PhVWuxqlvjslvO7Ac-SD1cO1cU2aTRkUmMa9sfQsn8_KZvhVT5AzjNjZMVda-hgyOpDBjDEe1fWfeSG94HZIRy6eM0mdT791xnuOL2iE5qz7wzYNLoCth-JAAS1_NpvUFwu4nqTYxYKpwCPk0GqJnMvZ7oa9ZKgtFk9Vi72yPnheV4FJOix2JwEVIPsMSXhmfIEaxFNK-hGko72BKcwj-I1usecRrgrimqakUsoFI"
                   />
-                  <img
+                  <Image
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full border-2 border-background object-cover"
                     alt="Portrait of a young male startup founder with glasses, creative studio setting, professional headshot style, dramatic teal and violet lighting, sharp focus on facial features."
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuDd0uo3P-dScNr499XKHUR3VoBArb8SK4SYfyAru1hYvymaxcYJOFrtgxeJSmQEMhN4ImjzjFZZLASd2Y0MsOh9d5Ji4x_wa4U2dtzX5aje75EsjdrZzqYQcbtbNAyjwMv6UHYs4N9Jaztiiu_LmRyUFgQwmbkucLx9X9hgqCtqS8z5pdakPi8GDnPt5DBfs_pwSmjefH32_cKX18FCZtJZhuD3YdGv6vIzAS_tBxae7Nyr7ZlwxYhCf7NLbCSW4JrGkHDuW_cSge4"
                   />
-                  <img
+                  <Image
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full border-2 border-background object-cover"
                     alt="Close up portrait of an Asian male executive, sleek modern corporate aesthetic, soft blurred tech office background, warm but professional color grade with navy accents."
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_ROlrvTkYTj1TkaJo7m19t1bQPlddhNIepWbfjxrZXddxiFaaxTZkEqP7KOtAX8bz3uzOrxxPuMkyPEuHd7E4kEYqhkKo-ztt1I6jKX9uj8eXfuBlVRRUqZUGt9fWDt4z9_ZWLdCo5cnD3XUMlrkfNABmonDAnFrGhQXQH7y83DVd5cFs114n5XIRFYM3mAOhYf4IxHd4U7cBI5QfVSuxa9TEyc2_0g_JCyjX2rT3vvIqiFGcr_N0EJXF84Fczllhbrl2AiiDEFk"
@@ -249,7 +339,7 @@ export default function LandingPage() {
                   <div className="flex-grow flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-2">
                     <div className="bg-surface-variant/50 p-3 rounded-lg rounded-tl-none max-w-[80%]">
                       <p className="font-body-sm text-body-sm text-on-surface">
-                        Hello! I've analyzed your product documentation. How can I assist your customers today?
+                        Hello! I&apos;ve analyzed your product documentation. How can I assist your customers today?
                       </p>
                     </div>
                     <div className="bg-primary/20 p-3 rounded-lg rounded-tr-none self-end max-w-[80%] border border-primary-container">
@@ -395,7 +485,7 @@ export default function LandingPage() {
           </div>
         </section>
         <section className="py-stack-xl bg-surface-container-lowest">
-          <div className="max-w-container-max mx-auto px-margin-desktop">
+          <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
             {/* Section heading */}
             <div className="text-center mb-16">
               <p className="font-label-md text-label-md text-primary mb-3 tracking-wider">TRUSTED BY GROWING BUSINESSES</p>
@@ -434,9 +524,11 @@ export default function LandingPage() {
                 like having our best support rep working 24/7 for a fraction of the cost.
               </p>
               <div className="flex items-center justify-center gap-3">
-                <img
+                <Image
                   src="/culverwell.png"
                   alt="Culverwell Venge"
+                  width={48}
+                  height={48}
                   className="w-12 h-12 rounded-full object-cover border-2 border-surface"
                 />
                 <div className="text-left">
@@ -549,14 +641,14 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="text-center mt-10">
-            <a
+            <Link
               href="/pricing"
               target="_top"
               className="inline-flex items-center gap-2 font-body-md text-body-md text-primary font-semibold hover:brightness-110 transition-all"
             >
               Compare all features & plan details
               <span className="material-symbols-outlined text-lg">arrow_forward</span>
-            </a>
+            </Link>
           </div>
         </section>
         <section className="py-stack-xl px-margin-mobile">
@@ -585,37 +677,44 @@ export default function LandingPage() {
         </section>
       </main>
       <footer className="bg-surface-container-lowest border-t border-outline-variant py-stack-xl">
-        <div className="flex flex-col md:flex-row justify-between items-center px-margin-desktop max-w-container-max mx-auto gap-8">
+        <div className="flex flex-col md:flex-row justify-between items-center px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto gap-8">
           <div className="flex flex-col gap-4 items-center md:items-start">
-            <a href="/" target="_top" className="font-display text-headline-md text-primary font-bold">
+            <Link href="/" target="_top" className="font-display text-headline-md text-primary font-bold">
               botimi
-            </a>
+            </Link>
             <p className="font-body-sm text-body-sm text-on-surface-variant text-center md:text-left">
               &copy; 2024 botimi AI Ecosystem. All rights reserved.
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-8">
-            <a
+            <Link
               className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors"
               href="/how-it-works"
               target="_top"
             >
               How It Works
-            </a>
-            <a
+            </Link>
+            <Link
               className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors"
               href="/pricing"
               target="_top"
             >
               Pricing
-            </a>
-            <a
+            </Link>
+            <Link
               className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors"
               href="/docs"
               target="_top"
             >
               Docs
-            </a>
+            </Link>
+            <Link
+              className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors"
+              href="/enterprise"
+              target="_top"
+            >
+              Enterprise
+            </Link>
           </div>
           <div className="flex gap-4">
             <a

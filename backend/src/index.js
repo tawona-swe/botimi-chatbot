@@ -42,11 +42,21 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
-app.use(cors({
-  origin: config.frontendUrl || "*",
-  credentials: true,
-  methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+// /api/chat/* and /api/widget/* are called from arbitrary customer websites
+// embedding the widget — they need any origin allowed. Everything else is
+// the dashboard talking to its own backend, so it stays restricted to
+// config.frontendUrl. This has to be handled here (a dynamic origin
+// delegate), not as a per-router header override further down the chain —
+// the cors package fully answers OPTIONS preflight requests itself and
+// never reaches downstream middleware, so a later override never runs.
+app.use(cors((req, callback) => {
+  const isPublicWidgetRoute = req.path.startsWith("/api/chat") || req.path.startsWith("/api/widget");
+  callback(null, {
+    origin: isPublicWidgetRoute ? true : (config.frontendUrl || "*"),
+    credentials: !isPublicWidgetRoute,
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  });
 }));
 
 app.use(morgan(config.isDev ? "dev" : "combined"));
@@ -96,6 +106,18 @@ app.use("/api/webhooks", webhookRoutes);
 
 // Vendor profile
 app.use("/api/vendor", (await import("./routes/vendor.js")).default);
+
+// Team seats
+app.use("/api/team", (await import("./routes/team.js")).default);
+
+// Canned responses
+app.use("/api/canned-responses", (await import("./routes/cannedResponses.js")).default);
+
+// WhatsApp channel (public webhook — called by Meta, not a browser)
+app.use("/api/whatsapp", (await import("./routes/whatsapp.js")).default);
+
+// Public ticket CSAT (no auth — ticket UUID is the access token)
+app.use("/api/public/tickets", (await import("./routes/ticketsPublic.js")).default);
 
 // Super Admin
 app.use("/api/admin", adminRoutes);

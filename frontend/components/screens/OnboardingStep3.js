@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Link from "next/link";
 
 export default function OnboardingStep3() {
   const [copied, setCopied] = useState(false);
@@ -68,8 +69,8 @@ export default function OnboardingStep3() {
             animation: spin-slow 3s linear infinite;
         }
       `}</style>
-      <header className="flex justify-between items-center w-full px-margin-desktop max-w-container-max mx-auto h-16 border-b border-outline-variant sticky top-0 z-40">
-        <a href="/" className="font-display text-headline-md font-extrabold text-primary dark:text-primary">botimi</a>
+      <header className="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto h-16 border-b border-outline-variant sticky top-0 z-40">
+        <Link href="/" className="font-display text-headline-md font-extrabold text-primary dark:text-primary">botimi</Link>
         <div className="flex items-center gap-4">
           <span className="font-label-md text-label-md text-on-surface-variant">Step 3 of 3</span>
           <button onClick={() => window.location.href = "/dashboard"} className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors cursor-pointer">close</button>
@@ -86,7 +87,7 @@ export default function OnboardingStep3() {
                 <div className="relative flex h-10 w-10 items-center justify-center rounded-full step-complete">
                   <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>check</span>
                 </div>
-                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 font-label-md text-label-md text-primary whitespace-nowrap">Knowledge Core</span>
+                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 font-label-md text-label-md text-primary w-16 sm:w-max text-center leading-tight sm:whitespace-nowrap">Knowledge Core</span>
               </li>
               <li className="relative pr-8 sm:pr-20 group">
                 <div aria-hidden="true" className="absolute inset-0 flex items-center">
@@ -95,13 +96,13 @@ export default function OnboardingStep3() {
                 <div className="relative flex h-10 w-10 items-center justify-center rounded-full step-complete">
                   <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>check</span>
                 </div>
-                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 font-label-md text-label-md text-primary whitespace-nowrap">Bot Persona</span>
+                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 font-label-md text-label-md text-primary w-16 sm:w-max text-center leading-tight sm:whitespace-nowrap">Bot Persona</span>
               </li>
               <li className="relative">
                 <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-surface-container step-active">
                   <span className="font-label-md text-label-md font-bold">3</span>
                 </div>
-                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 font-label-md text-label-md text-on-surface whitespace-nowrap font-bold">Deployment</span>
+                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 font-label-md text-label-md text-on-surface w-16 sm:w-max text-center leading-tight sm:whitespace-nowrap font-bold">Deployment</span>
               </li>
             </ol>
           </nav>
@@ -109,7 +110,7 @@ export default function OnboardingStep3() {
             <div className="md:col-span-7 space-y-stack-md">
               <div className="space-y-stack-sm">
                 <h1 className="font-headline-lg text-headline-lg text-on-surface">Embed your Bot</h1>
-                <p className="font-body-md text-body-md text-on-surface-variant">Paste the following snippet into your website's HTML to activate the botimi AI concierge. We recommend placing it just before the closing <code className="bg-surface-container px-1 rounded text-primary">&lt;/body&gt;</code> tag for optimal performance.</p>
+                <p className="font-body-md text-body-md text-on-surface-variant">Paste the following snippet into your website&apos;s HTML to activate the botimi AI concierge. We recommend placing it just before the closing <code className="bg-surface-container px-1 rounded text-primary">&lt;/body&gt;</code> tag for optimal performance.</p>
               </div>
               <div ref={glowRef} onMouseMove={handleMouseMove} className="relative bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden code-glow group">
                 <div className="flex items-center justify-between px-stack-md py-stack-sm bg-surface-container-high border-b border-outline-variant">
@@ -147,7 +148,7 @@ export default function OnboardingStep3() {
                     <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>error</span>
                     <span className="font-label-md text-label-md font-bold uppercase tracking-wider">Snippet not detected</span>
                   </div>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">We haven't received any pings from your website yet. Check your code implementation and try again.</p>
+                  <p className="font-body-sm text-body-sm text-on-surface-variant">We haven&apos;t received any pings from your website yet. Check your code implementation and try again.</p>
                 </div>
                 <div className="space-y-stack-sm">
                   <button onClick={() => window.location.href = "/dashboard"} className="w-full bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all py-3 flex items-center justify-center gap-2">
@@ -187,12 +188,12 @@ export default function OnboardingStep3() {
         </div>
       </main>
       <footer className="w-full py-stack-xl bg-surface-container-lowest border-t border-outline-variant mt-auto">
-        <div className="flex flex-col md:flex-row justify-between items-center px-margin-desktop max-w-container-max mx-auto gap-stack-md">
-          <a href="/" className="font-display text-headline-md text-primary">botimi</a>
+        <div className="flex flex-col md:flex-row justify-between items-center px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto gap-stack-md">
+          <Link href="/" className="font-display text-headline-md text-primary">botimi</Link>
           <div className="flex gap-stack-lg">
-            <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/dashboard">Dashboard</a>
-            <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/support">Support</a>
-            <a className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/docs">Docs</a>
+            <Link className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/dashboard">Dashboard</Link>
+            <Link className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/support">Support</Link>
+            <Link className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/docs">Docs</Link>
           </div>
           <p className="font-body-sm text-body-sm text-on-surface-variant">&copy; 2024 botimi AI Ecosystem. All rights reserved.</p>
         </div>

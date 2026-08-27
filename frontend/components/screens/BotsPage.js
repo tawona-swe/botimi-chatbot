@@ -1,18 +1,58 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Sidebar from "../ui/Sidebar";
 import api from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 
+const MODEL_PROVIDERS = {
+  groq: {
+    label: "Groq",
+    models: [
+      { value: "llama3-70b", label: "GPT-OSS 120B — best quality" },
+      { value: "llama3-8b", label: "GPT-OSS 20B — fastest" },
+      { value: "mixtral-8x7b", label: "Qwen3.6 27B" },
+    ],
+  },
+  gemini: {
+    label: "Google Gemini",
+    models: [
+      { value: "gemini-flash", label: "Gemini Flash" },
+      { value: "gemini-pro", label: "Gemini Pro" },
+    ],
+  },
+  openrouter: {
+    label: "OpenRouter (free models)",
+    models: [
+      { value: "auto", label: "Auto — best available free model" },
+      { value: "glm-5.2", label: "GLM 5.2" },
+      { value: "minimax-m3", label: "MiniMax M3" },
+      { value: "nemotron-ultra", label: "Nemotron 3 Ultra 550B" },
+      { value: "nemotron-super", label: "Nemotron 3 Super 120B" },
+      { value: "gemma-4", label: "Gemma 4 31B" },
+      { value: "inkling", label: "Inkling" },
+    ],
+  },
+  opencodezen: {
+    label: "OpenCode Zen (free models)",
+    models: [
+      { value: "mimo-v2.5", label: "MiMo V2.5" },
+      { value: "hy3", label: "Hy3" },
+      { value: "deepseek-v4-flash", label: "DeepSeek V4 Flash" },
+      { value: "nemotron-3-ultra", label: "Nemotron 3 Ultra" },
+      { value: "nemotron-3.5-lightning", label: "Nemotron 3.5 Lightning" },
+    ],
+  },
+};
+
 export default function BotsPage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [bots, setBots] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,19 +76,25 @@ export default function BotsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState({ name: "", websiteUrl: "" });
   const [createLoading, setCreateLoading] = useState(false);
+  const [whatsappPhoneId, setWhatsappPhoneId] = useState("");
+  const [whatsappSaving, setWhatsappSaving] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("botimiSidebarCollapsed");
     if (saved) setSidebarCollapsed(saved === "true");
   }, []);
 
-  // Auto-open the create modal when arriving via the Dashboard Guide's navigate action
+  // Auto-open the create modal when arriving via the Dashboard Guide's navigate action.
+  // Reads window.location directly (not useSearchParams) — this only ever needs to run
+  // once client-side after mount, and avoids the Suspense-boundary requirement
+  // useSearchParams imposes on the page for static/production builds.
   useEffect(() => {
-    if (searchParams.get("action") === "create-bot") {
+    if (typeof window === "undefined") return;
+    if (new URLSearchParams(window.location.search).get("action") === "create-bot") {
       setShowCreateModal(true);
       router.replace("/bots");
     }
-  }, [searchParams, router]);
+  }, [router]);
 
   // Auth guard
   useEffect(() => {
@@ -70,7 +116,7 @@ export default function BotsPage() {
     });
   };
 
-  const loadBots = async () => {
+  async function loadBots() {
     setLoading(true);
     try {
       const data = await api.getBots();
@@ -80,7 +126,7 @@ export default function BotsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const selectBot = async (bot) => {
     setSelectedBot(bot);
@@ -89,6 +135,7 @@ export default function BotsPage() {
     setTestQuestion("");
     setCrawlUrl("");
     setCrawlSuccess("");
+    setWhatsappPhoneId(bot.whatsapp_phone_number_id || "");
     try {
       const data = await api.getBotSources(bot.id);
       setSources(data.sources || []);
@@ -105,6 +152,11 @@ export default function BotsPage() {
       response_tone: selectedBot.response_tone,
       brand_color: selectedBot.brand_color || "#c0c1ff",
       is_active: selectedBot.is_active,
+      model_provider: selectedBot.model_provider || "groq",
+      model_name: selectedBot.model_name || "llama3-70b",
+      confidence_threshold: selectedBot.confidence_threshold ?? 0.7,
+      proactive_message: selectedBot.proactive_message || "",
+      proactive_delay_seconds: selectedBot.proactive_delay_seconds ?? 15,
     });
     setEditMode(true);
   };
@@ -120,6 +172,19 @@ export default function BotsPage() {
       console.error("Failed to save bot:", err);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveWhatsapp = async () => {
+    setWhatsappSaving(true);
+    try {
+      const data = await api.updateBot(selectedBot.id, { whatsapp_phone_number_id: whatsappPhoneId.trim() });
+      setSelectedBot(data.bot);
+      setBots(prev => prev.map(b => b.id === selectedBot.id ? { ...b, ...data.bot } : b));
+    } catch (err) {
+      console.error("Failed to save WhatsApp connection:", err);
+    } finally {
+      setWhatsappSaving(false);
     }
   };
 
@@ -246,16 +311,23 @@ export default function BotsPage() {
         .scrollbar-thin::-webkit-scrollbar-thumb:hover { opacity: 1; }
         .bg-dot { background-image: radial-gradient(var(--dot-color) 1px, transparent 1px); background-size: 24px 24px; }
       `}</style>
-      <Sidebar activeLabel="Bots" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+      <Sidebar activeLabel="Bots" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
       <main className={`flex-1 ${sidebarCollapsed ? 'ml-[80px]' : 'ml-[260px]'} max-lg:ml-0 min-h-screen flex flex-col lg:flex-row bg-background text-on-background font-body-md relative transition-all duration-300`}>
-        <div className="absolute inset-0 bg-dot pointer-events-none" />
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/4 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 bg-dot" />
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/4 rounded-full blur-[100px]" />
+        </div>
 
         {/* Bot List Panel */}
         <div className="w-80 max-lg:w-full border-r border-outline-variant flex flex-col bg-surface-container-lowest/80 backdrop-blur-sm lg:shrink-0 max-lg:border-r-0 max-lg:border-b max-lg:max-h-[45vh]">
           <div className="p-5 border-b border-outline-variant">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-lg font-bold text-on-surface">My Bots</h2>
+              <div className="flex items-center gap-3">
+                <button onClick={() => setMobileNavOpen(true)} className="lg:hidden text-on-surface-variant hover:text-on-surface transition-colors" aria-label="Open menu">
+                  <span className="material-symbols-outlined text-xl">menu</span>
+                </button>
+                <h2 className="font-display text-lg font-bold text-on-surface">My Bots</h2>
+              </div>
               <div className="flex items-center gap-2">
                 <button onClick={() => setShowCreateModal(true)} className="px-3 py-1.5 bg-primary text-on-primary rounded-xl text-[11px] font-bold hover:opacity-90 transition-all flex items-center gap-1">
                   <span className="material-symbols-outlined text-sm">add</span>
@@ -322,7 +394,7 @@ export default function BotsPage() {
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Website URL (optional)</label>
                   <input type="url" value={createForm.websiteUrl} onChange={e => setCreateForm(f => ({ ...f, websiteUrl: e.target.value }))} placeholder="https://docs.yourcompany.com" className="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
-                  <p className="text-[10px] text-on-surface-variant/50">If provided, we'll crawl and index your website content automatically.</p>
+                  <p className="text-[10px] text-on-surface-variant/50">If provided, we&apos;ll crawl and index your website content automatically.</p>
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button onClick={handleCreateBot} disabled={createLoading} className="flex-1 px-5 py-2.5 bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
@@ -390,6 +462,61 @@ export default function BotsPage() {
                           <option value="friendly">Friendly</option>
                           <option value="concise">Concise</option>
                         </select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Model Provider</label>
+                        <select
+                          value={editForm.model_provider}
+                          onChange={e => {
+                            const provider = e.target.value;
+                            setEditForm(f => ({ ...f, model_provider: provider, model_name: MODEL_PROVIDERS[provider].models[0].value }));
+                          }}
+                          className="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface"
+                        >
+                          {Object.entries(MODEL_PROVIDERS).map(([key, p]) => (
+                            <option key={key} value={key}>{p.label}</option>
+                          ))}
+                        </select>
+                        {(editForm.model_provider === "opencodezen" || editForm.model_provider === "openrouter") && (
+                          <p className="text-[11px] text-on-surface-variant/70">Free shared pool — occasionally rate-limited or briefly unavailable. Falls back to Groq automatically if it doesn&apos;t respond.</p>
+                        )}
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Model</label>
+                        <select
+                          value={editForm.model_name}
+                          onChange={e => setEditForm(f => ({ ...f, model_name: e.target.value }))}
+                          className="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface"
+                        >
+                          {(MODEL_PROVIDERS[editForm.model_provider]?.models || []).map(m => (
+                            <option key={m.value} value={m.value}>{m.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Confidence Threshold</label>
+                          <span className="text-xs font-mono text-on-surface">{Math.round((editForm.confidence_threshold ?? 0.7) * 100)}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0.3"
+                          max="0.95"
+                          step="0.05"
+                          value={editForm.confidence_threshold ?? 0.7}
+                          onChange={e => setEditForm(f => ({ ...f, confidence_threshold: parseFloat(e.target.value) }))}
+                          className="w-full accent-primary"
+                        />
+                        <p className="text-[11px] text-on-surface-variant/70">Below this match confidence, the bot admits it isn&apos;t sure instead of guessing, and escalates to your team.</p>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Proactive Message</label>
+                        <input type="text" placeholder="e.g. Need help finding something?" value={editForm.proactive_message} onChange={e => setEditForm(f => ({ ...f, proactive_message: e.target.value }))} className="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-on-surface-variant/70">Show after</span>
+                          <input type="number" min="3" max="300" value={editForm.proactive_delay_seconds} onChange={e => setEditForm(f => ({ ...f, proactive_delay_seconds: parseInt(e.target.value) || 15 }))} className="w-16 bg-surface-container-lowest border border-outline-variant p-1.5 rounded-lg text-xs text-on-surface" />
+                          <span className="text-[11px] text-on-surface-variant/70">seconds idle (leave message blank to disable)</span>
+                        </div>
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Brand Color</label>
@@ -483,6 +610,38 @@ export default function BotsPage() {
                         )}
                       </div>
                     )}
+                  </div>
+
+                  {/* WhatsApp Connection */}
+                  <div className="bg-surface-container border border-outline-variant rounded-2xl p-6 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-green-500">chat</span>
+                      <h3 className="font-display font-bold text-on-surface">WhatsApp</h3>
+                      {selectedBot.whatsapp_phone_number_id ? (
+                        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 uppercase">Connected</span>
+                      ) : (
+                        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant uppercase">Not connected</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-on-surface-variant">Mirrors this bot on WhatsApp — same training and escalation logic as your website widget.</p>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Phone Number ID</label>
+                      <div className="flex gap-2">
+                        <input type="text" placeholder="From your Meta app dashboard" value={whatsappPhoneId} onChange={e => setWhatsappPhoneId(e.target.value)} className="flex-1 min-w-0 bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
+                        <button onClick={handleSaveWhatsapp} disabled={whatsappSaving} className="shrink-0 px-4 py-2 bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 disabled:opacity-50">
+                          {whatsappSaving ? "Saving..." : "Save"}
+                        </button>
+                      </div>
+                    </div>
+                    <details className="text-xs text-on-surface-variant">
+                      <summary className="cursor-pointer font-semibold hover:text-on-surface transition-colors">Setup instructions</summary>
+                      <ol className="mt-2 space-y-1.5 list-decimal list-inside">
+                        <li>Create a Meta Business App with the WhatsApp product added.</li>
+                        <li>In your server&apos;s environment, set <code className="bg-surface-container-lowest px-1 rounded font-mono">WHATSAPP_ACCESS_TOKEN</code> and <code className="bg-surface-container-lowest px-1 rounded font-mono">WHATSAPP_VERIFY_TOKEN</code> (any value you choose).</li>
+                        <li>In the Meta dashboard, set the webhook URL to <code className="bg-surface-container-lowest px-1 rounded font-mono break-all">{`{your-public-domain}/api/whatsapp/webhook`}</code> with your chosen verify token — this needs a real public HTTPS URL, not localhost.</li>
+                        <li>Copy the Phone Number ID from the Meta dashboard and paste it above.</li>
+                      </ol>
+                    </details>
                   </div>
                 </div>
 

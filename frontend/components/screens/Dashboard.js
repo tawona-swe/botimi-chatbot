@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "../ui/Sidebar";
 import api from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 
 export default function Dashboard() {
-  const { vendor, isAuthenticated, loading: authLoading } = useAuth();
+  const { vendor, teamMember, isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [analytics, setAnalytics] = useState(null);
   const [recentConversations, setRecentConversations] = useState([]);
   const [chartRange, setChartRange] = useState("7D");
@@ -46,7 +48,7 @@ export default function Dashboard() {
     if (saved) setSidebarCollapsed(saved === "true");
   }, []);
 
-  const loadAnalytics = async () => {
+  async function loadAnalytics() {
     try {
       setLoading(true);
       const data = await api.getAnalytics();
@@ -56,9 +58,9 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const loadVolumeByDay = async (days) => {
+  async function loadVolumeByDay(days) {
     try {
       setChartLoading(true);
       const data = await api.getAnalytics({ days });
@@ -68,25 +70,25 @@ export default function Dashboard() {
     } finally {
       setChartLoading(false);
     }
-  };
+  }
 
-  const loadRecentConversations = async () => {
+  async function loadRecentConversations() {
     try {
       const data = await api.getConversations({ limit: 5 });
       setRecentConversations(data.conversations || []);
     } catch {
       // Non-critical — leave the table in its empty state
     }
-  };
+  }
 
-  const loadOpenTicketCount = async () => {
+  async function loadOpenTicketCount() {
     try {
       const data = await api.getTicketAnalytics();
       setOpenTicketCount(data?.open || 0);
     } catch {
       // Non-critical — leave the badge hidden
     }
-  };
+  }
 
   const timeAgo = (ts) => {
     if (!ts) return "";
@@ -122,8 +124,8 @@ export default function Dashboard() {
 
   return (
     <>
-      <Sidebar activeLabel="Overview" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} />
-      <main className={`flex-1 ${sidebarCollapsed ? 'ml-[80px]' : 'ml-[260px]'} max-lg:ml-0 min-h-screen flex flex-col bg-background text-on-background font-body-md selection:bg-primary/30 relative overflow-x-hidden transition-all duration-300`}>
+      <Sidebar activeLabel="Overview" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
+      <main className={`flex-1 ${sidebarCollapsed ? 'ml-[80px]' : 'ml-[260px]'} max-lg:ml-0 min-h-screen flex flex-col bg-background text-on-background font-body-md selection:bg-primary/30 relative transition-all duration-300`}>
       <style>{`
         .material-symbols-outlined {
           font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -197,12 +199,17 @@ export default function Dashboard() {
         }
       `}</style>
 
-      <div className="absolute inset-0 bg-dot pointer-events-none" />
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute top-1/2 left-1/4 w-[400px] h-[400px] bg-secondary/3 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-dot" />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/4 w-[400px] h-[400px] bg-secondary/3 rounded-full blur-[100px]" />
+      </div>
 
       <header className="h-16 flex items-center justify-between px-6 lg:px-8 bg-background/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-40">
         <div className="flex items-center gap-3">
+          <button onClick={() => setMobileNavOpen(true)} className="lg:hidden text-on-surface-variant hover:text-on-surface transition-colors" aria-label="Open menu">
+            <span className="material-symbols-outlined text-xl">menu</span>
+          </button>
           <h1 className="font-display text-lg font-bold text-on-surface">Dashboard</h1>
           <span className="font-label-md text-[11px] text-on-surface-variant bg-surface-container-highest px-2 py-0.5 rounded-md border border-outline-variant hidden sm:inline">Overview</span>
         </div>
@@ -216,8 +223,8 @@ export default function Dashboard() {
               <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-gradient-to-br from-rose-400 to-pink-600 rounded-full border-2 border-background" />
             )}
           </div>
-          <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-[12px] text-on-primary font-bold shadow-lg shadow-primary/20">
-            {vendor?.name?.slice(0, 2)?.toUpperCase() || "U"}
+          <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-[12px] text-on-primary font-bold shadow-lg shadow-primary/20" title={teamMember ? `${teamMember.name} (${teamMember.role})` : vendor?.name}>
+            {(teamMember?.name || vendor?.name)?.slice(0, 2)?.toUpperCase() || "U"}
           </div>
         </div>
       </header>
@@ -425,9 +432,9 @@ export default function Dashboard() {
             <span className="font-body-sm text-xs text-on-surface-variant">&copy; 2024 botimi AI Ecosystem.</span>
           </div>
           <div className="flex gap-6">
-            <a className="font-body-sm text-xs text-on-surface-variant hover:text-primary transition-colors" href="/">Home</a>
-            <a className="font-body-sm text-xs text-on-surface-variant hover:text-primary transition-colors" href="/support">Support</a>
-            <a className="font-body-sm text-xs text-on-surface-variant hover:text-primary transition-colors" href="/onboarding">Onboarding</a>
+            <Link className="font-body-sm text-xs text-on-surface-variant hover:text-primary transition-colors" href="/">Home</Link>
+            <Link className="font-body-sm text-xs text-on-surface-variant hover:text-primary transition-colors" href="/support">Support</Link>
+            <Link className="font-body-sm text-xs text-on-surface-variant hover:text-primary transition-colors" href="/onboarding">Onboarding</Link>
           </div>
         </div>
       </footer>

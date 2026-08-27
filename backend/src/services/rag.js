@@ -175,7 +175,7 @@ function cosineSimilarity(a, b) {
  * @param {string} botId - Bot ID
  * @param {string} userMessage - The user's message
  * @param {Array} conversationHistory - Previous messages in the session
- * @returns {Promise<{content: string, sources: Array, tokensUsed: number, latencyMs: number}>}
+ * @returns {Promise<{content: string, sources: Array, tokensUsed: number, latencyMs: number, confident: boolean|null, topSimilarity: number}>}
  */
 export async function generateRagResponse(botId, userMessage, conversationHistory = []) {
   // Get bot config
@@ -190,6 +190,13 @@ export async function generateRagResponse(botId, userMessage, conversationHistor
   // Build context string from relevant chunks
   const context = relevantChunks.map((c) => c.content).join("\n\n");
 
+  // Confidence = how well the top matching chunk actually matches the question.
+  // Not applicable when there's no knowledge base at all (nothing to be confident about yet).
+  const hasKnowledgeBase = relevantChunks.length > 0;
+  const topSimilarity = hasKnowledgeBase ? relevantChunks[0].similarity : 0;
+  const threshold = bot.confidence_threshold ?? 0.7;
+  const isConfident = hasKnowledgeBase ? topSimilarity >= threshold : null;
+
   // Build system prompt
   const toneInstruction = {
     professional: "Respond in a professional, helpful manner. Be precise and courteous.",
@@ -197,9 +204,13 @@ export async function generateRagResponse(botId, userMessage, conversationHistor
     concise: "Respond concisely. Get straight to the point with minimal fluff.",
   }[bot.response_tone] || "Respond in a professional, helpful manner.";
 
+  const confidenceInstruction = isConfident === false
+    ? "\n\nThe retrieved knowledge base content is only a weak match for this question — you are not confident it actually answers what was asked. Be upfront about that uncertainty rather than guessing, and let the user know a team member will follow up."
+    : "";
+
   const systemPrompt = `You are ${bot.name}, an AI customer support assistant for the company. ${toneInstruction}
 
-${context ? `Use the following knowledge base content to answer the user's question. If the information is not in the knowledge base, politely say you don't know and offer to escalate.\n\nKnowledge Base:\n${context}` : "You don't have a knowledge base yet. Answer general questions about the company's products and services, but direct specific inquiries to the support team."}
+${context ? `Use the following knowledge base content to answer the user's question. If the information is not in the knowledge base, politely say you don't know and offer to escalate.\n\nKnowledge Base:\n${context}` : "You don't have a knowledge base yet. Answer general questions about the company's products and services, but direct specific inquiries to the support team."}${confidenceInstruction}
 
 Keep responses concise and helpful. Do not make up information not found in the knowledge base.`;
 
@@ -210,8 +221,9 @@ Keep responses concise and helpful. Do not make up information not found in the 
     { role: "user", content: userMessage },
   ];
 
-  // Get response from Groq
+  // Get response from the bot's configured provider/model (falls back automatically if unavailable)
   const response = await chatCompletion(messages, {
+    provider: bot.model_provider || "groq",
     model: bot.model_name || "llama3-70b",
     temperature: 0.7,
   });
@@ -222,6 +234,8 @@ Keep responses concise and helpful. Do not make up information not found in the 
     tokensUsed: response.tokensUsed,
     latencyMs: response.latencyMs,
     model: response.model || bot.model_name || "llama3-70b",
+    confident: isConfident,
+    topSimilarity,
   };
 }
 

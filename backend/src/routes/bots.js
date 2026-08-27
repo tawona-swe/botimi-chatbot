@@ -90,6 +90,7 @@ router.patch("/:id", (req, res) => {
     "widget_theme", "brand_color", "bot_greeting", "working_hours_start",
     "working_hours_end", "working_hours_enabled", "offline_message",
     "blacklist_topics", "quick_replies", "is_active",
+    "proactive_message", "proactive_delay_seconds", "whatsapp_phone_number_id",
   ];
 
   const updates = [];
