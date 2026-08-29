@@ -450,12 +450,12 @@ export default function LandingPage() {
             </div>
             <div className="col-span-12 md:col-span-6 lg:col-span-4 bg-surface-container border border-outline-variant p-8 rounded-xl group hover:border-tertiary/50 transition-colors">
               <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center text-primary mb-6">
-                <span className="material-symbols-outlined text-3xl">payments</span>
+                <span className="material-symbols-outlined text-3xl">hub</span>
               </div>
-              <h3 className="font-headline-md text-headline-md text-on-surface mb-3">Top-Notch AI Models</h3>
+              <h3 className="font-headline-md text-headline-md text-on-surface mb-3">Multi-Model AI Engine</h3>
               <p className="text-on-surface-variant">
-                Access industry-leading language models optimized for speed, accuracy, and reliability — no
-                hidden upsells.
+                Every reply is routed across multiple leading language model providers with automatic failover —
+                if one is down or rate-limited, your bot keeps answering without missing a beat.
               </p>
             </div>
             <div className="col-span-12 lg:col-span-8 bg-surface-container border border-outline-variant p-8 rounded-xl group hover:border-primary/50 transition-colors">
@@ -464,16 +464,16 @@ export default function LandingPage() {
                   <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary mb-6">
                     <span className="material-symbols-outlined text-3xl">confirmation_number</span>
                   </div>
-                  <h3 className="font-headline-md text-headline-md text-on-surface mb-3">Ticket Support Add-on</h3>
+                  <h3 className="font-headline-md text-headline-md text-on-surface mb-3">A Real Support Inbox</h3>
                   <p className="text-on-surface-variant">
-                    When the AI hits its limit, it seamlessly transitions to a human agent or creates a support ticket in
-                    your existing CRM.
+                    When the AI hits its limit, it hands off to your team with an SLA clock already running —
+                    assign teammates, reply from canned responses, and track CSAT after every resolution.
                   </p>
                 </div>
                 <div className="flex-1 flex flex-col gap-2 w-full">
                   <div className="p-3 bg-surface-container-high rounded border border-outline-variant flex items-center justify-between">
                     <span className="font-label-md text-on-surface">Ticket #402: Technical Error</span>
-                    <span className="px-2 py-0.5 bg-tertiary/20 text-tertiary rounded text-[10px]">OPEN</span>
+                    <span className="px-2 py-0.5 bg-tertiary/20 text-tertiary rounded text-[10px]">AT RISK</span>
                   </div>
                   <div className="p-3 bg-surface-container-high rounded border border-outline-variant flex items-center justify-between opacity-50">
                     <span className="font-label-md text-on-surface">Ticket #399: Billing Query</span>
@@ -481,6 +481,26 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
+            </div>
+            <div className="col-span-12 lg:col-span-6 bg-surface-container border border-outline-variant p-8 rounded-xl group hover:border-secondary/50 transition-colors">
+              <div className="w-12 h-12 bg-secondary/20 rounded-lg flex items-center justify-center text-secondary mb-6">
+                <span className="material-symbols-outlined text-3xl">chat_bubble</span>
+              </div>
+              <h3 className="font-headline-md text-headline-md text-on-surface mb-3">Now on WhatsApp</h3>
+              <p className="text-on-surface-variant">
+                Connect your WhatsApp Business number and the exact same trained bot — same knowledge, same
+                escalation rules — answers customers there too.
+              </p>
+            </div>
+            <div className="col-span-12 lg:col-span-6 bg-surface-container border border-outline-variant p-8 rounded-xl group hover:border-primary/50 transition-colors">
+              <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center text-primary mb-6">
+                <span className="material-symbols-outlined text-3xl">support_agent</span>
+              </div>
+              <h3 className="font-headline-md text-headline-md text-on-surface mb-3">AI-Assisted Agents</h3>
+              <p className="text-on-surface-variant">
+                Every escalation arrives with an AI-written summary and priority tag already attached, plus a
+                one-click suggested reply your team can send or edit.
+              </p>
             </div>
           </div>
         </section>
