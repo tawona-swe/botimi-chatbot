@@ -23,6 +23,19 @@ export const authLimiter = rateLimit({
 });
 
 /**
+ * Rate limiter for the public marketing-site guest assistant — per IP, since
+ * unlike the dashboard guide there's no logged-in vendor id to key on and
+ * every anonymous visitor would otherwise collapse into one shared bucket.
+ */
+export const guestAssistantLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests, please try again in a minute." },
+});
+
+/**
  * Rate limiter for chat endpoint — per vendor.
  */
 export function chatRateLimiter(req, res, next) {

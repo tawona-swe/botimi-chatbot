@@ -128,6 +128,9 @@ app.use("/api/widget", widgetRoutes);
 // Dashboard guide (internal-only assistant, not a deployable bot)
 app.use("/api/assistant", assistantRoutes);
 
+// Marketing-site guide for anonymous visitors (public, no auth — not a deployable bot)
+app.use("/api/guest-assistant", (await import("./routes/guestAssistant.js")).default);
+
 // --------------- Keepalive Cron ---------------
 // Periodic overage check every hour
 const { checkOverageAlerts } = await import("./services/overage.js");

@@ -165,6 +165,11 @@ class ApiClient {
     return this.request("POST", "/assistant/chat", { message, history });
   }
 
+  // Marketing-site guide for anonymous visitors (public, no auth)
+  guestAssistantChat(message, history) {
+    return this.request("POST", "/guest-assistant/chat", { message, history });
+  }
+
   // Conversations
   getConversations(params = {}) {
     const qs = new URLSearchParams(params).toString();
