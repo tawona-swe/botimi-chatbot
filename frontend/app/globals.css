@@ -7,57 +7,156 @@
 
   /* ── Light Theme (default) ── */
   --color-background: #f8f9fc;
+
+  --color-background-rgb: 248 249 252;
   --color-surface: #ffffff;
+
+  --color-surface-rgb: 255 255 255;
   --color-surface-dim: #e0e4ea;
+
+  --color-surface-dim-rgb: 224 228 234;
   --color-surface-bright: #ffffff;
+
+  --color-surface-bright-rgb: 255 255 255;
   --color-surface-container-lowest: #ffffff;
+
+  --color-surface-container-lowest-rgb: 255 255 255;
   --color-surface-container-low: #f4f5f9;
+
+  --color-surface-container-low-rgb: 244 245 249;
   --color-surface-container: #eeeff4;
+
+  --color-surface-container-rgb: 238 239 244;
   --color-surface-container-high: #e8ebf0;
+
+  --color-surface-container-high-rgb: 232 235 240;
   --color-surface-container-highest: #e0e4ea;
+
+  --color-surface-container-highest-rgb: 224 228 234;
   --color-surface-variant: #e0e4ea;
+
+  --color-surface-variant-rgb: 224 228 234;
   --color-on-surface: #1a1a2e;
+
+  --color-on-surface-rgb: 26 26 46;
   --color-on-surface-variant: #5a5a72;
+
+  --color-on-surface-variant-rgb: 90 90 114;
   --color-on-background: #1a1a2e;
 
+  --color-on-background-rgb: 26 26 46;
+
   --color-primary: #4A1A8A;
+
+
+  --color-primary-rgb: 74 26 138;
   --color-on-primary: #ffffff;
+
+  --color-on-primary-rgb: 255 255 255;
   --color-primary-container: #EDE4FF;
+
+  --color-primary-container-rgb: 237 228 255;
   --color-on-primary-container: #1A0038;
+
+  --color-on-primary-container-rgb: 26 0 56;
   --color-primary-fixed: #EDE4FF;
+
+  --color-primary-fixed-rgb: 237 228 255;
   --color-primary-fixed-dim: #C4A0FF;
+
+  --color-primary-fixed-dim-rgb: 196 160 255;
   --color-on-primary-fixed: #120024;
+
+  --color-on-primary-fixed-rgb: 18 0 36;
   --color-on-primary-fixed-variant: #3A0A6A;
+
+  --color-on-primary-fixed-variant-rgb: 58 10 106;
   --color-inverse-primary: #C4A0FF;
 
+  --color-inverse-primary-rgb: 196 160 255;
+
   --color-secondary: #6A2BC2;
+
+
+  --color-secondary-rgb: 106 43 194;
   --color-on-secondary: #ffffff;
+
+  --color-on-secondary-rgb: 255 255 255;
   --color-secondary-container: #EDE4FF;
+
+  --color-secondary-container-rgb: 237 228 255;
   --color-on-secondary-container: #1A0038;
+
+  --color-on-secondary-container-rgb: 26 0 56;
   --color-secondary-fixed: #EDE4FF;
+
+  --color-secondary-fixed-rgb: 237 228 255;
   --color-secondary-fixed-dim: #B88AFF;
+
+  --color-secondary-fixed-dim-rgb: 184 138 255;
   --color-on-secondary-fixed: #120024;
+
+  --color-on-secondary-fixed-rgb: 18 0 36;
   --color-on-secondary-fixed-variant: #3A0A6A;
 
+  --color-on-secondary-fixed-variant-rgb: 58 10 106;
+
   --color-tertiary: #B87E1A;
+
+
+  --color-tertiary-rgb: 184 126 26;
   --color-on-tertiary: #ffffff;
+
+  --color-on-tertiary-rgb: 255 255 255;
   --color-tertiary-container: #FFE4B8;
+
+  --color-tertiary-container-rgb: 255 228 184;
   --color-on-tertiary-container: #3A2500;
+
+  --color-on-tertiary-container-rgb: 58 37 0;
   --color-tertiary-fixed: #FFE4B8;
+
+  --color-tertiary-fixed-rgb: 255 228 184;
   --color-tertiary-fixed-dim: #FFC977;
+
+  --color-tertiary-fixed-dim-rgb: 255 201 119;
   --color-on-tertiary-fixed: #2B1800;
+
+  --color-on-tertiary-fixed-rgb: 43 24 0;
   --color-on-tertiary-fixed-variant: #8B5F00;
 
+  --color-on-tertiary-fixed-variant-rgb: 139 95 0;
+
   --color-error: #d32f2f;
+
+
+  --color-error-rgb: 211 47 47;
   --color-on-error: #ffffff;
+
+  --color-on-error-rgb: 255 255 255;
   --color-error-container: #ffdad6;
+
+  --color-error-container-rgb: 255 218 214;
   --color-on-error-container: #410002;
 
+  --color-on-error-container-rgb: 65 0 2;
+
   --color-outline: #c4c8d4;
+
+
+  --color-outline-rgb: 196 200 212;
   --color-outline-variant: #e0e4ea;
+
+  --color-outline-variant-rgb: 224 228 234;
   --color-inverse-surface: #303038;
+
+  --color-inverse-surface-rgb: 48 48 56;
   --color-inverse-on-surface: #f0f0f8;
+
+  --color-inverse-on-surface-rgb: 240 240 248;
   --color-surface-tint: #4A1A8A;
+
+  --color-surface-tint-rgb: 74 26 138;
 
   /* Legacy CSS variables (for non-tailwind parts of globals.css) */
   --text: #1a1a2e;
@@ -96,57 +195,157 @@
   color-scheme: dark;
 
   --color-background: #13131b;
+
+
+  --color-background-rgb: 19 19 27;
   --color-surface: #1f1f27;
+
+  --color-surface-rgb: 31 31 39;
   --color-surface-dim: #13131b;
+
+  --color-surface-dim-rgb: 19 19 27;
   --color-surface-bright: #393841;
+
+  --color-surface-bright-rgb: 57 56 65;
   --color-surface-container-lowest: #0d0d15;
+
+  --color-surface-container-lowest-rgb: 13 13 21;
   --color-surface-container-low: #1b1b23;
+
+  --color-surface-container-low-rgb: 27 27 35;
   --color-surface-container: #1f1f27;
+
+  --color-surface-container-rgb: 31 31 39;
   --color-surface-container-high: #292932;
+
+  --color-surface-container-high-rgb: 41 41 50;
   --color-surface-container-highest: #34343d;
+
+  --color-surface-container-highest-rgb: 52 52 61;
   --color-surface-variant: #34343d;
+
+  --color-surface-variant-rgb: 52 52 61;
   --color-on-surface: #e4e1ed;
+
+  --color-on-surface-rgb: 228 225 237;
   --color-on-surface-variant: #c7c4d7;
+
+  --color-on-surface-variant-rgb: 199 196 215;
   --color-on-background: #e4e1ed;
 
+  --color-on-background-rgb: 228 225 237;
+
   --color-primary: #C4A0FF;
+
+
+  --color-primary-rgb: 196 160 255;
   --color-on-primary: #1A0038;
+
+  --color-on-primary-rgb: 26 0 56;
   --color-primary-container: #3A0A6A;
+
+  --color-primary-container-rgb: 58 10 106;
   --color-on-primary-container: #1A0038;
+
+  --color-on-primary-container-rgb: 26 0 56;
   --color-primary-fixed: #EDE4FF;
+
+  --color-primary-fixed-rgb: 237 228 255;
   --color-primary-fixed-dim: #C4A0FF;
+
+  --color-primary-fixed-dim-rgb: 196 160 255;
   --color-on-primary-fixed: #120024;
+
+  --color-on-primary-fixed-rgb: 18 0 36;
   --color-on-primary-fixed-variant: #3A0A6A;
+
+  --color-on-primary-fixed-variant-rgb: 58 10 106;
   --color-inverse-primary: #4A1A8A;
 
+  --color-inverse-primary-rgb: 74 26 138;
+
   --color-secondary: #B88AFF;
+
+
+  --color-secondary-rgb: 184 138 255;
   --color-on-secondary: #1A0038;
+
+  --color-on-secondary-rgb: 26 0 56;
   --color-secondary-container: #4A1A8A;
+
+  --color-secondary-container-rgb: 74 26 138;
   --color-on-secondary-container: #1A0038;
+
+  --color-on-secondary-container-rgb: 26 0 56;
   --color-secondary-fixed: #EDE4FF;
+
+  --color-secondary-fixed-rgb: 237 228 255;
   --color-secondary-fixed-dim: #B88AFF;
+
+  --color-secondary-fixed-dim-rgb: 184 138 255;
   --color-on-secondary-fixed: #120024;
+
+  --color-on-secondary-fixed-rgb: 18 0 36;
   --color-on-secondary-fixed-variant: #3A0A6A;
 
+  --color-on-secondary-fixed-variant-rgb: 58 10 106;
+
   --color-tertiary: #FFC977;
+
+
+  --color-tertiary-rgb: 255 201 119;
   --color-on-tertiary: #2B1800;
+
+  --color-on-tertiary-rgb: 43 24 0;
   --color-tertiary-container: #8B5F00;
+
+  --color-tertiary-container-rgb: 139 95 0;
   --color-on-tertiary-container: #3A2500;
+
+  --color-on-tertiary-container-rgb: 58 37 0;
   --color-tertiary-fixed: #FFE4B8;
+
+  --color-tertiary-fixed-rgb: 255 228 184;
   --color-tertiary-fixed-dim: #FFC977;
+
+  --color-tertiary-fixed-dim-rgb: 255 201 119;
   --color-on-tertiary-fixed: #2B1800;
+
+  --color-on-tertiary-fixed-rgb: 43 24 0;
   --color-on-tertiary-fixed-variant: #8B5F00;
 
+  --color-on-tertiary-fixed-variant-rgb: 139 95 0;
+
   --color-error: #ffb4ab;
+
+
+  --color-error-rgb: 255 180 171;
   --color-on-error: #690005;
+
+  --color-on-error-rgb: 105 0 5;
   --color-error-container: #93000a;
+
+  --color-error-container-rgb: 147 0 10;
   --color-on-error-container: #ffdad6;
 
+  --color-on-error-container-rgb: 255 218 214;
+
   --color-outline: #908fa0;
+
+
+  --color-outline-rgb: 144 143 160;
   --color-outline-variant: #464554;
+
+  --color-outline-variant-rgb: 70 69 84;
   --color-inverse-surface: #e4e1ed;
+
+  --color-inverse-surface-rgb: 228 225 237;
   --color-inverse-on-surface: #303038;
+
+  --color-inverse-on-surface-rgb: 48 48 56;
   --color-surface-tint: #C4A0FF;
+
+  --color-surface-tint-rgb: 196 160 255;
 
   /* Legacy CSS variables */
   --text: #e4e1ed;
@@ -316,6 +515,17 @@ a {
 /* Shared utility classes used by all components */
 .ai-glow {
   box-shadow: 0px 4px 20px rgba(99, 102, 241, 0.15);
+}
+
+/* Decorative blurred glow circles (bg-primary/secondary + blur-[Npx] + rounded-full)
+   sit inside an overflow-hidden section that's sized around the page's actual
+   content, not around the blur's full spread — so the blur filter gets hard-
+   clipped by that boundary before it's visually faded to nothing, showing as a
+   sharp seam right where the section ends. This mask fades each glow to fully
+   transparent well inside its own box, so clipping never catches a still-visible edge. */
+.glow-blob {
+  mask-image: radial-gradient(circle, black 0%, black 40%, transparent 72%);
+  -webkit-mask-image: radial-gradient(circle, black 0%, black 40%, transparent 72%);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
