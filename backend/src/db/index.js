@@ -33,6 +33,8 @@ const COLUMN_MIGRATIONS = [
   ["bots", "proactive_message", "TEXT DEFAULT ''"],
   ["bots", "proactive_delay_seconds", "INTEGER NOT NULL DEFAULT 15"],
   ["bots", "whatsapp_phone_number_id", "TEXT DEFAULT ''"],
+  ["bots", "whatsapp_access_token", "TEXT DEFAULT ''"],
+  ["messages", "rating", "TEXT"],
 ];
 
 function runColumnMigrations() {

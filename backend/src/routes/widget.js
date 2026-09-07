@@ -63,6 +63,12 @@ s.textContent='#botimi-wc{all:initial;position:fixed;z-index:999999;'+(p==='bott
 '.btyping span{width:6px;height:6px;border-radius:50%;'+(t==='light'?'background:#999;':'background:#666;')+'animation:bb 1.2s infinite}'+
 '.btyping span:nth-child(2){animation-delay:.2s}'+
 '.btyping span:nth-child(3){animation-delay:.4s}'+
+'.bfb{display:flex;gap:6px;margin-top:-2px;padding-left:2px}'+
+'.bfb button{background:none;border:none;cursor:pointer;opacity:.35;padding:2px;display:flex;align-items:center;transition:opacity .15s}'+
+'.bfb button:hover{opacity:.75}'+
+'.bfb button.sel{opacity:1}'+
+'.bfb button svg{width:13px;height:13px;fill:'+(t==='light'?'#666':'#999')+'}'+
+'.bfb button.sel svg{fill:'+cl+'}'+
 '@keyframes bb{0\\%{transform:translateY(0)}30\\%{transform:translateY(-6px)}60\\%,100\\%{transform:translateY(0)}}'+
 '.bpw{text-align:center;font-size:10px;padding:6px;opacity:.4}'+
 '.bpx{position:fixed;'+(p==='bottom-left'?'left:20px;':'right:20px;')+'bottom:90px;max-width:260px;padding:12px 14px;border-radius:14px;'+(p==='bottom-left'?'border-bottom-left-radius:4px;':'border-bottom-right-radius:4px;')+(t==='light'?'background:#fff;color:#1a1a2e;':'background:#1a1a2e;color:#e0e0e0;')+'box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:13px;line-height:1.5;cursor:pointer;display:flex;align-items:flex-start;gap:8px;animation:bpin .25s ease-out}'+
@@ -79,12 +85,19 @@ d.appendChild(pnl);d.appendChild(bbl);document.body.appendChild(d);
 var op=0,me=document.getElementById('bms'),ip=document.getElementById('bip'),sb=document.getElementById('bsnd'),cx=document.getElementById('bcx');
 function tg(){op=!op;pnl.classList.toggle('open',op);bbl.style.display=op?'none':'flex';hidePx();}
 bbl.addEventListener('click',tg);cx.addEventListener('click',tg);
-function am(t,r){var dv=document.createElement('div');dv.className='bmsg '+r;dv.textContent=t;me.appendChild(dv);me.scrollTop=me.scrollHeight;}
+function am(t,r,mid){var dv=document.createElement('div');dv.className='bmsg '+r;dv.textContent=t;me.appendChild(dv);
+if(r==='bot'&&mid){var fb=document.createElement('div');fb.className='bfb';
+fb.innerHTML='<button data-v="up" aria-label="Good reply"><svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg></button><button data-v="down" aria-label="Bad reply"><svg viewBox="0 0 24 24"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg></button>';
+var btns=fb.querySelectorAll('button');
+for(var i=0;i<btns.length;i++){btns[i].addEventListener('click',function(e){if(fb.classList.contains('voted'))return;fb.classList.add('voted');var b=e.currentTarget;b.classList.add('sel');
+fetch(B+'/api/chat/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messageId:mid,rating:b.getAttribute('data-v')})}).catch(function(){});});}
+me.appendChild(fb);}
+me.scrollTop=me.scrollHeight;}
 function sty(){var dv=document.createElement('div');dv.className='btyping';dv.id='btyp';dv.innerHTML='<span></span><span></span><span></span>';me.appendChild(dv);me.scrollTop=me.scrollHeight;}
 function hty(){var e=document.getElementById('btyp');if(e)e.remove();}
 async function sm(){var t=ip.value.trim();if(!t)return;ip.value='';am(t,'user');sty();
 try{var r=await fetch(B+'/api/widget/'+k+'/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:t,conversationId:c.cid||null})});
-if(!r.ok)throw new Error('Request failed');var d=await r.json();hty();am(d.reply||'No response','bot');if(d.conversationId)c.cid=d.conversationId;}
+if(!r.ok)throw new Error('Request failed');var d=await r.json();hty();am(d.reply||'No response','bot',d.messageId);if(d.conversationId)c.cid=d.conversationId;}
 catch(e){hty();am('Sorry, I\\'m having trouble connecting. Please try again later.','bot');console.error('[botimi]',e);}}
 sb.addEventListener('click',sm);ip.addEventListener('keydown',function(e){if(e.key==='Enter')sm();});
 var px=null;

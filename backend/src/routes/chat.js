@@ -73,11 +73,12 @@ export async function handleChatMessage({ apiKey, message, conversationId, visit
 
   const result = await generateRagResponse(bot.id, message, history.slice(0, -1));
 
+  const botMessageId = uuidv4();
   db.prepare(`
     INSERT INTO messages (id, conversation_id, role, content, model_used, tokens_used, latency_ms, sources)
     VALUES (?, ?, 'bot', ?, ?, ?, ?, ?)
   `).run(
-    uuidv4(), convId, result.content,
+    botMessageId, convId, result.content,
     result.model || "llama3-70b", result.tokensUsed, result.latencyMs,
     JSON.stringify(result.sources)
   );
@@ -125,6 +126,7 @@ export async function handleChatMessage({ apiKey, message, conversationId, visit
     status: 200,
     body: {
       reply: result.content,
+      messageId: botMessageId,
       conversationId: convId,
       visitorId: vid,
       sources: result.sources,
@@ -146,6 +148,31 @@ router.post("/message", chatRateLimiter, async (req, res) => {
   } catch (err) {
     console.error("[Chat] Error:", err);
     res.status(500).json({ error: "Failed to process message" });
+  }
+});
+
+/**
+ * POST /api/chat/feedback
+ * Thumbs up/down on a single bot reply — the message's own UUID is enough to
+ * address it (same trust model as ticketsPublic.js's ticket-UUID-as-token: an
+ * unguessable id, not a permission to enumerate). Public, called directly
+ * from the widget and any other client hitting the chat API.
+ */
+router.post("/feedback", (req, res) => {
+  try {
+    const { messageId, rating } = req.body;
+    if (!messageId || !["up", "down"].includes(rating)) {
+      return res.status(400).json({ error: "messageId and rating ('up' or 'down') are required" });
+    }
+
+    const message = db.prepare("SELECT id FROM messages WHERE id = ? AND role = 'bot'").get(messageId);
+    if (!message) return res.status(404).json({ error: "Message not found" });
+
+    db.prepare("UPDATE messages SET rating = ? WHERE id = ?").run(rating, messageId);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[Feedback] Error:", err);
+    res.status(500).json({ error: "Failed to record feedback" });
   }
 });
 

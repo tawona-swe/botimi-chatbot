@@ -76,6 +76,18 @@ router.get("/overview", (req, res) => {
     "SELECT COUNT(*) as total, SUM(resolved_by_bot) as resolved FROM conversations WHERE vendor_id = ?"
   ).get(vendorId);
 
+  // Visitor feedback on individual bot replies (thumbs up/down)
+  const feedback = db.prepare(`
+    SELECT
+      SUM(CASE WHEN rating = 'up' THEN 1 ELSE 0 END) as up,
+      SUM(CASE WHEN rating = 'down' THEN 1 ELSE 0 END) as down
+    FROM messages
+    WHERE role = 'bot' AND rating IS NOT NULL
+      AND conversation_id IN (SELECT id FROM conversations WHERE vendor_id = ?)
+  `).get(vendorId);
+
+  const feedbackTotal = (feedback.up || 0) + (feedback.down || 0);
+
   res.json({
     totalConversations: totalConversations.count,
     todayConversations: todayConversations.count,
@@ -90,6 +102,12 @@ router.get("/overview", (req, res) => {
       total: botResolution.total,
       resolvedByBot: botResolution.resolved || 0,
       escalated: botResolution.total - (botResolution.resolved || 0),
+    },
+    feedback: {
+      up: feedback.up || 0,
+      down: feedback.down || 0,
+      total: feedbackTotal,
+      positiveRate: feedbackTotal > 0 ? Math.round(((feedback.up || 0) / feedbackTotal) * 1000) / 10 : null,
     },
   });
 });

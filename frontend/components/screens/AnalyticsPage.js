@@ -260,6 +260,37 @@ export default function AnalyticsPage() {
               )}
             </div>
 
+            {/* Visitor Feedback */}
+            <div className="glass-panel rounded-2xl p-6 ai-glow border border-outline-variant">
+              <h2 className="font-display font-bold text-on-surface mb-4">Visitor Feedback</h2>
+              {analytics?.feedback?.total > 0 ? (
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <p className="font-display text-5xl font-bold text-primary">{analytics.feedback.positiveRate}%</p>
+                    <p className="text-xs text-on-surface-variant mt-2">of rated replies marked helpful</p>
+                  </div>
+                  <div className="w-full bg-surface-variant h-3 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-1000" style={{ width: `${Math.min(analytics.feedback.positiveRate, 100)}%` }} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div className="bg-surface-container-lowest rounded-xl p-4 text-center border border-outline/5">
+                      <p className="font-display text-2xl font-bold text-on-surface">{formatNumber(analytics.feedback.up)}</p>
+                      <p className="text-xs text-on-surface-variant mt-1">Thumbs Up</p>
+                    </div>
+                    <div className="bg-surface-container-lowest rounded-xl p-4 text-center border border-outline/5">
+                      <p className="font-display text-2xl font-bold text-on-surface">{formatNumber(analytics.feedback.down)}</p>
+                      <p className="text-xs text-on-surface-variant mt-1">Thumbs Down</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <span className="material-symbols-outlined text-3xl text-on-surface-variant/20 mb-2">thumbs_up_down</span>
+                  <p className="text-xs text-on-surface-variant">No visitor feedback yet</p>
+                </div>
+              )}
+            </div>
+
           </div>
 
           {/* Ticket Analytics */}
