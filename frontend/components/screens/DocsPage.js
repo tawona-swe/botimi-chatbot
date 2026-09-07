@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import api from "../../lib/api";
 
-const DEMO_BOT_ID = "demo-bot-static";
+const DEMO_BOT_ID = "demo-bot-001";
 
 const sidebarSections = [
   { id: "getting-started", label: "Getting Started", icon: "rocket_launch" },
@@ -63,9 +63,9 @@ export default function DocsPage() {
         const mockReplies = {
           "pricing": "We offer three plans: **Starter ($29/mo)**, **Growth ($79/mo)**, and **Scale ($199/mo)**. Each comes with a 14-day free trial!",
           "pricing plans": "We offer three plans: **Starter ($29/mo)**, **Growth ($79/mo)**, and **Scale ($199/mo)**. Each comes with a 14-day free trial!",
-          "api": "Our REST API is fully documented at **docs.botimi.ai**. You'll get API access on Growth and Scale plans.",
-          "api docs": "Our REST API is fully documented at **docs.botimi.ai**. You'll get API access on Growth and Scale plans.",
-          "integrations": "botimi integrates with **WordPress, Webflow, Shopify, Wix**, and any custom site via a single JS snippet. React/Next.js SDK also available!",
+          "api": "Check the API Reference section in these docs — it covers authenticating with your bot ID and sending chat messages.",
+          "api docs": "Check the API Reference section in these docs — it covers authenticating with your bot ID and sending chat messages.",
+          "integrations": "botimi works on **WordPress, Webflow, Shopify, Wix**, and any custom site via a single JS snippet — including React/Next.js apps, just load the script tag from a useEffect.",
           "hello": "Hi there! 👋 How can I help you today?",
           "hi": "Hey! What can I help you with?",
         };
@@ -277,7 +277,7 @@ export default function DocsPage() {
                 <li><strong>WordPress:</strong> Add the snippet via <em>Appearance → Customize → Additional JS</em> or use a plugin.</li>
                 <li><strong>Shopify:</strong> Paste in <em>Online Store → Themes → Edit Code → theme.liquid</em> before <code>&lt;/body&gt;</code>.</li>
                 <li><strong>Webflow:</strong> Add via <em>Site Settings → Custom Code → Footer Code</em>.</li>
-                <li><strong>React / Next.js:</strong> Use <code>dangerouslySetInnerHTML</code> in a useEffect or use our React SDK.</li>
+                <li><strong>React / Next.js:</strong> Load the script tag from a <code>useEffect</code> (e.g. via <code>next/script</code> in Next.js).</li>
                 <li><strong>Any other site:</strong> Paste directly into the HTML template or use Google Tag Manager.</li>
               </ul>
             </div>
@@ -424,10 +424,10 @@ export default function DocsPage() {
 }`}</code></pre>
 
               <h2>Rate Limits</h2>
-              <p>API requests are rate-limited per bot. Limits vary by plan — Starter: 100 req/min, Growth: 500 req/min, Scale: 2000 req/min.</p>
+              <p>Chat requests are limited to 30 per minute per bot across all plans.</p>
 
               <h2>Webhooks</h2>
-              <p>Configure webhooks in your dashboard to receive real-time events when conversations escalate to human support.</p>
+              <p>Not available yet — escalated conversations currently show up as tickets in your dashboard&apos;s Support inbox. Reach out if outbound webhooks would help your workflow.</p>
             </div>
           )}
         </main>

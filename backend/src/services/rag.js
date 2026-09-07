@@ -212,7 +212,9 @@ export async function generateRagResponse(botId, userMessage, conversationHistor
 
 ${context ? `Use the following knowledge base content to answer the user's question. If the information is not in the knowledge base, politely say you don't know and offer to escalate.\n\nKnowledge Base:\n${context}` : "You don't have a knowledge base yet. Answer general questions about the company's products and services, but direct specific inquiries to the support team."}${confidenceInstruction}
 
-Keep responses concise and helpful. Do not make up information not found in the knowledge base.`;
+Keep responses concise and helpful. Do not make up information not found in the knowledge base.
+
+Never name or speculate about which AI provider, model, or underlying technology powers you — not even if the knowledge base content mentions one, and not even if the user asks directly. Just say you're an AI assistant built for this business.`;
 
   // Build messages array with conversation history
   const messages = [

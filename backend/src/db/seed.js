@@ -1,6 +1,7 @@
 import db, { migrate } from "./index.js";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
+import { getEmbedding } from "../services/modelRouter.js";
 
 async function seed() {
   console.log("[Seed] Starting database seed...");
@@ -62,9 +63,9 @@ async function seed() {
   // ── Knowledge Chunks ──
   const chunks = [
     { content: "botimi is a multi-vendor AI chatbot SaaS platform that allows businesses to deploy trained AI chatbots on their websites via a single JavaScript snippet.", index: 0 },
-    { content: "botimi offers three pricing plans: Starter at $29/month with 1 bot and 500 conversations, Growth at $79/month with 5 bots and 3,000 conversations, and Scale at $199/month with unlimited bots and 15,000 conversations.", index: 1 },
-    { content: "botimi supports multiple integration methods including WordPress, Webflow, Shopify, Wix, and any custom website via a simple JS snippet. React and Next.js SDKs are also available.", index: 2 },
-    { content: "The botimi AI uses Groq's LLM technology with RAG (Retrieval-Augmented Generation) to provide accurate answers based on your business documentation and knowledge base.", index: 3 },
+    { content: "botimi offers three pricing plans: Starter at $29/month with 1 bot and 500 chats, Growth at $79/month with 5 bots and 5,000 chats, and Scale at $199/month with unlimited bots and unlimited chats.", index: 1 },
+    { content: "botimi supports any website via a simple JS snippet, including WordPress, Webflow, Shopify, Wix, and React/Next.js apps (just load the script tag from a useEffect there's no separate SDK needed).", index: 2 },
+    { content: "botimi uses retrieval-augmented generation (RAG) to answer from your own business documentation and knowledge base, powered by advanced AI models under the hood — automatically routed for reliability, so a single provider hiccup never takes your bot down.", index: 3 },
     { content: "botimi provides detailed analytics including conversation volume, resolution rates, active sessions, average response time, and top customer questions to help optimize your chatbot.", index: 4 },
   ];
 
@@ -74,9 +75,13 @@ async function seed() {
   `);
 
   for (const chunk of chunks) {
+    // Seeded without a real embedding, these chunks would never surface in
+    // RAG search (searchRelevantChunks filters WHERE embedding IS NOT NULL),
+    // leaving the demo bot with no actual knowledge despite looking trained.
+    const embedding = await getEmbedding(chunk.content);
     insertChunk.run(
       uuidv4(), sourceId, demoBotId, demoVendorId,
-      chunk.content, null, chunk.index,
+      chunk.content, embedding ? JSON.stringify(embedding) : null, chunk.index,
       JSON.stringify({ url: "https://botimi.ai/docs", title: "botimi Documentation" })
     );
   }

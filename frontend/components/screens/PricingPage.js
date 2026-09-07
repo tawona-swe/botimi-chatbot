@@ -67,10 +67,9 @@ export default function PricingPage() {
       features: [
         "Up to 500 chats / month",
         "1 bot",
-        "Multi-Model AI Integration",
-        "Basic RAG (1 source)",
-        "Standard Widget Customization",
-        "Standard Support",
+        "Crawl up to 50 pages",
+        "Multi-provider AI with automatic failover",
+        "Standard email support",
       ],
       cta: "Start Trial",
       highlighted: false,
@@ -83,12 +82,10 @@ export default function PricingPage() {
       features: [
         "Up to 5,000 chats / month",
         "5 bots",
-        "High-Speed AI Inference",
-        "Advanced RAG (10 sources)",
-        "Priority Widget Customization",
-        "Priority Email Support",
-        "Detailed Analytics",
-        "Ticket Add-on Included",
+        "Crawl up to 500 pages",
+        "Multi-provider AI with automatic failover",
+        "Support ticket inbox with team seats",
+        "Priority email support",
       ],
       cta: "Get Growth",
       highlighted: true,
@@ -101,14 +98,11 @@ export default function PricingPage() {
       features: [
         "Unlimited chats",
         "Unlimited bots",
-        "Custom LLM Fine-tuning",
-        "Advanced RAG (unlimited sources)",
-        "Full API Access & Webhooks",
-        "Dedicated Account Manager",
-        "Custom Integrations",
-        "SLA Guarantee (99.9% uptime)",
-        "White-label Widget",
-        "SSO / SAML",
+        "Unlimited page crawling",
+        "White-label widget (no botimi branding)",
+        "Support ticket inbox with team seats",
+        "Dedicated account manager",
+        "Custom integrations (bespoke — see Enterprise)",
       ],
       cta: "Contact Sales",
       highlighted: false,
@@ -323,8 +317,8 @@ export default function PricingPage() {
         {/* ── Hero ── */}
         <section className="relative pt-32 pb-16 px-margin-mobile md:px-margin-desktop">
           <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
-            <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-primary rounded-full blur-[120px] animate-pulse"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary rounded-full blur-[120px] delay-1000 animate-pulse"></div>
+            <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-primary rounded-full blur-[120px] animate-pulse glow-blob"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary rounded-full blur-[120px] delay-1000 animate-pulse glow-blob"></div>
           </div>
           <div className="max-w-container-max mx-auto text-center relative z-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full border border-outline-variant w-fit mx-auto mb-6">
@@ -452,15 +446,9 @@ export default function PricingPage() {
                   {[
                     { label: "Monthly chats", starter: "500", growth: "5,000", scale: "Unlimited" },
                     { label: "Bots", starter: "1", growth: "5", scale: "Unlimited" },
-                    { label: "AI Models", starter: "Standard", growth: "High-Speed", scale: "Custom Fine-tuning" },
-                    { label: "RAG Sources", starter: "1", growth: "10", scale: "Unlimited" },
-                    { label: "Widget Customization", starter: "Basic", growth: "Priority", scale: "White-label" },
-                    { label: "Analytics", starter: "Basic", growth: "Detailed", scale: "Advanced + Export" },
-                    { label: "Ticket Add-on", starter: "—", growth: "✓", scale: "✓" },
-                    { label: "API Access", starter: "—", growth: "—", scale: "Full Access" },
-                    { label: "Webhooks", starter: "—", growth: "—", scale: "✓" },
-                    { label: "SSO / SAML", starter: "—", growth: "—", scale: "✓" },
-                    { label: "SLA Guarantee", starter: "—", growth: "—", scale: "99.9%" },
+                    { label: "Website pages crawled", starter: "50", growth: "500", scale: "Unlimited" },
+                    { label: "Support ticket inbox", starter: "—", growth: "✓", scale: "✓" },
+                    { label: "White-label widget", starter: "—", growth: "—", scale: "✓" },
                     { label: "Support", starter: "Standard", growth: "Priority Email", scale: "Dedicated Manager" },
                   ].map((row) => (
                     <tr key={row.label} className="border-b border-outline-variant hover:bg-surface-container/50 transition-colors">

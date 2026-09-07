@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "../../context/AuthContext";
+import WhatsAppIcon from "../ui/WhatsAppIcon";
 
 export default function LandingPage() {
   const { vendor } = useAuth();
@@ -252,8 +252,8 @@ export default function LandingPage() {
       <main>
         <section className="relative min-h-[85vh] px-margin-mobile md:px-margin-desktop pt-24 md:pt-32">
           <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary rounded-full blur-[120px] animate-pulse"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary rounded-full blur-[120px] delay-1000 animate-pulse"></div>
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary rounded-full blur-[120px] animate-pulse glow-blob"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary rounded-full blur-[120px] delay-1000 animate-pulse glow-blob"></div>
           </div>
           <div className="max-w-container-max mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
             <div className="flex flex-col gap-stack-lg">
@@ -287,32 +287,10 @@ export default function LandingPage() {
                   Create Free Account
                 </button>
               </div>
-              <div className="flex items-center gap-4 mt-8 opacity-60">
-                <div className="flex -space-x-3">
-                  <Image
-                    width={40}
-                    height={40}
-                    className="w-10 h-10 rounded-full border-2 border-background object-cover"
-                    alt="Portrait of a diverse professional woman in a tech environment, representing a satisfied software engineer user, high resolution, minimalist office background, purple and blue ambient lighting."
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDztneSctQtFe2TV2T2mOUVqKS74aLiD1LZP3PhVWuxqlvjslvO7Ac-SD1cO1cU2aTRkUmMa9sfQsn8_KZvhVT5AzjNjZMVda-hgyOpDBjDEe1fWfeSG94HZIRy6eM0mdT791xnuOL2iE5qz7wzYNLoCth-JAAS1_NpvUFwu4nqTYxYKpwCPk0GqJnMvZ7oa9ZKgtFk9Vi72yPnheV4FJOix2JwEVIPsMSXhmfIEaxFNK-hGko72BKcwj-I1usecRrgrimqakUsoFI"
-                  />
-                  <Image
-                    width={40}
-                    height={40}
-                    className="w-10 h-10 rounded-full border-2 border-background object-cover"
-                    alt="Portrait of a young male startup founder with glasses, creative studio setting, professional headshot style, dramatic teal and violet lighting, sharp focus on facial features."
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDd0uo3P-dScNr499XKHUR3VoBArb8SK4SYfyAru1hYvymaxcYJOFrtgxeJSmQEMhN4ImjzjFZZLASd2Y0MsOh9d5Ji4x_wa4U2dtzX5aje75EsjdrZzqYQcbtbNAyjwMv6UHYs4N9Jaztiiu_LmRyUFgQwmbkucLx9X9hgqCtqS8z5pdakPi8GDnPt5DBfs_pwSmjefH32_cKX18FCZtJZhuD3YdGv6vIzAS_tBxae7Nyr7ZlwxYhCf7NLbCSW4JrGkHDuW_cSge4"
-                  />
-                  <Image
-                    width={40}
-                    height={40}
-                    className="w-10 h-10 rounded-full border-2 border-background object-cover"
-                    alt="Close up portrait of an Asian male executive, sleek modern corporate aesthetic, soft blurred tech office background, warm but professional color grade with navy accents."
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_ROlrvTkYTj1TkaJo7m19t1bQPlddhNIepWbfjxrZXddxiFaaxTZkEqP7KOtAX8bz3uzOrxxPuMkyPEuHd7E4kEYqhkKo-ztt1I6jKX9uj8eXfuBlVRRUqZUGt9fWDt4z9_ZWLdCo5cnD3XUMlrkfNABmonDAnFrGhQXQH7y83DVd5cFs114n5XIRFYM3mAOhYf4IxHd4U7cBI5QfVSuxa9TEyc2_0g_JCyjX2rT3vvIqiFGcr_N0EJXF84Fczllhbrl2AiiDEFk"
-                  />
-                </div>
+              <div className="flex items-center gap-2 mt-8 opacity-70">
+                <span className="material-symbols-outlined text-primary text-lg">bolt</span>
                 <p className="font-label-md text-label-md text-on-surface-variant">
-                  Trusted by 500+ fast-growing teams
+                  Multi-provider AI with automatic failover — no single point of failure
                 </p>
               </div>
             </div>
@@ -344,26 +322,27 @@ export default function LandingPage() {
                     </div>
                     <div className="bg-primary/20 p-3 rounded-lg rounded-tr-none self-end max-w-[80%] border border-primary-container">
                       <p className="font-body-sm text-body-sm text-on-surface">
-                        How do I set up the AI integration for instant replies?
+                        How do I get this trained on my own content?
                       </p>
                     </div>
                     <div className="bg-surface-variant/50 p-3 rounded-lg rounded-tl-none max-w-[85%] relative overflow-hidden pl-5">
                       <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full bg-gradient-to-b from-primary via-secondary to-primary/40"></div>
                       <p className="font-body-sm text-body-sm text-on-surface mb-2">
-                        Integrating AI models is simple. Follow these steps:
+                        Getting your bot live takes a few minutes:
                       </p>
                       <ul className="text-[12px] list-disc list-inside text-on-surface-variant space-y-1">
                         <li>
-                          Go to{" "}
+                          Crawl your website or upload docs on the{" "}
                           <code className="bg-surface-container px-1 rounded">
-                            Settings &gt; LLM Providers
-                          </code>
+                            Bots
+                          </code>{" "}
+                          page
                         </li>
                         <li>
-                          Input your API key or use our <strong>Managed Tier</strong>
+                          We index it into a searchable knowledge base automatically
                         </li>
                         <li>
-                          Toggle &quot;High Speed Mode&quot; for &lt;500ms latency
+                          Copy your embed snippet — you&apos;re live
                         </li>
                       </ul>
                     </div>
@@ -483,8 +462,8 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="col-span-12 lg:col-span-6 bg-surface-container border border-outline-variant p-8 rounded-xl group hover:border-secondary/50 transition-colors">
-              <div className="w-12 h-12 bg-secondary/20 rounded-lg flex items-center justify-center text-secondary mb-6">
-                <span className="material-symbols-outlined text-3xl">chat_bubble</span>
+              <div className="w-12 h-12 bg-[#25D366]/15 rounded-lg flex items-center justify-center text-[#25D366] mb-6">
+                <WhatsAppIcon className="w-6 h-6" />
               </div>
               <h3 className="font-headline-md text-headline-md text-on-surface mb-3">Now on WhatsApp</h3>
               <p className="text-on-surface-variant">
@@ -507,55 +486,22 @@ export default function LandingPage() {
         <section className="py-stack-xl bg-surface-container-lowest">
           <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
             {/* Section heading */}
-            <div className="text-center mb-16">
-              <p className="font-label-md text-label-md text-primary mb-3 tracking-wider">TRUSTED BY GROWING BUSINESSES</p>
-              <h2 className="font-display text-headline-lg text-on-surface">Results that speak for themselves</h2>
-            </div>
-
-            {/* Stats grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
-              <div className="text-center">
-                <p className="font-display text-5xl font-bold text-primary">70%</p>
-                <p className="text-on-surface-variant text-sm mt-1">Fewer support tickets</p>
-              </div>
-              <div className="text-center">
-                <p className="font-display text-5xl font-bold text-primary">10K+</p>
-                <p className="text-on-surface-variant text-sm mt-1">Conversations handled</p>
-              </div>
-              <div className="text-center">
-                <p className="font-display text-5xl font-bold text-primary">99.7%</p>
-                <p className="text-on-surface-variant text-sm mt-1">Accuracy rate</p>
-              </div>
-              <div className="text-center">
-                <p className="font-display text-5xl font-bold text-primary">3min</p>
-                <p className="text-on-surface-variant text-sm mt-1">Avg. response time</p>
-              </div>
-            </div>
-
-            {/* Featured quote */}
-            <div className="max-w-3xl mx-auto text-center">
-              <span className="material-symbols-outlined text-primary text-4xl opacity-60 mb-4 block">format_quote</span>
-              <h3 className="font-headline-lg text-headline-lg text-on-surface italic leading-tight mb-6">
-                &quot;botimi transformed our support desk. We reduced human intervention by 70% in the first month
-                without losing customer satisfaction.&quot;
-              </h3>
-              <p className="text-on-surface-variant font-body-lg mb-6">
-                We were skeptical about AI chatbots, but botimi delivers. It&apos;s
-                like having our best support rep working 24/7 for a fraction of the cost.
+            <div className="text-center mb-12">
+              <p className="font-label-md text-label-md text-primary mb-3 tracking-wider">EARLY ACCESS</p>
+              <h2 className="font-display text-headline-lg text-on-surface mb-4">Just getting started — that&apos;s an advantage</h2>
+              <p className="text-on-surface-variant font-body-lg max-w-2xl mx-auto">
+                botimi is in early access. Founding customers work directly with us to shape the roadmap,
+                and get hands-on onboarding no large platform can match.
               </p>
-              <div className="flex items-center justify-center gap-3">
-                <Image
-                  src="/culverwell.png"
-                  alt="Culverwell Venge"
-                  width={48}
-                  height={48}
-                  className="w-12 h-12 rounded-full object-cover border-2 border-surface"
-                />
-                <div className="text-left">
-                  <p className="text-on-surface font-bold text-sm">Culverwell Venge</p>
-                  <p className="text-primary text-xs">CEO, Taxcul</p>
-                </div>
-              </div>
+            </div>
+
+            <div className="flex justify-center">
+              <button
+                className="px-8 py-3.5 bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all"
+                onClick={() => (window.location.href = "/register")}
+              >
+                Become a founding customer
+              </button>
             </div>
           </div>
         </section>
@@ -583,10 +529,10 @@ export default function LandingPage() {
                   <span className="material-symbols-outlined text-primary">done</span> Up to 500 chats / month
                 </li>
                 <li className="flex items-center gap-3 text-sm text-on-surface">
-                  <span className="material-symbols-outlined text-primary">done</span> Multi-Model AI Integration
+                  <span className="material-symbols-outlined text-primary">done</span> Crawl up to 50 pages
                 </li>
                 <li className="flex items-center gap-3 text-sm text-on-surface">
-                  <span className="material-symbols-outlined text-primary">done</span> Standard Support
+                  <span className="material-symbols-outlined text-primary">done</span> Standard support
                 </li>
               </ul>
               <button
@@ -613,13 +559,13 @@ export default function LandingPage() {
                   <span className="material-symbols-outlined text-primary">done</span> Up to 5,000 chats / month
                 </li>
                 <li className="flex items-center gap-3 text-sm text-on-surface">
-                  <span className="material-symbols-outlined text-primary">done</span> High-Speed AI Inference
+                  <span className="material-symbols-outlined text-primary">done</span> Crawl up to 500 pages
                 </li>
                 <li className="flex items-center gap-3 text-sm text-on-surface">
-                  <span className="material-symbols-outlined text-primary">done</span> Advanced RAG (10 sources)
+                  <span className="material-symbols-outlined text-primary">done</span> Support ticket inbox with team seats
                 </li>
                 <li className="flex items-center gap-3 text-sm text-on-surface">
-                  <span className="material-symbols-outlined text-primary">done</span> Priority Email Support
+                  <span className="material-symbols-outlined text-primary">done</span> Priority email support
                 </li>
               </ul>
               <button
@@ -643,13 +589,13 @@ export default function LandingPage() {
                   <span className="material-symbols-outlined text-primary">done</span> Unlimited chats
                 </li>
                 <li className="flex items-center gap-3 text-sm text-on-surface">
-                  <span className="material-symbols-outlined text-primary">done</span> Custom LLM Fine-tuning
+                  <span className="material-symbols-outlined text-primary">done</span> Unlimited page crawling
                 </li>
                 <li className="flex items-center gap-3 text-sm text-on-surface">
-                  <span className="material-symbols-outlined text-primary">done</span> Full API Access & Webhooks
+                  <span className="material-symbols-outlined text-primary">done</span> White-label widget
                 </li>
                 <li className="flex items-center gap-3 text-sm text-on-surface">
-                  <span className="material-symbols-outlined text-primary">done</span> Dedicated Account Manager
+                  <span className="material-symbols-outlined text-primary">done</span> Dedicated account manager
                 </li>
               </ul>
               <button
