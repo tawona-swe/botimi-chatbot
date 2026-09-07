@@ -46,7 +46,7 @@ router.post("/webhook", async (req, res) => {
         const messages = value.messages || [];
         if (!phoneNumberId || messages.length === 0) continue; // status/delivery webhooks, not a message
 
-        const bot = db.prepare("SELECT id FROM bots WHERE whatsapp_phone_number_id = ? AND is_active = 1").get(phoneNumberId);
+        const bot = db.prepare("SELECT id, whatsapp_access_token FROM bots WHERE whatsapp_phone_number_id = ? AND is_active = 1").get(phoneNumberId);
         if (!bot) {
           console.warn(`[WhatsApp] No bot mapped to phone_number_id ${phoneNumberId}`);
           continue;
@@ -72,7 +72,7 @@ router.post("/webhook", async (req, res) => {
           });
 
           if (result.status === 200 && result.body.reply) {
-            await sendWhatsAppMessage(phoneNumberId, from, result.body.reply).catch((err) => {
+            await sendWhatsAppMessage(phoneNumberId, from, result.body.reply, bot.whatsapp_access_token).catch((err) => {
               console.error("[WhatsApp] Failed to send reply:", err.message);
             });
           }

@@ -91,6 +91,7 @@ router.patch("/:id", (req, res) => {
     "working_hours_end", "working_hours_enabled", "offline_message",
     "blacklist_topics", "quick_replies", "is_active",
     "proactive_message", "proactive_delay_seconds", "whatsapp_phone_number_id",
+    "whatsapp_access_token",
   ];
 
   const updates = [];

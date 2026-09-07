@@ -5,48 +5,22 @@ import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Sidebar from "../ui/Sidebar";
+import WhatsAppIcon from "../ui/WhatsAppIcon";
 import api from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 
-const MODEL_PROVIDERS = {
-  groq: {
-    label: "Groq",
-    models: [
-      { value: "llama3-70b", label: "GPT-OSS 120B — best quality" },
-      { value: "llama3-8b", label: "GPT-OSS 20B — fastest" },
-      { value: "mixtral-8x7b", label: "Qwen3.6 27B" },
-    ],
-  },
-  gemini: {
-    label: "Google Gemini",
-    models: [
-      { value: "gemini-flash", label: "Gemini Flash" },
-      { value: "gemini-pro", label: "Gemini Pro" },
-    ],
-  },
-  openrouter: {
-    label: "OpenRouter (free models)",
-    models: [
-      { value: "auto", label: "Auto — best available free model" },
-      { value: "glm-5.2", label: "GLM 5.2" },
-      { value: "minimax-m3", label: "MiniMax M3" },
-      { value: "nemotron-ultra", label: "Nemotron 3 Ultra 550B" },
-      { value: "nemotron-super", label: "Nemotron 3 Super 120B" },
-      { value: "gemma-4", label: "Gemma 4 31B" },
-      { value: "inkling", label: "Inkling" },
-    ],
-  },
-  opencodezen: {
-    label: "OpenCode Zen (free models)",
-    models: [
-      { value: "mimo-v2.5", label: "MiMo V2.5" },
-      { value: "hy3", label: "Hy3" },
-      { value: "deepseek-v4-flash", label: "DeepSeek V4 Flash" },
-      { value: "nemotron-3-ultra", label: "Nemotron 3 Ultra" },
-      { value: "nemotron-3.5-lightning", label: "Nemotron 3.5 Lightning" },
-    ],
-  },
+// Vendors pick a response quality, never a provider or model name — which
+// underlying AI actually answers (and any automatic failover between them)
+// is entirely botimi's infrastructure decision, not something to expose.
+const RESPONSE_QUALITY = {
+  balanced: { label: "Balanced (Recommended)", description: "Best overall quality for most bots.", provider: "groq", model: "llama3-70b" },
+  fast: { label: "Fast", description: "Optimized for the quickest possible replies.", provider: "groq", model: "llama3-8b" },
 };
+
+function qualityTierFor(provider, model) {
+  const match = Object.entries(RESPONSE_QUALITY).find(([, q]) => q.provider === provider && q.model === model);
+  return match ? match[0] : "balanced";
+}
 
 export default function BotsPage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -77,6 +51,7 @@ export default function BotsPage() {
   const [createForm, setCreateForm] = useState({ name: "", websiteUrl: "" });
   const [createLoading, setCreateLoading] = useState(false);
   const [whatsappPhoneId, setWhatsappPhoneId] = useState("");
+  const [whatsappToken, setWhatsappToken] = useState("");
   const [whatsappSaving, setWhatsappSaving] = useState(false);
 
   useEffect(() => {
@@ -136,6 +111,7 @@ export default function BotsPage() {
     setCrawlUrl("");
     setCrawlSuccess("");
     setWhatsappPhoneId(bot.whatsapp_phone_number_id || "");
+    setWhatsappToken(bot.whatsapp_access_token || "");
     try {
       const data = await api.getBotSources(bot.id);
       setSources(data.sources || []);
@@ -152,8 +128,7 @@ export default function BotsPage() {
       response_tone: selectedBot.response_tone,
       brand_color: selectedBot.brand_color || "#c0c1ff",
       is_active: selectedBot.is_active,
-      model_provider: selectedBot.model_provider || "groq",
-      model_name: selectedBot.model_name || "llama3-70b",
+      quality_tier: qualityTierFor(selectedBot.model_provider || "groq", selectedBot.model_name || "llama3-70b"),
       confidence_threshold: selectedBot.confidence_threshold ?? 0.7,
       proactive_message: selectedBot.proactive_message || "",
       proactive_delay_seconds: selectedBot.proactive_delay_seconds ?? 15,
@@ -164,7 +139,10 @@ export default function BotsPage() {
   const saveEdit = async () => {
     setSaving(true);
     try {
-      const data = await api.updateBot(selectedBot.id, editForm);
+      const { quality_tier, ...rest } = editForm;
+      const tier = RESPONSE_QUALITY[quality_tier] || RESPONSE_QUALITY.balanced;
+      const payload = { ...rest, model_provider: tier.provider, model_name: tier.model };
+      const data = await api.updateBot(selectedBot.id, payload);
       setSelectedBot(data.bot);
       setBots(prev => prev.map(b => b.id === selectedBot.id ? { ...b, ...data.bot } : b));
       setEditMode(false);
@@ -178,7 +156,10 @@ export default function BotsPage() {
   const handleSaveWhatsapp = async () => {
     setWhatsappSaving(true);
     try {
-      const data = await api.updateBot(selectedBot.id, { whatsapp_phone_number_id: whatsappPhoneId.trim() });
+      const data = await api.updateBot(selectedBot.id, {
+        whatsapp_phone_number_id: whatsappPhoneId.trim(),
+        whatsapp_access_token: whatsappToken.trim(),
+      });
       setSelectedBot(data.bot);
       setBots(prev => prev.map(b => b.id === selectedBot.id ? { ...b, ...data.bot } : b));
     } catch (err) {
@@ -464,34 +445,17 @@ export default function BotsPage() {
                         </select>
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Model Provider</label>
+                        <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Response Quality</label>
                         <select
-                          value={editForm.model_provider}
-                          onChange={e => {
-                            const provider = e.target.value;
-                            setEditForm(f => ({ ...f, model_provider: provider, model_name: MODEL_PROVIDERS[provider].models[0].value }));
-                          }}
+                          value={editForm.quality_tier}
+                          onChange={e => setEditForm(f => ({ ...f, quality_tier: e.target.value }))}
                           className="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface"
                         >
-                          {Object.entries(MODEL_PROVIDERS).map(([key, p]) => (
-                            <option key={key} value={key}>{p.label}</option>
+                          {Object.entries(RESPONSE_QUALITY).map(([key, q]) => (
+                            <option key={key} value={key}>{q.label}</option>
                           ))}
                         </select>
-                        {(editForm.model_provider === "opencodezen" || editForm.model_provider === "openrouter") && (
-                          <p className="text-[11px] text-on-surface-variant/70">Free shared pool — occasionally rate-limited or briefly unavailable. Falls back to Groq automatically if it doesn&apos;t respond.</p>
-                        )}
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Model</label>
-                        <select
-                          value={editForm.model_name}
-                          onChange={e => setEditForm(f => ({ ...f, model_name: e.target.value }))}
-                          className="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface"
-                        >
-                          {(MODEL_PROVIDERS[editForm.model_provider]?.models || []).map(m => (
-                            <option key={m.value} value={m.value}>{m.label}</option>
-                          ))}
-                        </select>
+                        <p className="text-[11px] text-on-surface-variant/70">{RESPONSE_QUALITY[editForm.quality_tier]?.description}</p>
                       </div>
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
@@ -615,9 +579,9 @@ export default function BotsPage() {
                   {/* WhatsApp Connection */}
                   <div className="bg-surface-container border border-outline-variant rounded-2xl p-6 space-y-4">
                     <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-green-500">chat</span>
+                      <WhatsAppIcon className="w-5 h-5 text-[#25D366]" />
                       <h3 className="font-display font-bold text-on-surface">WhatsApp</h3>
-                      {selectedBot.whatsapp_phone_number_id ? (
+                      {selectedBot.whatsapp_phone_number_id && selectedBot.whatsapp_access_token ? (
                         <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 uppercase">Connected</span>
                       ) : (
                         <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant uppercase">Not connected</span>
@@ -626,20 +590,22 @@ export default function BotsPage() {
                     <p className="text-xs text-on-surface-variant">Mirrors this bot on WhatsApp — same training and escalation logic as your website widget.</p>
                     <div className="space-y-1.5">
                       <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Phone Number ID</label>
-                      <div className="flex gap-2">
-                        <input type="text" placeholder="From your Meta app dashboard" value={whatsappPhoneId} onChange={e => setWhatsappPhoneId(e.target.value)} className="flex-1 min-w-0 bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
-                        <button onClick={handleSaveWhatsapp} disabled={whatsappSaving} className="shrink-0 px-4 py-2 bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 disabled:opacity-50">
-                          {whatsappSaving ? "Saving..." : "Save"}
-                        </button>
-                      </div>
+                      <input type="text" placeholder="From your Meta Business Portfolio" value={whatsappPhoneId} onChange={e => setWhatsappPhoneId(e.target.value)} className="w-full bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
                     </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Access Token</label>
+                      <input type="password" placeholder="System User token — not the 24h temporary one" value={whatsappToken} onChange={e => setWhatsappToken(e.target.value)} className="w-full bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
+                    </div>
+                    <button onClick={handleSaveWhatsapp} disabled={whatsappSaving} className="w-full px-4 py-2 bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 disabled:opacity-50">
+                      {whatsappSaving ? "Saving..." : "Save"}
+                    </button>
                     <details className="text-xs text-on-surface-variant">
                       <summary className="cursor-pointer font-semibold hover:text-on-surface transition-colors">Setup instructions</summary>
                       <ol className="mt-2 space-y-1.5 list-decimal list-inside">
-                        <li>Create a Meta Business App with the WhatsApp product added.</li>
-                        <li>In your server&apos;s environment, set <code className="bg-surface-container-lowest px-1 rounded font-mono">WHATSAPP_ACCESS_TOKEN</code> and <code className="bg-surface-container-lowest px-1 rounded font-mono">WHATSAPP_VERIFY_TOKEN</code> (any value you choose).</li>
-                        <li>In the Meta dashboard, set the webhook URL to <code className="bg-surface-container-lowest px-1 rounded font-mono break-all">{`{your-public-domain}/api/whatsapp/webhook`}</code> with your chosen verify token — this needs a real public HTTPS URL, not localhost.</li>
-                        <li>Copy the Phone Number ID from the Meta dashboard and paste it above.</li>
+                        <li>In your own Meta Business Portfolio (most businesses already have one), add the WhatsApp product and register the number you want this bot to use.</li>
+                        <li>Go to Business Settings → Users → System Users, create one, and generate a <strong>long-lived System User access token</strong> with <code className="bg-surface-container-lowest px-1 rounded font-mono">whatsapp_business_messaging</code> permission — not the default 24-hour temporary token from the quickstart, that one expires the next day.</li>
+                        <li>Set the webhook URL to <code className="bg-surface-container-lowest px-1 rounded font-mono break-all">{`{your-public-domain}/api/whatsapp/webhook`}</code> with the verify token botimi gives you — this needs a real public HTTPS URL, not localhost.</li>
+                        <li>Copy the Phone Number ID and your System User access token from the Meta dashboard and paste them above.</li>
                       </ol>
                     </details>
                   </div>
