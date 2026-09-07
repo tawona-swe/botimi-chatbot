@@ -201,8 +201,8 @@ export default function Dashboard() {
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-dot" />
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px]" />
-        <div className="absolute top-1/2 left-1/4 w-[400px] h-[400px] bg-secondary/3 rounded-full blur-[100px]" />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] glow-blob" />
+        <div className="absolute top-1/2 left-1/4 w-[400px] h-[400px] bg-secondary/3 rounded-full blur-[100px] glow-blob" />
       </div>
 
       <header className="h-16 flex items-center justify-between px-6 lg:px-8 bg-background/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-40">

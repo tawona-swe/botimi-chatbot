@@ -119,8 +119,8 @@ export default function OnboardingStep2() {
         </div>
       </header>
       <main className="flex-grow flex flex-col items-center pb-12 px-margin-mobile relative overflow-hidden">
-        <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full pointer-events-none"></div>
-        <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] bg-secondary/5 blur-[100px] rounded-full pointer-events-none"></div>
+        <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full pointer-events-none glow-blob"></div>
+        <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] bg-secondary/5 blur-[100px] rounded-full pointer-events-none glow-blob"></div>
         <div className="w-full max-w-3xl mb-12 z-10">
           <div className="flex justify-between items-start relative px-4">
             <div className="absolute top-6 left-0 w-full h-[2px] bg-outline/20 -translate-y-1/2 z-0"></div>

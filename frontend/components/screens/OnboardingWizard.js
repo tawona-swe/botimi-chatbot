@@ -254,8 +254,8 @@ export default function OnboardingWizard() {
       </header>
 
       <main className="flex-grow flex flex-col items-center justify-start px-4 sm:px-6 relative overflow-hidden">
-        <div className="fixed top-[-20%] left-[-10%] w-[600px] h-[600px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
-        <div className="fixed bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-secondary/5 blur-[120px] rounded-full pointer-events-none" />
+        <div className="fixed top-[-20%] left-[-10%] w-[600px] h-[600px] bg-primary/5 blur-[120px] rounded-full pointer-events-none glow-blob" />
+        <div className="fixed bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-secondary/5 blur-[120px] rounded-full pointer-events-none glow-blob" />
 
         <div className="w-full max-w-2xl mt-8 mb-10 z-10 px-2">
           <div className="flex justify-between items-center relative">

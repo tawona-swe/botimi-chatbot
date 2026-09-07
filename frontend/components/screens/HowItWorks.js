@@ -243,8 +243,8 @@ export default function HowItWorks() {
         {/* ── Hero ── */}
         <section className="relative pt-32 pb-16 px-margin-mobile md:px-margin-desktop">
           <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary rounded-full blur-[120px] animate-pulse"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary rounded-full blur-[120px] delay-1000 animate-pulse"></div>
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary rounded-full blur-[120px] animate-pulse glow-blob"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary rounded-full blur-[120px] delay-1000 animate-pulse glow-blob"></div>
           </div>
           <div className="max-w-container-max mx-auto text-center relative z-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full border border-outline-variant w-fit mx-auto mb-6">
