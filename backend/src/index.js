@@ -17,7 +17,6 @@ import {
   conversationRoutes,
   analyticsRoutes,
   ticketRoutes,
-  webhookRoutes,
   adminRoutes,
   widgetRoutes,
   assistantRoutes,
@@ -61,9 +60,6 @@ app.use(cors((req, callback) => {
 
 app.use(morgan(config.isDev ? "dev" : "combined"));
 
-// Raw body for webhooks (needs to be before JSON parser)
-app.use("/api/webhooks/stripe", express.raw({ type: "application/json" }));
-
 // JSON body parser
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
@@ -101,11 +97,11 @@ app.use("/api/analytics", analyticsRoutes);
 // Tickets
 app.use("/api/tickets", ticketRoutes);
 
-// Webhooks
-app.use("/api/webhooks", webhookRoutes);
-
 // Vendor profile
 app.use("/api/vendor", (await import("./routes/vendor.js")).default);
+
+// Pesepay (Zimbabwe local billing)
+app.use("/api/pesepay", (await import("./routes/pesepay.js")).default);
 
 // Team seats
 app.use("/api/team", (await import("./routes/team.js")).default);
@@ -151,6 +147,14 @@ setTimeout(() => {
     console.error("[Cron] Initial overage check error:", err);
   }
 }, 30_000); // 30 seconds after startup
+
+// --------------- Pesepay Billing Cycle ---------------
+// Resolves pending Ecocash charges and triggers renewals that are due.
+const { runBillingCycle } = await import("./services/pesepayBilling.js");
+setInterval(() => {
+  console.log("[Cron] Running Pesepay billing cycle...");
+  runBillingCycle().catch((err) => console.error("[Cron] Pesepay billing cycle error:", err));
+}, 60 * 60 * 1000); // every hour
 
 // --------------- GDPR Data Cleanup ---------------
 // Auto-delete conversation logs older than 90 days

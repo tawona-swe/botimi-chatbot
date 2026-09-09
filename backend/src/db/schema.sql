@@ -16,8 +16,7 @@ CREATE TABLE IF NOT EXISTS vendors (
   country           TEXT DEFAULT '',
   subscription_plan TEXT NOT NULL DEFAULT 'trial',  -- trial | starter | growth | scale
   subscription_status TEXT NOT NULL DEFAULT 'active', -- active | past_due | canceled | trialing
-  stripe_customer_id TEXT DEFAULT '',
-  stripe_subscription_id TEXT DEFAULT '',
+  payment_provider  TEXT NOT NULL DEFAULT 'pesepay',
   conversations_used INTEGER NOT NULL DEFAULT 0,
   conversations_limit INTEGER NOT NULL DEFAULT 500,
   ticket_addon       INTEGER NOT NULL DEFAULT 0,    -- 0 or 1
@@ -225,8 +224,28 @@ CREATE TABLE IF NOT EXISTS usage_events (
 );
 
 -- ============================================================
+-- PESEPAY CHARGES (Zimbabwe local billing — one-time charge per cycle,
+-- since Pesepay has no native recurring/subscription API)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS pesepay_charges (
+  id                TEXT PRIMARY KEY,
+  vendor_id         TEXT NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+  plan_id           TEXT NOT NULL,
+  method            TEXT NOT NULL DEFAULT 'ecocash', -- ecocash | card
+  customer_reference TEXT DEFAULT '', -- phone number for ecocash, blank for card (redirect flow)
+  reference_number  TEXT NOT NULL,
+  amount            REAL NOT NULL,
+  currency_code     TEXT NOT NULL,
+  payment_method_code TEXT NOT NULL,
+  status            TEXT NOT NULL DEFAULT 'pending', -- pending | paid | failed
+  attempt_number    INTEGER NOT NULL DEFAULT 1,
+  created_at        TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- ============================================================
 -- INDEXES
 -- ============================================================
+CREATE INDEX IF NOT EXISTS idx_pesepay_charges_vendor ON pesepay_charges(vendor_id);
 CREATE INDEX IF NOT EXISTS idx_bots_vendor ON bots(vendor_id);
 CREATE INDEX IF NOT EXISTS idx_knowledge_sources_bot ON knowledge_sources(bot_id);
 CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_bot ON knowledge_chunks(bot_id);

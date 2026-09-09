@@ -35,6 +35,15 @@ const COLUMN_MIGRATIONS = [
   ["bots", "whatsapp_phone_number_id", "TEXT DEFAULT ''"],
   ["bots", "whatsapp_access_token", "TEXT DEFAULT ''"],
   ["messages", "rating", "TEXT"],
+  ["vendors", "payment_provider", "TEXT NOT NULL DEFAULT 'pesepay'"],
+  ["vendors", "pesepay_phone_number", "TEXT DEFAULT ''"],
+  ["vendors", "next_charge_at", "TEXT"],
+  ["vendors", "dunning_attempts", "INTEGER NOT NULL DEFAULT 0"],
+  ["pesepay_charges", "plan_id", "TEXT NOT NULL DEFAULT 'starter'"],
+  ["pesepay_charges", "method", "TEXT NOT NULL DEFAULT 'ecocash'"],
+  ["pesepay_charges", "customer_reference", "TEXT DEFAULT ''"],
+  ["vendors", "pesepay_payment_method", "TEXT DEFAULT ''"],
+  ["vendors", "pesepay_currency", "TEXT DEFAULT ''"],
 ];
 
 function runColumnMigrations() {

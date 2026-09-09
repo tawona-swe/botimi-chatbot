@@ -8,7 +8,7 @@ AI chatbot platform for businesses: train a bot on your own content (crawled pag
 - **Backend** — Express + better-sqlite3 (WAL mode), no ORM, no build step
 - **LLM providers** — Groq, Google Gemini, OpenRouter, and OpenCode Zen, routed through a cascading fallback (`backend/src/services/modelRouter.js`) so a bot keeps responding if one provider is down or rate-limited
 - **Auth** — JWT sessions (`backend/src/middleware/auth.js`), supporting both vendor-owner and invited team-member logins
-- **Billing** — Stripe subscriptions (`backend/src/services/stripe.js`, `backend/src/routes/webhooks.js`)
+- **Billing** — Pesepay (`backend/src/services/pesepay.js`, `backend/src/services/pesepayBilling.js`, `backend/src/routes/pesepay.js`): Ecocash for Zimbabwe, Visa/Mastercard (redirect flow) for international customers
 
 ## Repo layout
 
@@ -39,7 +39,7 @@ The database is created automatically on first boot (`backend/data/botimi.db`) �
 
 ### Environment variables
 
-See `backend/.env.example` and `frontend/.env.example` for the full list with descriptions. At minimum, the backend needs `JWT_SECRET` and **one** LLM provider key (Groq and Gemini both have free tiers) to serve chat responses. Everything else (Stripe, WhatsApp, Resend email, OpenRouter, OpenCode Zen) degrades gracefully when unset — features relying on them just won't be reachable until configured.
+See `backend/.env.example` and `frontend/.env.example` for the full list with descriptions. At minimum, the backend needs `JWT_SECRET` and **one** LLM provider key (Groq and Gemini both have free tiers) to serve chat responses. Everything else (Pesepay, WhatsApp, Resend email, OpenRouter, OpenCode Zen) degrades gracefully when unset — features relying on them just won't be reachable until configured.
 
 ## Core features
 
@@ -59,4 +59,4 @@ See `backend/.env.example` and `frontend/.env.example` for the full list with de
 
 ## Not yet built
 
-- Pesepay (Zimbabwe payments) — Stripe covers international billing today
+- A renewal-reminder email for card-paying vendors — Ecocash renewals auto-charge via a phone PIN push, but the card redirect flow has no stored payment method to re-charge silently, so those vendors need a "renew now" link each cycle instead

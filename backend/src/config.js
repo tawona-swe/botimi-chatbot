@@ -36,22 +36,21 @@ const config = {
     apiVersion: process.env.WHATSAPP_API_VERSION || "v21.0",
   },
 
-  stripe: {
-    secretKey: process.env.STRIPE_SECRET_KEY || "",
-    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
-    prices: {
-      starter: process.env.STRIPE_STARTER_PRICE_ID || "",
-      growth: process.env.STRIPE_GROWTH_PRICE_ID || "",
-      scale: process.env.STRIPE_SCALE_PRICE_ID || "",
-    },
-  },
-
   email: {
     apiKey: process.env.RESEND_API_KEY || "",
     from: process.env.EMAIL_FROM || "noreply@botimi.ai",
   },
 
+  pesepay: {
+    integrationKey: process.env.PESEPAY_INTEGRATION_KEY || "",
+    encryptionKey: process.env.PESEPAY_ENCRYPTION_KEY || "",
+    // "sandbox" uses currency "ZWL"; "production" uses "ZiG" — see project memory,
+    // these are genuinely different environments with different hosts.
+    env: process.env.PESEPAY_ENV || "sandbox",
+  },
+
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:3000",
+  backendUrl: process.env.BACKEND_URL || "http://localhost:3001",
 
   appName: process.env.APP_NAME || "botimi",
 

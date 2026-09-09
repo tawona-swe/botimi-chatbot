@@ -128,7 +128,7 @@ export default function PricingPage() {
     },
     {
       q: "What payment methods do you accept?",
-      a: "We accept all major credit cards (Visa, Mastercard, Amex), PayPal, and bank transfers for annual enterprise plans. All payments are processed securely via Stripe.",
+      a: "We accept Visa and Mastercard internationally, and Ecocash for customers in Zimbabwe.",
     },
     {
       q: "Is there a discount for annual billing?",
