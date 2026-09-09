@@ -280,12 +280,20 @@ class ApiClient {
     return this.request("DELETE", `/team/${id}`);
   }
 
-  createCheckout(planId, ticketAddon) {
-    return this.request("POST", "/vendor/checkout", { planId, ticketAddon });
+  pesepayCheckout(planId, phoneNumber, currency, method) {
+    return this.request("POST", "/pesepay/checkout", { planId, phoneNumber, currency, method });
   }
 
-  getBillingPortal() {
-    return this.request("POST", "/vendor/billing-portal");
+  pesepayCheckoutCard(planId) {
+    return this.request("POST", "/pesepay/checkout-card", { planId });
+  }
+
+  pesepayPending() {
+    return this.request("GET", "/pesepay/pending");
+  }
+
+  pesepayStatus(referenceNumber) {
+    return this.request("GET", `/pesepay/status/${referenceNumber}`);
   }
 
   // Super Admin
