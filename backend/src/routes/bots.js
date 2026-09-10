@@ -179,6 +179,11 @@ router.delete("/:id/sources/:sourceId", (req, res) => {
   const source = db.prepare("SELECT id FROM knowledge_sources WHERE id = ? AND bot_id = ?").get(req.params.sourceId, req.params.id);
   if (!source) return res.status(404).json({ error: "Source not found" });
 
+  // FTS is a standalone shadow index (not a real foreign key relationship,
+  // so no cascade) — must clear it explicitly before the chunks it mirrors
+  // are gone, or the keyword-search half of RAG would keep matching deleted
+  // content forever.
+  db.prepare("DELETE FROM knowledge_chunks_fts WHERE chunk_id IN (SELECT id FROM knowledge_chunks WHERE source_id = ?)").run(req.params.sourceId);
   db.prepare("DELETE FROM knowledge_chunks WHERE source_id = ?").run(req.params.sourceId);
   db.prepare("DELETE FROM knowledge_sources WHERE id = ?").run(req.params.sourceId);
 
@@ -329,7 +334,8 @@ router.post("/:id/recrawl/:sourceId", async (req, res) => {
 
   // Reset source status
   db.prepare("UPDATE knowledge_sources SET status = 'processing', error_message = '', updated_at = datetime('now') WHERE id = ?").run(source.id);
-  // Delete old chunks
+  // Delete old chunks (and their FTS shadow rows — no real FK, no cascade)
+  db.prepare("DELETE FROM knowledge_chunks_fts WHERE chunk_id IN (SELECT id FROM knowledge_chunks WHERE source_id = ?)").run(source.id);
   db.prepare("DELETE FROM knowledge_chunks WHERE source_id = ?").run(source.id);
 
   res.json({ message: "Recrawl started", sourceId: source.id });

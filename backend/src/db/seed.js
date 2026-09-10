@@ -73,17 +73,20 @@ async function seed() {
     INSERT INTO knowledge_chunks (id, source_id, bot_id, vendor_id, content, embedding, chunk_index, metadata)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
+  const insertFts = db.prepare("INSERT INTO knowledge_chunks_fts (chunk_id, bot_id, content) VALUES (?, ?, ?)");
 
   for (const chunk of chunks) {
     // Seeded without a real embedding, these chunks would never surface in
     // RAG search (searchRelevantChunks filters WHERE embedding IS NOT NULL),
     // leaving the demo bot with no actual knowledge despite looking trained.
     const embedding = await getEmbedding(chunk.content);
+    const chunkId = uuidv4();
     insertChunk.run(
-      uuidv4(), sourceId, demoBotId, demoVendorId,
+      chunkId, sourceId, demoBotId, demoVendorId,
       chunk.content, embedding ? JSON.stringify(embedding) : null, chunk.index,
       JSON.stringify({ url: "https://botimi.ai/docs", title: "botimi Documentation" })
     );
+    insertFts.run(chunkId, demoBotId, chunk.content);
   }
   console.log("[Seed] Indexed 5 knowledge chunks");
 

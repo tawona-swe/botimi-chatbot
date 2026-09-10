@@ -51,6 +51,7 @@ export async function indexPages(sourceId, botId, vendorId, pages) {
     INSERT INTO knowledge_chunks (id, source_id, bot_id, vendor_id, content, embedding, chunk_index, metadata)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
+  const insertFts = db.prepare("INSERT INTO knowledge_chunks_fts (chunk_id, bot_id, content) VALUES (?, ?, ?)");
 
   const updateSource = db.prepare("UPDATE knowledge_sources SET status = 'indexing', chunk_count = ? WHERE id = ?");
 
@@ -61,9 +62,10 @@ export async function indexPages(sourceId, botId, vendorId, pages) {
     const metadata = JSON.stringify({ url: page.url, title: page.title });
 
     for (let i = 0; i < chunks.length; i++) {
+      const chunkId = uuidv4();
       const embedding = await getEmbedding(chunks[i]);
       insertChunk.run(
-        uuidv4(),
+        chunkId,
         sourceId,
         botId,
         vendorId,
@@ -72,6 +74,7 @@ export async function indexPages(sourceId, botId, vendorId, pages) {
         totalChunks++,
         metadata
       );
+      insertFts.run(chunkId, botId, chunks[i]);
     }
   }
 
@@ -94,15 +97,17 @@ export async function indexText(sourceId, botId, vendorId, text, title = "") {
     INSERT INTO knowledge_chunks (id, source_id, bot_id, vendor_id, content, embedding, chunk_index, metadata)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
+  const insertFts = db.prepare("INSERT INTO knowledge_chunks_fts (chunk_id, bot_id, content) VALUES (?, ?, ?)");
 
   const chunks = chunkText(text);
   const metadata = JSON.stringify({ title, source: "document_upload" });
 
   let totalChunks = 0;
   for (let i = 0; i < chunks.length; i++) {
+    const chunkId = uuidv4();
     const embedding = await getEmbedding(chunks[i]);
     insertChunk.run(
-      uuidv4(),
+      chunkId,
       sourceId,
       botId,
       vendorId,
@@ -111,6 +116,7 @@ export async function indexText(sourceId, botId, vendorId, text, title = "") {
       totalChunks++,
       metadata
     );
+    insertFts.run(chunkId, botId, chunks[i]);
   }
 
   db.prepare("UPDATE knowledge_sources SET status = 'indexed', chunk_count = ? WHERE id = ?").run(totalChunks, sourceId);
@@ -118,36 +124,103 @@ export async function indexText(sourceId, botId, vendorId, text, title = "") {
 }
 
 /**
- * Search for relevant chunks using cosine similarity.
+ * Turn a user query into a safe FTS5 MATCH expression. Raw text can contain
+ * FTS5 operators (", *, :, -, parens) that would throw a syntax error or
+ * change meaning unintentionally — extract plain word tokens and quote each
+ * one individually so none of that syntax can leak through, then OR them
+ * together (any matching term counts, matching how BM25 ranking already
+ * rewards documents containing more of the query's terms).
+ */
+function buildFtsQuery(query) {
+  const terms = (query.match(/[\p{L}\p{N}]+/gu) || []).slice(0, 32);
+  if (terms.length === 0) return null;
+  return terms.map((t) => `"${t.replace(/"/g, '""')}"`).join(" OR ");
+}
+
+/**
+ * Keyword search via the FTS5 shadow index — returns chunk ids ranked by
+ * BM25 (SQLite's bm25() is more-negative-is-better, so plain ascending
+ * ORDER BY is already correct). Catches its own errors so a pathological
+ * query can never take down the whole RAG pipeline, just silently
+ * contributes no keyword-side matches.
+ */
+function searchKeywordChunkIds(botId, query, limit) {
+  const ftsQuery = buildFtsQuery(query);
+  if (!ftsQuery) return [];
+  try {
+    const rows = db.prepare(`
+      SELECT chunk_id FROM knowledge_chunks_fts
+      WHERE bot_id = ? AND knowledge_chunks_fts MATCH ?
+      ORDER BY bm25(knowledge_chunks_fts)
+      LIMIT ?
+    `).all(botId, ftsQuery, limit);
+    return rows.map((r) => r.chunk_id);
+  } catch (err) {
+    console.error("[RAG] Keyword search failed:", err.message);
+    return [];
+  }
+}
+
+/**
+ * Hybrid search: semantic (embedding cosine similarity) fused with keyword
+ * (FTS5/BM25) via Reciprocal Rank Fusion. Semantic alone misses exact-term
+ * matches — SKUs, prices, product names — that a customer's own wording
+ * often uses verbatim; RRF combines the two ranked lists using rank
+ * position only, which sidesteps having to normalize cosine similarity
+ * (-1..1) and BM25 (unbounded, more-negative-is-better) onto a shared scale.
  * @param {string} botId - Bot ID
  * @param {string} query - User query
  * @param {number} topK - Number of results to return
- * @returns {Array<{content: string, similarity: number, metadata: Object}>}
+ * @returns {Promise<{chunks: Array<{content: string, similarity: number, metadata: Object}>, topSimilarity: number}>}
  */
 export async function searchRelevantChunks(botId, query, topK = 5) {
   const queryEmbedding = await getEmbedding(query);
-  if (!queryEmbedding) {
-    return [];
-  }
 
-  const chunks = db.prepare(
-    "SELECT id, content, embedding, metadata FROM knowledge_chunks WHERE bot_id = ? AND embedding IS NOT NULL"
+  const embeddedChunks = db.prepare(
+    "SELECT id, embedding FROM knowledge_chunks WHERE bot_id = ? AND embedding IS NOT NULL"
   ).all(botId);
 
-  // Calculate cosine similarity
-  const results = chunks.map((chunk) => {
-    const chunkEmbedding = JSON.parse(chunk.embedding);
-    const similarity = cosineSimilarity(queryEmbedding, chunkEmbedding);
-    return {
-      content: chunk.content,
-      similarity,
-      metadata: JSON.parse(chunk.metadata || "{}"),
-    };
-  });
+  const semanticRanked = queryEmbedding
+    ? embeddedChunks
+        .map((chunk) => ({ id: chunk.id, similarity: cosineSimilarity(queryEmbedding, JSON.parse(chunk.embedding)) }))
+        .sort((a, b) => b.similarity - a.similarity)
+    : [];
 
-  // Sort by similarity descending and take topK
-  results.sort((a, b) => b.similarity - a.similarity);
-  return results.slice(0, topK);
+  const keywordRankedIds = searchKeywordChunkIds(botId, query, Math.max(topK * 3, 15));
+
+  const RRF_K = 60;
+  const fused = new Map(); // chunk id -> fused score
+  semanticRanked.forEach((c, i) => fused.set(c.id, (fused.get(c.id) || 0) + 1 / (RRF_K + i + 1)));
+  keywordRankedIds.forEach((id, i) => fused.set(id, (fused.get(id) || 0) + 1 / (RRF_K + i + 1)));
+
+  const topIds = [...fused.entries()].sort((a, b) => b[1] - a[1]).slice(0, topK).map(([id]) => id);
+  const topSimilarity = semanticRanked[0]?.similarity ?? 0;
+  if (topIds.length === 0) return { chunks: [], topSimilarity };
+
+  const rows = db.prepare(
+    `SELECT id, content, metadata FROM knowledge_chunks WHERE id IN (${topIds.map(() => "?").join(",")})`
+  ).all(...topIds);
+  const rowById = new Map(rows.map((r) => [r.id, r]));
+  const similarityById = new Map(semanticRanked.map((c) => [c.id, c.similarity]));
+
+  const chunks = topIds
+    .map((id) => rowById.get(id))
+    .filter(Boolean)
+    .map((row) => ({
+      content: row.content,
+      metadata: JSON.parse(row.metadata || "{}"),
+      // Confidence is judged on this chunk's actual semantic similarity when
+      // known, not the fused rank — a keyword-only hit (no embedding, or not
+      // in the semantic top set at all) has no meaning-match signal, so 0.
+      similarity: similarityById.get(row.id) ?? 0,
+    }));
+
+  // topSimilarity (used for the confidence gate below) is always the best
+  // PURE semantic match across the whole corpus, independent of how fusion
+  // reordered the returned chunks — keeps the existing confidence_threshold
+  // calibration (tuned against raw cosine similarity) meaningful even though
+  // the returned context set is now hybrid.
+  return { chunks, topSimilarity };
 }
 
 /**
@@ -184,16 +257,16 @@ export async function generateRagResponse(botId, userMessage, conversationHistor
     throw new Error("Bot not found");
   }
 
-  // Search for relevant context
-  const relevantChunks = await searchRelevantChunks(botId, userMessage);
+  // Search for relevant context — hybrid semantic + keyword (see searchRelevantChunks)
+  const { chunks: relevantChunks, topSimilarity } = await searchRelevantChunks(botId, userMessage);
 
   // Build context string from relevant chunks
   const context = relevantChunks.map((c) => c.content).join("\n\n");
 
-  // Confidence = how well the top matching chunk actually matches the question.
+  // Confidence = how well the best pure semantic match actually matches the
+  // question — independent of hybrid re-ranking, see searchRelevantChunks.
   // Not applicable when there's no knowledge base at all (nothing to be confident about yet).
   const hasKnowledgeBase = relevantChunks.length > 0;
-  const topSimilarity = hasKnowledgeBase ? relevantChunks[0].similarity : 0;
   const threshold = bot.confidence_threshold ?? 0.7;
   const isConfident = hasKnowledgeBase ? topSimilarity >= threshold : null;
 

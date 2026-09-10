@@ -118,6 +118,20 @@ CREATE TABLE IF NOT EXISTS knowledge_chunks (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Keyword-search shadow index for hybrid RAG retrieval (semantic embedding
+-- similarity alone misses exact-term matches — SKUs, prices, product names
+-- — that a customer's own wording often uses verbatim). A standalone FTS5
+-- table rather than an external-content one: knowledge_chunks.id is a TEXT
+-- UUID, not the INTEGER rowid external-content FTS5 tables require to link
+-- back, so this duplicates `content` rather than referencing it. No real
+-- foreign key relationship exists between this and knowledge_chunks — every
+-- place chunks get deleted must also delete the matching fts rows by hand.
+CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_chunks_fts USING fts5(
+  chunk_id UNINDEXED,
+  bot_id UNINDEXED,
+  content
+);
+
 -- ============================================================
 -- CONVERSATIONS (chat sessions between visitors and bots)
 -- ============================================================

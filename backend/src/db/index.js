@@ -63,11 +63,31 @@ function runColumnMigrations() {
   }
 }
 
+// knowledge_chunks_fts is a standalone shadow index (see schema.sql) with no
+// real foreign key to knowledge_chunks, so CREATE TABLE IF NOT EXISTS alone
+// leaves it empty for any chunk that existed before the table did. One-time
+// backfill: if the fts table is empty but real chunks exist, populate it.
+function backfillKnowledgeChunksFts() {
+  const ftsCount = db.prepare("SELECT COUNT(*) as n FROM knowledge_chunks_fts").get().n;
+  if (ftsCount > 0) return;
+
+  const chunks = db.prepare("SELECT id, bot_id, content FROM knowledge_chunks").all();
+  if (chunks.length === 0) return;
+
+  const insert = db.prepare("INSERT INTO knowledge_chunks_fts (chunk_id, bot_id, content) VALUES (?, ?, ?)");
+  const insertAll = db.transaction((rows) => {
+    for (const row of rows) insert.run(row.id, row.bot_id, row.content);
+  });
+  insertAll(chunks);
+  console.log(`[DB] Backfilled ${chunks.length} chunk(s) into the FTS keyword index.`);
+}
+
 export function migrate() {
   const schemaPath = resolve(__dirname, "schema.sql");
   const schema = readFileSync(schemaPath, "utf-8");
   db.exec(schema);
   runColumnMigrations();
+  backfillKnowledgeChunksFts();
   console.log("[DB] Migration complete.");
 }
 
