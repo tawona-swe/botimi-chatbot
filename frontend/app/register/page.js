@@ -39,7 +39,7 @@ export default function RegisterPage() {
     try {
       await signup(data.email, data.password, '', data.name, '');
       toast.success('Welcome to botimi!');
-      router.push('/dashboard');
+      router.push('/onboarding-plan');
     } catch (err) {
       toast.error(err.message || 'Registration failed');
     }
@@ -47,8 +47,8 @@ export default function RegisterPage() {
 
   const handleGoogleCredential = async (credential) => {
     try {
-      await loginWithGoogleCredential(credential);
-      router.push('/dashboard');
+      const data = await loginWithGoogleCredential(credential);
+      router.push(data.isNewUser ? '/onboarding-plan' : '/dashboard');
       toast.success('Signed in with Google!');
     } catch (err) {
       toast.error(err.message || 'Google sign-in failed');

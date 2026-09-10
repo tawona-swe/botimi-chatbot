@@ -3,6 +3,7 @@ import LandingPage from "../../components/screens/LandingPage";
 import Dashboard from "../../components/screens/Dashboard";
 import SupportInbox from "../../components/screens/SupportInbox";
 import OnboardingWizard from "../../components/screens/OnboardingWizard";
+import OnboardingPlan from "../../components/screens/OnboardingPlan";
 import OnboardingRedesign from "../../components/screens/OnboardingRedesign";
 import OnboardingStep2 from "../../components/screens/OnboardingStep2";
 import OnboardingStep3 from "../../components/screens/OnboardingStep3";
@@ -23,6 +24,7 @@ const screenInfo = {
   dashboard: { title: "Vendor Dashboard", Component: Dashboard },
   support: { title: "Support Inbox", Component: SupportInbox },
   onboarding: { title: "Onboarding Wizard", Component: OnboardingWizard },
+  "onboarding-plan": { title: "Choose Your Plan", Component: OnboardingPlan },
   "onboarding-redesign": { title: "Onboarding Redesign", Component: OnboardingRedesign },
   "onboarding-customize": { title: "Onboarding Step 2", Component: OnboardingStep2 },
   "onboarding-install": { title: "Onboarding Step 3", Component: OnboardingStep3 },

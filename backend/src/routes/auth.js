@@ -194,6 +194,7 @@ router.post("/google", authLimiter, async (req, res) => {
 
     // Check if vendor already exists with this email
     let vendor = db.prepare("SELECT * FROM vendors WHERE email = ?").get(googleEmail.toLowerCase());
+    const isNewUser = !vendor;
 
     if (!vendor) {
       // Create new vendor account
@@ -249,6 +250,7 @@ router.post("/google", authLimiter, async (req, res) => {
         ticketAddon: !!vendor.ticket_addon,
         botId: bot?.id,
       },
+      isNewUser,
     });
   } catch (err) {
     console.error("[Auth] Google OAuth error:", err);
