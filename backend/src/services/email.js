@@ -130,6 +130,26 @@ export async function sendTrialExpiredAlert(vendorEmail) {
 }
 
 /**
+ * Remind a card-paying vendor their plan is due for renewal. Card payments
+ * go through Pesepay's redirect flow, which has no stored payment method to
+ * re-charge silently (unlike Ecocash's phone-PIN push) — they have to click
+ * through and pay again themselves.
+ */
+export async function sendRenewalReminder(vendorEmail, planName) {
+  return sendEmail({
+    to: vendorEmail,
+    subject: "Your botimi plan is due for renewal",
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+        <h1 style="color: #c0c1ff;">Time to Renew</h1>
+        <p>Your ${planName} plan is due for renewal. Since you pay by card, we can't charge you automatically — click below to renew and keep your bot running without interruption.</p>
+        <a href="${config.frontendUrl}/settings" style="display: inline-block; background: #c0c1ff; color: #1000a9; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Renew Now</a>
+      </div>
+    `,
+  });
+}
+
+/**
  * Send overage alert to vendor.
  */
 export async function sendOverageAlert(vendorEmail, usagePct, planName) {

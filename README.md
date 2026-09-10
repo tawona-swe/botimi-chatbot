@@ -59,4 +59,5 @@ See `backend/.env.example` and `frontend/.env.example` for the full list with de
 
 ## Not yet built
 
-- A renewal-reminder email for card-paying vendors — Ecocash renewals auto-charge via a phone PIN push, but the card redirect flow has no stored payment method to re-charge silently, so those vendors need a "renew now" link each cycle instead
+- Four onboarding screens exist (`OnboardingWizard`, `OnboardingRedesign`, `OnboardingStep2`, `OnboardingStep3`) but none are wired into the live signup flow — `register`/`login` go straight to `/dashboard` (or `/onboarding-plan` for a fresh signup). Which of the four (if any) to actually adopt is still an open decision.
+- Local vs. international pricing is gated on a self-reported, unverified `country` text field — nothing stops an international customer from entering "Zimbabwe" to get the cheaper rate.

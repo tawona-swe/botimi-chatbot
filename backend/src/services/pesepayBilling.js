@@ -280,13 +280,45 @@ export async function resolveCharge(referenceNumber) {
   return transaction.transactionStatus;
 }
 
+const RENEWAL_REMINDER_INTERVAL_DAYS = 3;
+
+/**
+ * Card-paying vendors have no stored payment method to re-charge silently
+ * (unlike Ecocash's phone-PIN push), so a due renewal just gets flagged
+ * past_due and emailed instead of auto-charged — deduped so the hourly cron
+ * doesn't re-send the same reminder every hour.
+ */
+async function remindCardVendorToRenew(vendor) {
+  const recentReminder = db.prepare(`
+    SELECT id FROM usage_events
+    WHERE vendor_id = ? AND event_type = 'renewal_reminder'
+      AND created_at >= datetime('now', ?)
+  `).get(vendor.id, `-${RENEWAL_REMINDER_INTERVAL_DAYS} days`);
+  if (recentReminder) return;
+
+  if (vendor.subscription_status !== "past_due") {
+    db.prepare("UPDATE vendors SET subscription_status = 'past_due' WHERE id = ?").run(vendor.id);
+  }
+
+  db.prepare("INSERT INTO usage_events (id, vendor_id, event_type, metadata) VALUES (?, ?, 'renewal_reminder', ?)")
+    .run(uuidv4(), vendor.id, JSON.stringify({ sentAt: new Date().toISOString() }));
+
+  try {
+    const { sendRenewalReminder } = await import("./email.js");
+    await sendRenewalReminder(vendor.email, config.plans[vendor.subscription_plan]?.name || vendor.subscription_plan);
+    console.log(`[PesepayBilling] Sent renewal reminder to vendor ${vendor.id} (pays by card).`);
+  } catch (err) {
+    console.error(`[PesepayBilling] Failed to email renewal reminder to vendor ${vendor.id}:`, err.message);
+  }
+}
+
 /**
  * Cron entry point: (1) resolve any charges still pending from a previous
  * cycle, (2) trigger a fresh renewal charge for every due vendor. Only
  * Ecocash/Omari vendors can be auto-charged (the phone PIN push doesn't need
  * the customer on our site) — card vendors used the redirect flow, which has
  * no stored payment method to re-charge silently, so they're just flagged
- * past_due and need a "renew now" link (email reminder — not yet built).
+ * past_due and emailed a "renew now" link instead (see remindCardVendorToRenew).
  */
 export async function runBillingCycle() {
   const pendingCharges = db.prepare("SELECT reference_number FROM pesepay_charges WHERE status = 'pending'").all();
@@ -312,7 +344,7 @@ export async function runBillingCycle() {
     if (alreadyPending) continue; // avoid double-charging while a previous attempt is still in flight
 
     if (!["ecocash", "omari"].includes(vendor.pesepay_payment_method)) {
-      console.log(`[PesepayBilling] Vendor ${vendor.id} is due for renewal but pays by card (redirect) — needs a manual renew link, not implemented yet.`);
+      await remindCardVendorToRenew(vendor);
       continue;
     }
 
