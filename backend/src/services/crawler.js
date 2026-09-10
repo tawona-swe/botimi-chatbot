@@ -1,5 +1,9 @@
 import { chromium } from "playwright";
 import * as cheerio from "cheerio";
+import db from "../db/index.js";
+import { indexPages } from "./rag.js";
+
+const PLAN_CRAWL_LIMITS = { trial: 10, starter: 50, growth: 500, scale: -1 };
 
 /**
  * Crawl a website and extract text content from all pages.
@@ -81,6 +85,33 @@ export async function crawlWebsite(url, options = {}) {
   }
 
   return results;
+}
+
+/**
+ * Wipe and re-crawl a single website source, then reindex it. Shared by the
+ * manual "recrawl now" button (routes/bots.js) and the scheduled staleness
+ * check (services/scheduledRecrawl.js) — same plan-limit logic, same
+ * chunk/FTS cleanup, same error handling either way. Does its own status
+ * bookkeeping, so a caller can fire-and-forget it (the synchronous DB prep
+ * at the top still runs before the caller's next line, since JS runs a
+ * function up to its first `await` before yielding).
+ */
+export async function performRecrawl(source, botId, vendorId) {
+  db.prepare("UPDATE knowledge_sources SET status = 'processing', error_message = '', updated_at = datetime('now') WHERE id = ?").run(source.id);
+  db.prepare("DELETE FROM knowledge_chunks_fts WHERE chunk_id IN (SELECT id FROM knowledge_chunks WHERE source_id = ?)").run(source.id);
+  db.prepare("DELETE FROM knowledge_chunks WHERE source_id = ?").run(source.id);
+
+  try {
+    const vendor = db.prepare("SELECT subscription_plan FROM vendors WHERE id = ?").get(vendorId);
+    const maxPages = PLAN_CRAWL_LIMITS[vendor?.subscription_plan] ?? 50;
+
+    const pages = await crawlWebsite(source.url, { maxPages: maxPages === -1 ? 500 : maxPages });
+    const chunkCount = await indexPages(source.id, botId, vendorId, pages);
+    console.log(`[Recrawl] Completed for ${source.url}: ${pages.length} pages, ${chunkCount} chunks`);
+  } catch (err) {
+    console.error("[Recrawl] Error:", err);
+    db.prepare("UPDATE knowledge_sources SET status = 'error', error_message = ? WHERE id = ?").run(err.message, source.id);
+  }
 }
 
 /**

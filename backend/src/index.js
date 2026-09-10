@@ -169,6 +169,17 @@ setTimeout(() => {
   checkTrialExpirations().catch((err) => console.error("[Cron] Initial trial expiration check error:", err));
 }, 30_000);
 
+// --------------- Scheduled Re-crawl ---------------
+// Re-crawls website knowledge sources that haven't been touched in 7 days,
+// so a bot's answers don't silently go stale after a customer's site
+// changes. Daily, not hourly — a 7-day staleness threshold doesn't need
+// finer-grained checking, and each run can launch real Playwright browsers.
+const { runScheduledRecrawls } = await import("./services/scheduledRecrawl.js");
+setInterval(() => {
+  console.log("[Cron] Running scheduled re-crawl check...");
+  runScheduledRecrawls().catch((err) => console.error("[Cron] Scheduled re-crawl error:", err));
+}, 24 * 60 * 60 * 1000); // every 24 hours
+
 // --------------- GDPR Data Cleanup ---------------
 // Auto-delete conversation logs older than 90 days
 setInterval(() => {

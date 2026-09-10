@@ -332,30 +332,10 @@ router.post("/:id/recrawl/:sourceId", async (req, res) => {
   if (!source) return res.status(404).json({ error: "Source not found" });
   if (source.type !== "website_crawl") return res.status(400).json({ error: "Only website sources can be recrawled" });
 
-  // Reset source status
-  db.prepare("UPDATE knowledge_sources SET status = 'processing', error_message = '', updated_at = datetime('now') WHERE id = ?").run(source.id);
-  // Delete old chunks (and their FTS shadow rows — no real FK, no cascade)
-  db.prepare("DELETE FROM knowledge_chunks_fts WHERE chunk_id IN (SELECT id FROM knowledge_chunks WHERE source_id = ?)").run(source.id);
-  db.prepare("DELETE FROM knowledge_chunks WHERE source_id = ?").run(source.id);
+  const { performRecrawl } = await import("../services/crawler.js");
+  performRecrawl(source, bot.id, req.vendor.id).catch((err) => console.error("[Recrawl] Unhandled error:", err));
 
   res.json({ message: "Recrawl started", sourceId: source.id });
-
-  try {
-    const vendorConfig = db.prepare("SELECT subscription_plan FROM vendors WHERE id = ?").get(req.vendor.id);
-    const planLimits = { trial: 10, starter: 50, growth: 500, scale: -1 };
-    const maxPages = planLimits[vendorConfig?.subscription_plan] || 50;
-
-    const { crawlWebsite } = await import("../services/crawler.js");
-    const { indexPages } = await import("../services/rag.js");
-
-    const pages = await crawlWebsite(source.url, { maxPages: maxPages === -1 ? 500 : maxPages });
-    const chunkCount = await indexPages(source.id, bot.id, req.vendor.id, pages);
-
-    console.log(`[Recrawl] Completed for ${source.url}: ${pages.length} pages, ${chunkCount} chunks`);
-  } catch (err) {
-    console.error("[Recrawl] Error:", err);
-    db.prepare("UPDATE knowledge_sources SET status = 'error', error_message = ? WHERE id = ?").run(err.message, source.id);
-  }
 });
 
 /**
