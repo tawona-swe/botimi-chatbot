@@ -518,7 +518,7 @@ export default function LandingPage() {
             <div className="bg-surface-container border border-outline-variant p-8 rounded-xl flex flex-col hover:border-primary/30 transition-all duration-300">
               <p className="font-label-md text-label-md text-primary mb-2">Starter</p>
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-headline-lg font-display text-on-surface font-bold">$29</span>
+                <span className="text-headline-lg font-display text-on-surface font-bold">$39</span>
                 <span className="text-on-surface-variant">/month</span>
               </div>
               <p className="text-on-surface-variant text-sm mb-8">
@@ -526,7 +526,7 @@ export default function LandingPage() {
               </p>
               <ul className="flex-grow space-y-4 mb-8">
                 <li className="flex items-center gap-3 text-sm text-on-surface">
-                  <span className="material-symbols-outlined text-primary">done</span> Up to 500 chats / month
+                  <span className="material-symbols-outlined text-primary">done</span> 600 conversation credits / month
                 </li>
                 <li className="flex items-center gap-3 text-sm text-on-surface">
                   <span className="material-symbols-outlined text-primary">done</span> Crawl up to 50 pages
@@ -539,7 +539,7 @@ export default function LandingPage() {
                 className="w-full border border-outline-variant bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all py-3"
                 onClick={() => (window.location.href = "/register")}
               >
-                Start Trial
+                Start Free Trial
               </button>
             </div>
             <div className="bg-surface-container border-2 border-primary p-8 rounded-xl flex flex-col shadow-xl shadow-primary/10 relative transform md:-translate-y-4">
@@ -548,7 +548,7 @@ export default function LandingPage() {
               </div>
               <p className="font-label-md text-label-md text-primary mb-2">Growth</p>
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-headline-lg font-display text-on-surface font-bold">$79</span>
+                <span className="text-headline-lg font-display text-on-surface font-bold">$99</span>
                 <span className="text-on-surface-variant">/month</span>
               </div>
               <p className="text-on-surface-variant text-sm mb-8">
@@ -556,7 +556,7 @@ export default function LandingPage() {
               </p>
               <ul className="flex-grow space-y-4 mb-8">
                 <li className="flex items-center gap-3 text-sm text-on-surface">
-                  <span className="material-symbols-outlined text-primary">done</span> Up to 5,000 chats / month
+                  <span className="material-symbols-outlined text-primary">done</span> 2,000 conversation credits / month
                 </li>
                 <li className="flex items-center gap-3 text-sm text-on-surface">
                   <span className="material-symbols-outlined text-primary">done</span> Crawl up to 500 pages
@@ -572,21 +572,21 @@ export default function LandingPage() {
                 className="w-full bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all py-3"
                 onClick={() => (window.location.href = "/register")}
               >
-                Get Growth
+                Start Free Trial
               </button>
             </div>
             <div className="bg-surface-container border border-outline-variant p-8 rounded-xl flex flex-col hover:border-primary/30 transition-all duration-300">
-              <p className="font-label-md text-label-md text-primary mb-2">Scale</p>
+              <p className="font-label-md text-label-md text-primary mb-2">Business</p>
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-headline-lg font-display text-on-surface font-bold">$199</span>
+                <span className="text-headline-lg font-display text-on-surface font-bold">$279</span>
                 <span className="text-on-surface-variant">/month</span>
               </div>
               <p className="text-on-surface-variant text-sm mb-8">
-                Unlimited potential for enterprise-level operations.
+                Unlimited potential for larger operations.
               </p>
               <ul className="flex-grow space-y-4 mb-8">
                 <li className="flex items-center gap-3 text-sm text-on-surface">
-                  <span className="material-symbols-outlined text-primary">done</span> Unlimited chats
+                  <span className="material-symbols-outlined text-primary">done</span> 6,000 conversation credits / month
                 </li>
                 <li className="flex items-center gap-3 text-sm text-on-surface">
                   <span className="material-symbols-outlined text-primary">done</span> Unlimited page crawling
@@ -602,7 +602,7 @@ export default function LandingPage() {
                 className="w-full border border-outline-variant bg-surface-container text-on-surface rounded-xl text-sm font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all py-3"
                 onClick={() => (window.location.href = "/register")}
               >
-                Contact Sales
+                Start Free Trial
               </button>
             </div>
           </div>

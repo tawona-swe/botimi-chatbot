@@ -44,6 +44,13 @@ const COLUMN_MIGRATIONS = [
   ["pesepay_charges", "customer_reference", "TEXT DEFAULT ''"],
   ["vendors", "pesepay_payment_method", "TEXT DEFAULT ''"],
   ["vendors", "pesepay_currency", "TEXT DEFAULT ''"],
+  // Running conversation-credit balance: renewals and top-ups both add to
+  // it, every conversation subtracts one. Not a monthly cap that resets —
+  // see pesepayBilling.js. conversations_limit stays as-is (now read as
+  // "included per cycle" rather than a hard ceiling), conversations_used
+  // stays a lifetime counter for analytics, neither gates access anymore.
+  ["vendors", "conversation_credits", "INTEGER NOT NULL DEFAULT 0"],
+  ["pesepay_charges", "charge_type", "TEXT NOT NULL DEFAULT 'subscription'"],
 ];
 
 function runColumnMigrations() {

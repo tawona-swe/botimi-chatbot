@@ -88,18 +88,42 @@ export async function sendTicketResolvedWithCsat(email, ticketNumber, subject, t
 }
 
 /**
+ * Notify the vendor that the bot handed a conversation off to a human —
+ * without this, an escalated ticket just sits in the dashboard until
+ * someone happens to check it.
+ */
+export async function sendNewTicketAlert(vendorEmail, ticketNumber, subject, priority) {
+  return sendEmail({
+    to: vendorEmail,
+    subject: `[${ticketNumber}] A customer needs you: ${subject}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+        <h1 style="color: #c0c1ff;">Your bot handed off a conversation</h1>
+        <p>It couldn't confidently answer, so a customer is now waiting on your team.</p>
+        <div style="background: #1f1f27; padding: 20px; border-radius: 12px; margin: 20px 0;">
+          <p><strong>Ticket:</strong> ${ticketNumber}</p>
+          <p><strong>Subject:</strong> ${subject}</p>
+          ${priority ? `<p><strong>Priority:</strong> ${priority}</p>` : ""}
+        </div>
+        <a href="${config.frontendUrl}/support" style="display: inline-block; background: #c0c1ff; color: #1000a9; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Open in Support Inbox</a>
+      </div>
+    `,
+  });
+}
+
+/**
  * Send overage alert to vendor.
  */
 export async function sendOverageAlert(vendorEmail, usagePct, planName) {
   return sendEmail({
     to: vendorEmail,
-    subject: `⚠️ botimi — You've used ${usagePct}% of your conversations`,
+    subject: `⚠️ botimi — Your conversation credits are running low`,
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-        <h1 style="color: #c0c1ff;">Usage Alert</h1>
-        <p>You've used <strong>${usagePct}%</strong> of your ${planName} plan's monthly conversation limit.</p>
-        <p>Additional conversations will be billed at $0.02 each.</p>
-        <a href="${config.frontendUrl}/dashboard/settings" style="display: inline-block; background: #c0c1ff; color: #1000a9; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Upgrade Plan</a>
+        <h1 style="color: #c0c1ff;">Running Low on Credits</h1>
+        <p>You've used <strong>${usagePct}%</strong> of a typical ${planName} plan cycle's worth of conversation credits.</p>
+        <p>When your balance hits zero, the bot hands new conversations straight to your support inbox instead of answering them — top up now to keep it answering automatically.</p>
+        <a href="${config.frontendUrl}/settings" style="display: inline-block; background: #c0c1ff; color: #1000a9; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Buy More Credits</a>
       </div>
     `,
   });

@@ -36,8 +36,8 @@ router.post("/signup", authLimiter, async (req, res) => {
     const trialEndsAt = new Date(Date.now() + config.limits.trialDays * 24 * 60 * 60 * 1000).toISOString();
 
     db.prepare(`
-      INSERT INTO vendors (id, email, password_hash, name, company_name, industry, subscription_plan, subscription_status, conversations_limit, trial_ends_at)
-      VALUES (?, ?, ?, ?, ?, ?, 'trial', 'trialing', 500, ?)
+      INSERT INTO vendors (id, email, password_hash, name, company_name, industry, subscription_plan, subscription_status, conversations_limit, conversation_credits, trial_ends_at)
+      VALUES (?, ?, ?, ?, ?, ?, 'trial', 'trialing', 500, 500, ?)
     `).run(id, email.toLowerCase(), passwordHash, name || "", companyName || "", industry || "", trialEndsAt);
 
     // Create default bot
@@ -204,8 +204,8 @@ router.post("/google", authLimiter, async (req, res) => {
       const randomPassword = await bcrypt.hash(uuidv4() + Date.now(), 12);
 
       db.prepare(`
-        INSERT INTO vendors (id, email, password_hash, name, subscription_plan, subscription_status, conversations_limit, trial_ends_at)
-        VALUES (?, ?, ?, ?, 'trial', 'trialing', 500, ?)
+        INSERT INTO vendors (id, email, password_hash, name, subscription_plan, subscription_status, conversations_limit, conversation_credits, trial_ends_at)
+        VALUES (?, ?, ?, ?, 'trial', 'trialing', 500, 500, ?)
       `).run(id, googleEmail.toLowerCase(), randomPassword, googleName, trialEndsAt);
 
       // Create default bot

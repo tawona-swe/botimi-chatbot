@@ -12,7 +12,7 @@ router.use(authenticate);
  */
 router.get("/profile", (req, res) => {
   const vendor = db.prepare(
-    "SELECT id, email, name, company_name, industry, logo_url, brand_color, country, subscription_plan, subscription_status, ticket_addon, conversations_used, conversations_limit, trial_ends_at, created_at FROM vendors WHERE id = ?"
+    "SELECT id, email, name, company_name, industry, logo_url, brand_color, country, subscription_plan, subscription_status, ticket_addon, conversations_used, conversations_limit, conversation_credits, trial_ends_at, created_at FROM vendors WHERE id = ?"
   ).get(req.vendor.id);
 
   res.json({ vendor });

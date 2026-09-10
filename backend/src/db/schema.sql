@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS vendors (
   payment_provider  TEXT NOT NULL DEFAULT 'pesepay',
   conversations_used INTEGER NOT NULL DEFAULT 0,
   conversations_limit INTEGER NOT NULL DEFAULT 500,
+  conversation_credits INTEGER NOT NULL DEFAULT 0,
   ticket_addon       INTEGER NOT NULL DEFAULT 0,    -- 0 or 1
   trial_ends_at      TEXT,
   is_suspended       INTEGER NOT NULL DEFAULT 0,
@@ -230,8 +231,9 @@ CREATE TABLE IF NOT EXISTS usage_events (
 CREATE TABLE IF NOT EXISTS pesepay_charges (
   id                TEXT PRIMARY KEY,
   vendor_id         TEXT NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
-  plan_id           TEXT NOT NULL,
-  method            TEXT NOT NULL DEFAULT 'ecocash', -- ecocash | card
+  charge_type       TEXT NOT NULL DEFAULT 'subscription', -- subscription | topup
+  plan_id           TEXT NOT NULL, -- plan id for subscriptions, top-up pack id for topups
+  method            TEXT NOT NULL DEFAULT 'ecocash', -- ecocash | omari | card
   customer_reference TEXT DEFAULT '', -- phone number for ecocash, blank for card (redirect flow)
   reference_number  TEXT NOT NULL,
   amount            REAL NOT NULL,

@@ -6,11 +6,9 @@ import Sidebar from "../ui/Sidebar";
 import api from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 
-const PLANS = [
-  { id: "starter", name: "Starter", price: 29, chatbots: 1, websites: 1, convos: "500/mo", crawlerPages: 50, support: "Email" },
-  { id: "growth", name: "Growth", price: 79, chatbots: 5, websites: 5, convos: "3,000/mo", crawlerPages: 500, support: "Priority Email" },
-  { id: "scale", name: "Scale", price: 199, chatbots: "Unlimited", websites: "Unlimited", convos: "15,000/mo", crawlerPages: "Unlimited", support: "Dedicated Slack" },
-];
+const PLAN_ORDER = ["starter", "growth", "scale"];
+const SUPPORT_LABELS = { email: "Email", priority_email: "Priority Email", dedicated_slack: "Dedicated Slack" };
+const TOPUP_ORDER = ["small", "large"];
 
 export default function SettingsPage() {
   const { vendor, teamMember, refreshVendor, isAuthenticated, loading: authLoading } = useAuth();
@@ -29,6 +27,14 @@ export default function SettingsPage() {
   const [pesepayStatus, setPesepayStatus] = useState(""); // "", "prompting", "success", "failed", "error"
   const [pesepayError, setPesepayError] = useState("");
   const [cardCheckoutLoading, setCardCheckoutLoading] = useState(false);
+  const [pricing, setPricing] = useState({ local: true, plans: {}, topUps: {} });
+  const [topUpPackId, setTopUpPackId] = useState(null);
+  const [topUpPhone, setTopUpPhone] = useState("");
+  const [topUpCurrency, setTopUpCurrency] = useState("usd");
+  const [topUpMethod, setTopUpMethod] = useState("ecocash");
+  const [topUpStatus, setTopUpStatus] = useState("");
+  const [topUpError, setTopUpError] = useState("");
+  const [topUpCardLoading, setTopUpCardLoading] = useState(false);
   const [team, setTeam] = useState({ owner: null, members: [] });
   const [teamLoading, setTeamLoading] = useState(true);
   const [inviteForm, setInviteForm] = useState({ email: "", name: "", password: "", role: "agent" });
@@ -65,32 +71,43 @@ export default function SettingsPage() {
       loadProfile();
       loadTeam();
       loadCannedResponses();
+      loadPricing();
       checkPendingPesepayCharge();
     }
   }, [isAuthenticated]);
+
+  async function loadPricing() {
+    try {
+      const data = await api.pesepayPlans();
+      setPricing(data);
+    } catch (err) {
+      console.error("Failed to load pricing:", err);
+    }
+  }
 
   // Card payments redirect away to Pesepay's hosted page and back — on
   // return, look up whatever charge was left pending and poll it, since
   // Pesepay's referenceNumber isn't known until after checkout started.
   async function checkPendingPesepayCharge() {
     try {
-      const { referenceNumber } = await api.pesepayPending();
+      const { referenceNumber, chargeType } = await api.pesepayPending();
       if (!referenceNumber) return;
-      setPesepayStatus("prompting");
+      const setStatus = chargeType === "topup" ? setTopUpStatus : setPesepayStatus;
+      setStatus("prompting");
       for (let attempt = 0; attempt < 20; attempt++) {
         const { transactionStatus } = await api.pesepayStatus(referenceNumber);
         if (transactionStatus === "SUCCESS") {
-          setPesepayStatus("success");
-          await refreshVendor();
+          setStatus("success");
+          await Promise.all([refreshVendor(), loadProfile()]);
           return;
         }
         if (transactionStatus === "FAILED") {
-          setPesepayStatus("failed");
+          setStatus("failed");
           return;
         }
         await new Promise((r) => setTimeout(r, 3000));
       }
-      setPesepayStatus("");
+      setStatus("");
     } catch (err) {
       console.error("Failed to check pending Pesepay charge:", err);
     }
@@ -242,7 +259,7 @@ export default function SettingsPage() {
         const { transactionStatus } = await api.pesepayStatus(referenceNumber);
         if (transactionStatus === "SUCCESS") {
           setPesepayStatus("success");
-          await refreshVendor();
+          await Promise.all([refreshVendor(), loadProfile()]);
           return;
         }
         if (transactionStatus === "FAILED") {
@@ -271,9 +288,62 @@ export default function SettingsPage() {
     }
   };
 
+  const handleTopUpCheckout = async (packId) => {
+    if (!/^0\d{9}$/.test(topUpPhone)) {
+      setTopUpError("Enter a valid phone number, e.g. 0771234567");
+      return;
+    }
+    setTopUpError("");
+    setTopUpStatus("prompting");
+    try {
+      const { referenceNumber } = await api.pesepayTopUpCheckout(packId, topUpPhone, topUpCurrency, topUpMethod);
+      for (let attempt = 0; attempt < 20; attempt++) {
+        await new Promise((r) => setTimeout(r, 3000));
+        const { transactionStatus } = await api.pesepayStatus(referenceNumber);
+        if (transactionStatus === "SUCCESS") {
+          setTopUpStatus("success");
+          await Promise.all([refreshVendor(), loadProfile()]);
+          return;
+        }
+        if (transactionStatus === "FAILED") {
+          setTopUpStatus("failed");
+          return;
+        }
+      }
+      setTopUpStatus("error");
+      setTopUpError("Timed out waiting for confirmation. If you approved the PIN prompt, refresh this page in a minute.");
+    } catch (err) {
+      console.error("Top-up checkout failed:", err);
+      setTopUpStatus("error");
+      setTopUpError(err.message || "Payment failed to start.");
+    }
+  };
+
+  const handleTopUpCardCheckout = async (packId) => {
+    setTopUpCardLoading(true);
+    try {
+      const { redirectUrl } = await api.pesepayTopUpCheckoutCard(packId);
+      window.location.href = redirectUrl;
+    } catch (err) {
+      console.error("Top-up card checkout failed:", err);
+      alert(err.message || "Failed to start card payment.");
+      setTopUpCardLoading(false);
+    }
+  };
+
   const currentPlan = profile?.subscription_plan || "trial";
-  const currentPlanData = PLANS.find(p => p.id === currentPlan) || { name: "Trial", price: 0 };
+  const currentPlanData = pricing.plans[currentPlan] || { name: "Trial", price: 0 };
   const isTrialing = profile?.subscription_status === "trialing" || currentPlan === "trial";
+  const displayPlans = PLAN_ORDER
+    .map((id) => (pricing.plans[id] ? { id, ...pricing.plans[id] } : null))
+    .filter(Boolean)
+    .map((p) => ({
+      ...p,
+      chatbotsLabel: p.chatbots === -1 ? "Unlimited" : p.chatbots,
+      websitesLabel: p.websites === -1 ? "Unlimited" : p.websites,
+      convosLabel: `${p.conversationsPerMonth.toLocaleString()}/mo`,
+      supportLabel: SUPPORT_LABELS[p.support] || p.support,
+    }));
 
   if (loading) {
     return (
@@ -496,7 +566,8 @@ export default function SettingsPage() {
             <p className="text-xs text-on-surface-variant mb-6">
               You are currently on the <strong className="text-primary capitalize">{currentPlan}</strong> plan.
               {isTrialing && profile?.trial_ends_at && ` Trial ends ${new Date(profile.trial_ends_at).toLocaleDateString()}.`}
-              {profile?.conversations_limit && ` Usage: ${profile.conversations_used || 0}/${profile.conversations_limit} conversations.`}
+              {" "}<strong className="text-on-surface">{(profile?.conversation_credits ?? 0).toLocaleString()}</strong> conversation credits remaining
+              {pricing.local !== undefined && ` (${pricing.local ? "Zimbabwe" : "international"} pricing)`}.
             </p>
 
             {pesepayPlanId === null && pesepayStatus === "prompting" && (
@@ -510,7 +581,7 @@ export default function SettingsPage() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {PLANS.map(plan => {
+              {displayPlans.map(plan => {
                 const isCurrent = plan.id === currentPlan;
                 return (
                   <div key={plan.id} className={`relative bg-surface-container-lowest rounded-2xl border p-5 transition-all ${isCurrent ? "border-primary ring-1 ring-primary/30" : "border-outline-variant hover:border-outline/30"}`}>
@@ -525,19 +596,19 @@ export default function SettingsPage() {
                     <ul className="mt-4 space-y-2">
                       <li className="flex items-center gap-2 text-xs text-on-surface-variant">
                         <span className="material-symbols-outlined text-sm text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                        {plan.chatbots} chatbot{plan.chatbots === 1 ? "" : "s"}
+                        {plan.chatbotsLabel} chatbot{plan.chatbots === 1 ? "" : "s"}
                       </li>
                       <li className="flex items-center gap-2 text-xs text-on-surface-variant">
                         <span className="material-symbols-outlined text-sm text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                        {plan.websites} website{plan.websites === 1 ? "" : "s"}
+                        {plan.websitesLabel} website{plan.websites === 1 ? "" : "s"}
                       </li>
                       <li className="flex items-center gap-2 text-xs text-on-surface-variant">
                         <span className="material-symbols-outlined text-sm text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                        {plan.convos}
+                        {plan.convosLabel} credits
                       </li>
                       <li className="flex items-center gap-2 text-xs text-on-surface-variant">
                         <span className="material-symbols-outlined text-sm text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                        {plan.support} Support
+                        {plan.supportLabel} Support
                       </li>
                     </ul>
                     {!isCurrent && (
@@ -567,7 +638,7 @@ export default function SettingsPage() {
                             ) : (
                               <>
                                 <div className="flex gap-1 p-0.5 bg-surface-container-lowest border border-outline-variant rounded-lg">
-                                  {["usd", "local"].map((c) => (
+                                  {["usd", "zig"].map((c) => (
                                     <button
                                       key={c}
                                       onClick={() => { setPesepayCurrency(c); if (c !== "usd") setPesepayMethod("ecocash"); }}
@@ -616,6 +687,103 @@ export default function SettingsPage() {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Top-up credits */}
+            <div className="mt-6 pt-6 border-t border-outline-variant">
+              <h3 className="font-display text-sm font-bold text-on-surface mb-1">Buy more conversation credits</h3>
+              <p className="text-xs text-on-surface-variant mb-4">Credits never expire and stack on top of your plan's monthly allotment — buy more any time your balance runs low.</p>
+
+              {topUpStatus === "success" && (
+                <div className="mb-4 p-3 rounded-xl bg-primary/10 border border-primary/30 text-xs text-primary font-semibold">Payment confirmed — credits added.</div>
+              )}
+              {topUpStatus === "failed" && (
+                <div className="mb-4 p-3 rounded-xl bg-error/10 border border-error/30 text-xs text-error font-semibold">Payment did not go through. Please try again.</div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {TOPUP_ORDER.map((id) => {
+                  const pack = pricing.topUps[id];
+                  if (!pack) return null;
+                  return (
+                    <div key={id} className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-5">
+                      <div className="flex items-baseline justify-between">
+                        <span className="font-display font-bold text-on-surface text-lg">{pack.conversations.toLocaleString()} credits</span>
+                        <span className="font-display text-xl font-bold text-primary">${pack.price}</span>
+                      </div>
+                      {topUpPackId !== id ? (
+                        <div className="mt-4 flex flex-col gap-2">
+                          <button
+                            onClick={() => { setTopUpPackId(id); setTopUpStatus(""); setTopUpError(""); setTopUpMethod("ecocash"); }}
+                            className="w-full py-2.5 border border-outline-variant bg-surface-container text-on-surface rounded-xl text-xs font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all"
+                          >
+                            Pay via Ecocash or Omari
+                          </button>
+                          <button
+                            onClick={() => handleTopUpCardCheckout(id)}
+                            disabled={topUpCardLoading}
+                            className="w-full py-2 text-[11px] font-semibold text-on-surface-variant hover:text-primary transition-colors disabled:opacity-50"
+                          >
+                            {topUpCardLoading ? "Redirecting…" : "Or pay another way (card, Zimswitch, Innbucks & more)"}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="mt-3 pt-3 border-t border-outline-variant space-y-2">
+                          {topUpStatus === "success" ? (
+                            <p className="text-xs text-primary font-semibold">Payment confirmed — credits added.</p>
+                          ) : topUpStatus === "prompting" ? (
+                            <p className="text-[11px] text-on-surface-variant">Check your phone and enter your PIN to confirm…</p>
+                          ) : (
+                            <>
+                              <div className="flex gap-1 p-0.5 bg-surface-container-lowest border border-outline-variant rounded-lg">
+                                {["usd", "zig"].map((c) => (
+                                  <button
+                                    key={c}
+                                    onClick={() => { setTopUpCurrency(c); if (c !== "usd") setTopUpMethod("ecocash"); }}
+                                    className={`flex-1 py-1.5 rounded-md text-[11px] font-bold transition-all ${topUpCurrency === c ? "bg-primary text-on-primary" : "text-on-surface-variant hover:text-on-surface"}`}
+                                  >
+                                    {c === "usd" ? `USD $${pack.price}` : "ZiG"}
+                                  </button>
+                                ))}
+                              </div>
+                              {topUpCurrency === "usd" && (
+                                <div className="flex gap-1 p-0.5 bg-surface-container-lowest border border-outline-variant rounded-lg">
+                                  {["ecocash", "omari"].map((m) => (
+                                    <button
+                                      key={m}
+                                      onClick={() => setTopUpMethod(m)}
+                                      className={`flex-1 py-1.5 rounded-md text-[11px] font-bold capitalize transition-all ${topUpMethod === m ? "bg-primary text-on-primary" : "text-on-surface-variant hover:text-on-surface"}`}
+                                    >
+                                      {m}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                              <input
+                                type="tel"
+                                value={topUpPhone}
+                                onChange={(e) => setTopUpPhone(e.target.value)}
+                                placeholder="0771234567"
+                                className="w-full bg-surface-container-lowest border border-outline-variant p-2 rounded-lg text-xs text-on-surface placeholder:text-on-surface-variant/50"
+                              />
+                              <button
+                                onClick={() => handleTopUpCheckout(id)}
+                                className="w-full py-2 bg-primary text-on-primary rounded-lg text-xs font-bold hover:opacity-90 active:scale-[0.98] transition-all"
+                              >
+                                Pay with {topUpMethod === "omari" ? "Omari" : "Ecocash"}
+                              </button>
+                            </>
+                          )}
+                          {topUpError && <p className="text-[11px] text-error">{topUpError}</p>}
+                          {topUpStatus === "failed" && (
+                            <button onClick={() => setTopUpStatus("")} className="text-[11px] text-primary font-semibold">Try again</button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 

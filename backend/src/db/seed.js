@@ -28,9 +28,9 @@ async function seed() {
   // ── Demo Vendor ──
   db.prepare(`
     INSERT INTO vendors (id, email, password_hash, name, company_name, industry,
-      subscription_plan, subscription_status, conversations_used, conversations_limit,
+      subscription_plan, subscription_status, conversations_used, conversations_limit, conversation_credits,
       trial_ends_at, brand_color)
-    VALUES (?, ?, ?, ?, ?, ?, 'growth', 'active', 0, 3000, ?, '#c0c1ff')
+    VALUES (?, ?, ?, ?, ?, ?, 'growth', 'active', 0, 2000, 2000, ?, '#c0c1ff')
   `).run(demoVendorId, "demo@botimi.ai", passwordHash, "Demo User", "botimi Demo Corp", "Technology", trialEnd);
   console.log("[Seed] Created demo vendor: demo@botimi.ai / password123");
 
@@ -38,9 +38,9 @@ async function seed() {
   const adminHash = await bcrypt.hash("admin123", 12);
   db.prepare(`
     INSERT INTO vendors (id, email, password_hash, name, company_name, industry,
-      subscription_plan, subscription_status, is_superadmin, conversations_limit,
+      subscription_plan, subscription_status, is_superadmin, conversations_limit, conversation_credits,
       trial_ends_at, brand_color)
-    VALUES (?, ?, ?, ?, ?, ?, 'scale', 'active', 1, 999999, ?, '#ff6b6b')
+    VALUES (?, ?, ?, ?, ?, ?, 'scale', 'active', 1, 999999, 999999, ?, '#ff6b6b')
   `).run(adminVendorId, "admin@botimi.ai", adminHash, "Super Admin", "botimi Platform", "Technology", trialEnd);
   console.log("[Seed] Created super admin: admin@botimi.ai / admin123");
 
@@ -63,7 +63,7 @@ async function seed() {
   // ── Knowledge Chunks ──
   const chunks = [
     { content: "botimi is a multi-vendor AI chatbot SaaS platform that allows businesses to deploy trained AI chatbots on their websites via a single JavaScript snippet.", index: 0 },
-    { content: "botimi offers three pricing plans: Starter at $29/month with 1 bot and 500 chats, Growth at $79/month with 5 bots and 5,000 chats, and Scale at $199/month with unlimited bots and unlimited chats.", index: 1 },
+    { content: "botimi offers three pricing plans: Starter at $39/month with 1 bot and 600 conversation credits, Growth at $99/month with 5 bots and 2,000 conversation credits, and Business at $279/month with unlimited bots and 6,000 conversation credits. Zimbabwe-based customers get local pricing. Credits stack and never expire — top up any time your balance runs low.", index: 1 },
     { content: "botimi supports any website via a simple JS snippet, including WordPress, Webflow, Shopify, Wix, and React/Next.js apps (just load the script tag from a useEffect there's no separate SDK needed).", index: 2 },
     { content: "botimi uses retrieval-augmented generation (RAG) to answer from your own business documentation and knowledge base, powered by advanced AI models under the hood — automatically routed for reliability, so a single provider hiccup never takes your bot down.", index: 3 },
     { content: "botimi provides detailed analytics including conversation volume, resolution rates, active sessions, average response time, and top customer questions to help optimize your chatbot.", index: 4 },
@@ -104,7 +104,7 @@ async function seed() {
   `).run(uuidv4(), conv1Id);
   db.prepare(`
     INSERT INTO messages (id, conversation_id, role, content, model_used, tokens_used, latency_ms)
-    VALUES (?, ?, 'bot', 'We offer three plans: Starter ($29/mo), Growth ($79/mo), and Scale ($199/mo). Each comes with a 14-day free trial and you can upgrade or cancel anytime!', 'llama3-70b', 85, 1200)
+    VALUES (?, ?, 'bot', 'We offer three plans: Starter ($39/mo), Growth ($99/mo), and Business ($279/mo). Each comes with a 14-day free trial and you can upgrade or cancel anytime!', 'llama3-70b', 85, 1200)
   `).run(uuidv4(), conv1Id);
   db.prepare(`
     INSERT INTO messages (id, conversation_id, role, content, model_used, tokens_used, latency_ms)
@@ -170,7 +170,7 @@ async function seed() {
   console.log("  │  Demo Account                           │");
   console.log("  │  Email:    demo@botimi.ai              │");
   console.log("  │  Password: password123                  │");
-  console.log("  │  Plan:     Growth ($79/mo)              │");
+  console.log("  │  Plan:     Growth ($99/mo)              │");
   console.log("  ├─────────────────────────────────────────┤");
   console.log("  │  Admin Account                          │");
   console.log("  │  Email:    admin@botimi.ai              │");

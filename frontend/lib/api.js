@@ -288,6 +288,18 @@ class ApiClient {
     return this.request("POST", "/pesepay/checkout-card", { planId });
   }
 
+  pesepayPlans() {
+    return this.request("GET", "/pesepay/plans");
+  }
+
+  pesepayTopUpCheckout(packId, phoneNumber, currency, method) {
+    return this.request("POST", "/pesepay/topup/checkout", { packId, phoneNumber, currency, method });
+  }
+
+  pesepayTopUpCheckoutCard(packId) {
+    return this.request("POST", "/pesepay/topup/checkout-card", { packId });
+  }
+
   pesepayPending() {
     return this.request("GET", "/pesepay/pending");
   }

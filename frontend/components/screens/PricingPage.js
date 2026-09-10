@@ -6,7 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 export default function PricingPage() {
   const { vendor } = useAuth();
   const [isDark, setIsDark] = useState(false);
-  const [isAnnual, setIsAnnual] = useState(false);
+  const [isLocal, setIsLocal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -61,50 +61,46 @@ export default function PricingPage() {
   const plans = [
     {
       name: "Starter",
-      monthlyPrice: 29,
-      annualPrice: 290,
+      priceLocal: 19,
+      priceIntl: 39,
       description: "Perfect for early-stage startups and personal projects.",
       features: [
-        "Up to 500 chats / month",
+        "600 conversation credits / month",
         "1 bot",
         "Crawl up to 50 pages",
         "Multi-provider AI with automatic failover",
         "Standard email support",
       ],
-      cta: "Start Trial",
       highlighted: false,
     },
     {
       name: "Growth",
-      monthlyPrice: 79,
-      annualPrice: 790,
+      priceLocal: 49,
+      priceIntl: 99,
       description: "Ideal for growing businesses needing higher volume and speed.",
       features: [
-        "Up to 5,000 chats / month",
+        "2,000 conversation credits / month",
         "5 bots",
         "Crawl up to 500 pages",
         "Multi-provider AI with automatic failover",
         "Support ticket inbox with team seats",
         "Priority email support",
       ],
-      cta: "Get Growth",
       highlighted: true,
     },
     {
-      name: "Scale",
-      monthlyPrice: 199,
-      annualPrice: 1990,
-      description: "Unlimited potential for enterprise-level operations.",
+      name: "Business",
+      priceLocal: 129,
+      priceIntl: 279,
+      description: "Unlimited potential for larger operations.",
       features: [
-        "Unlimited chats",
+        "6,000 conversation credits / month",
         "Unlimited bots",
         "Unlimited page crawling",
         "White-label widget (no botimi branding)",
         "Support ticket inbox with team seats",
         "Dedicated account manager",
-        "Custom integrations (bespoke — see Enterprise)",
       ],
-      cta: "Contact Sales",
       highlighted: false,
     },
   ];
@@ -119,20 +115,20 @@ export default function PricingPage() {
       a: "Yes! Every plan comes with a 14-day free trial — no credit card required. You get full access to all features in your chosen tier during the trial period.",
     },
     {
-      q: "What counts as a chat?",
-      a: "A chat is a single conversation session between one visitor and your bot. Each session counts as one chat regardless of how many messages are exchanged within it.",
+      q: "What counts as a conversation credit?",
+      a: "One credit is used per conversation session between a visitor and your bot, not per message — a session that takes 10 messages to resolve costs the same as one that takes 2.",
+    },
+    {
+      q: "What happens if I run out of credits?",
+      a: "Your bot hands new conversations straight to your support inbox instead of answering them, so nothing gets silently dropped. Top up any time — credits never expire, and they stack on top of your plan's next monthly renewal rather than resetting.",
     },
     {
       q: "Can I get a custom enterprise plan?",
-      a: "Yes, we offer tailored enterprise plans with custom pricing, dedicated infrastructure, advanced compliance (SOC 2, HIPAA), and personalized onboarding. Contact our sales team for a quote.",
+      a: "Yes, we offer tailored enterprise plans with custom pricing, dedicated infrastructure, and personalized onboarding. Contact our sales team for a quote.",
     },
     {
       q: "What payment methods do you accept?",
-      a: "We accept Visa and Mastercard internationally, and Ecocash for customers in Zimbabwe.",
-    },
-    {
-      q: "Is there a discount for annual billing?",
-      a: "Yes! When you choose annual billing, you save roughly 17% compared to the monthly rate. The discount is already reflected in the annual prices shown above.",
+      a: "Visa and Mastercard internationally, plus Ecocash and Omari for customers in Zimbabwe.",
     },
   ];
 
@@ -335,28 +331,25 @@ export default function PricingPage() {
               Start with a 14-day free trial — no credit card required. Upgrade, downgrade, or cancel anytime.
             </p>
 
-            {/* ── Billing Toggle ── */}
+            {/* ── Billing Region Toggle ── */}
             <div className="flex items-center justify-center gap-4">
-              <span className={`font-body-md text-body-md ${!isAnnual ? "text-on-surface font-semibold" : "text-on-surface-variant"}`}>
-                Monthly
+              <span className={`font-body-md text-body-md ${!isLocal ? "text-on-surface font-semibold" : "text-on-surface-variant"}`}>
+                International
               </span>
               <button
-                onClick={() => setIsAnnual(!isAnnual)}
+                onClick={() => setIsLocal(!isLocal)}
                 className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
-                  isAnnual ? "bg-primary" : "bg-outline-variant"
+                  isLocal ? "bg-primary" : "bg-outline-variant"
                 }`}
               >
                 <span
                   className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${
-                    isAnnual ? "translate-x-7" : "translate-x-0"
+                    isLocal ? "translate-x-7" : "translate-x-0"
                   }`}
                 />
               </button>
-              <span className={`font-body-md text-body-md ${isAnnual ? "text-on-surface font-semibold" : "text-on-surface-variant"}`}>
-                Annual
-                <span className="ml-1.5 px-2 py-0.5 bg-primary/20 text-primary rounded-full text-[10px] font-bold uppercase tracking-wider">
-                  Save ~17%
-                </span>
+              <span className={`font-body-md text-body-md ${isLocal ? "text-on-surface font-semibold" : "text-on-surface-variant"}`}>
+                Zimbabwe
               </span>
             </div>
           </div>
@@ -381,17 +374,12 @@ export default function PricingPage() {
                 )}
                 <div className="p-8 pb-0">
                   <p className="font-label-md text-label-md text-primary mb-2">{plan.name}</p>
-                  <div className="flex items-baseline gap-1 mb-2">
+                  <div className="flex items-baseline gap-1 mb-4">
                     <span className="text-headline-lg font-display text-on-surface font-bold">
-                      ${isAnnual ? plan.annualPrice : plan.monthlyPrice}
+                      ${isLocal ? plan.priceLocal : plan.priceIntl}
                     </span>
-                    <span className="text-on-surface-variant">/{isAnnual ? "year" : "month"}</span>
+                    <span className="text-on-surface-variant">/month</span>
                   </div>
-                  {isAnnual && (
-                    <p className="text-xs text-on-surface-variant mb-4">
-                      ${plan.monthlyPrice}/mo if paid monthly
-                    </p>
-                  )}
                   <p className="text-on-surface-variant text-sm mb-8">{plan.description}</p>
                 </div>
                 <div className="px-8 flex-grow">
@@ -413,12 +401,15 @@ export default function PricingPage() {
                     }`}
                     onClick={() => (window.location.href = "/register")}
                   >
-                    {plan.cta}
+                    Start Free Trial
                   </button>
                 </div>
               </div>
             ))}
           </div>
+          <p className="text-center text-sm text-on-surface-variant mt-8">
+            Running low mid-month? Top up any time — credits never expire and stack on top of your plan.
+          </p>
         </section>
 
         {/* ── Feature Comparison ── */}
@@ -439,12 +430,12 @@ export default function PricingPage() {
                     <th className="text-left py-4 pr-8 font-body-md text-body-md text-on-surface font-semibold">Feature</th>
                     <th className="text-center py-4 px-4 font-body-md text-body-md text-on-surface font-semibold">Starter</th>
                     <th className="text-center py-4 px-4 font-body-md text-body-md text-primary font-semibold">Growth</th>
-                    <th className="text-center py-4 pl-4 font-body-md text-body-md text-on-surface font-semibold">Scale</th>
+                    <th className="text-center py-4 pl-4 font-body-md text-body-md text-on-surface font-semibold">Business</th>
                   </tr>
                 </thead>
                 <tbody>
                   {[
-                    { label: "Monthly chats", starter: "500", growth: "5,000", scale: "Unlimited" },
+                    { label: "Monthly conversation credits", starter: "600", growth: "2,000", scale: "6,000" },
                     { label: "Bots", starter: "1", growth: "5", scale: "Unlimited" },
                     { label: "Website pages crawled", starter: "50", growth: "500", scale: "Unlimited" },
                     { label: "Support ticket inbox", starter: "—", growth: "✓", scale: "✓" },

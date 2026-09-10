@@ -16,6 +16,52 @@ router.use((req, res, next) => {
 });
 
 /**
+ * Create a support ticket for a conversation the bot can't handle — either
+ * because it wasn't confident in an answer, or because the vendor's credit
+ * balance ran out. Shared so both cases get the same real pipeline: a ticket
+ * in the dashboard, a vendor email, and background priority/summary fill-in.
+ * No-op if ticketing isn't enabled or a ticket already exists for this
+ * conversation (a low-confidence answer and an exhausted balance could both
+ * fire on the same conversation otherwise).
+ */
+async function escalateToHuman({ bot, vendorEmail, convId, message, visitorName, source }) {
+  if (!bot.ticket_addon) return;
+  const existingTicket = db.prepare("SELECT id FROM tickets WHERE conversation_id = ?").get(convId);
+  if (existingTicket) return;
+
+  const { generateTicketNumber } = await import("../utils/helpers.js");
+  const ticketId = uuidv4();
+  const ticketNumber = generateTicketNumber();
+  const subject = message.slice(0, 100);
+  db.prepare(`
+    INSERT INTO tickets (id, vendor_id, conversation_id, ticket_number, subject, description, status, priority, customer_name, customer_email, source)
+    VALUES (?, ?, ?, ?, ?, ?, 'open', 'medium', ?, ?, ?)
+  `).run(ticketId, bot.vendor_id, convId, ticketNumber, subject, message, visitorName || "Website Visitor", "", source);
+
+  if (vendorEmail) {
+    import("../services/email.js")
+      .then(({ sendNewTicketAlert }) => sendNewTicketAlert(vendorEmail, ticketNumber, subject))
+      .catch(() => {}); // best-effort — the ticket already exists regardless
+  }
+
+  // Priority + summary make the ticket useful the moment an agent opens it,
+  // but neither should delay the reply the visitor is waiting on — classify/
+  // summarize in the background and backfill the row after.
+  (async () => {
+    try {
+      const [priority, fullHistory] = await Promise.all([
+        classifyPriority(message),
+        Promise.resolve(db.prepare("SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY created_at ASC").all(convId)),
+      ]);
+      const summary = await summarizeConversation(fullHistory);
+      db.prepare("UPDATE tickets SET priority = ?, ai_summary = ? WHERE id = ?").run(priority, summary, ticketId);
+    } catch {
+      // Best-effort — the ticket already exists with sane defaults.
+    }
+  })();
+}
+
+/**
  * Core message-handling logic, shared by POST /api/chat/message (this file)
  * and POST /api/widget/:apiKey/chat (routes/widget.js) — those two used to
  * be separate, drifted implementations, which is how the widget endpoint
@@ -34,7 +80,7 @@ export async function handleChatMessage({ apiKey, message, conversationId, visit
     return { status: 401, body: { error: "Invalid API key or bot not active" } };
   }
 
-  const vendor = db.prepare("SELECT is_suspended FROM vendors WHERE id = ?").get(bot.vendor_id);
+  const vendor = db.prepare("SELECT email, is_suspended FROM vendors WHERE id = ?").get(bot.vendor_id);
   if (vendor?.is_suspended) {
     return { status: 403, body: { error: "Account suspended" } };
   }
@@ -43,19 +89,25 @@ export async function handleChatMessage({ apiKey, message, conversationId, visit
   let convId = conversationId;
 
   const isNewConversation = !convId || !db.prepare("SELECT id FROM conversations WHERE id = ? AND bot_id = ?").get(convId, bot.id);
+  let creditsExhausted = false;
   if (isNewConversation) {
-    const vendorUsage = db.prepare("SELECT conversations_used, conversations_limit FROM vendors WHERE id = ?").get(bot.vendor_id);
-    if (vendorUsage && vendorUsage.conversations_limit > 0 && vendorUsage.conversations_used >= vendorUsage.conversations_limit) {
-      return { status: 429, body: { error: "Monthly conversation limit reached. Please upgrade your plan.", code: "LIMIT_REACHED" } };
-    }
-
     convId = uuidv4();
     db.prepare(`
       INSERT INTO conversations (id, bot_id, vendor_id, visitor_id, visitor_name, status, source)
       VALUES (?, ?, ?, ?, ?, 'active', ?)
     `).run(convId, bot.id, bot.vendor_id, vid, visitorName || "Website Visitor", source);
 
+    // Lifetime counter for analytics/display — no longer the billing gate,
+    // see conversation_credits below.
     db.prepare("UPDATE vendors SET conversations_used = conversations_used + 1 WHERE id = ?").run(bot.vendor_id);
+
+    // Running credit balance: renewals and top-ups both add to it (see
+    // pesepayBilling.js), every conversation subtracts one. Decrementing
+    // only succeeds (rows > 0) if there was a credit to spend — this atomic
+    // conditional update avoids a race where two conversations starting at
+    // once both read "1 credit left" and both decrement past zero.
+    const spent = db.prepare("UPDATE vendors SET conversation_credits = conversation_credits - 1 WHERE id = ? AND conversation_credits > 0").run(bot.vendor_id);
+    creditsExhausted = spent.changes === 0;
 
     try {
       checkVendorOverage(bot.vendor_id);
@@ -66,6 +118,26 @@ export async function handleChatMessage({ apiKey, message, conversationId, visit
     INSERT INTO messages (id, conversation_id, role, content)
     VALUES (?, ?, 'user', ?)
   `).run(uuidv4(), convId, message);
+
+  // Out of credits: don't spend money generating an answer we can't bill
+  // for — hand straight to a human via the same escalation pipeline as a
+  // low-confidence answer, rather than a bare error the visitor can't act on.
+  if (creditsExhausted) {
+    const handoffMessage = "Thanks for reaching out! Our AI assistant has reached its limit for this month, but I've let the team know and they'll get back to you directly.";
+    const botMessageId = uuidv4();
+    db.prepare(`
+      INSERT INTO messages (id, conversation_id, role, content)
+      VALUES (?, ?, 'bot', ?)
+    `).run(botMessageId, convId, handoffMessage);
+    db.prepare("UPDATE conversations SET message_count = message_count + 1, resolved_by_bot = 0, status = 'escalated' WHERE id = ?").run(convId);
+
+    await escalateToHuman({ bot, vendorEmail: vendor?.email, convId, message, visitorName, source: "credits_exhausted" });
+
+    return {
+      status: 200,
+      body: { reply: handoffMessage, messageId: botMessageId, conversationId: convId, visitorId: vid, sources: [], confident: false },
+    };
+  }
 
   const history = db.prepare(
     "SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY created_at ASC"
@@ -91,35 +163,7 @@ export async function handleChatMessage({ apiKey, message, conversationId, visit
     db.prepare("UPDATE conversations SET resolved_by_bot = 1 WHERE id = ?").run(convId);
   } else if (result.confident === false) {
     db.prepare("UPDATE conversations SET resolved_by_bot = 0, status = 'escalated' WHERE id = ?").run(convId);
-
-    if (bot.ticket_addon) {
-      const existingTicket = db.prepare("SELECT id FROM tickets WHERE conversation_id = ?").get(convId);
-      if (!existingTicket) {
-        const { generateTicketNumber } = await import("../utils/helpers.js");
-        const ticketId = uuidv4();
-        const ticketNumber = generateTicketNumber();
-        db.prepare(`
-          INSERT INTO tickets (id, vendor_id, conversation_id, ticket_number, subject, description, status, priority, customer_name, customer_email, source)
-          VALUES (?, ?, ?, ?, ?, ?, 'open', 'medium', ?, ?, 'bot_low_confidence')
-        `).run(ticketId, bot.vendor_id, convId, ticketNumber, message.slice(0, 100), message, visitorName || "Website Visitor", "");
-
-        // Priority + summary make the ticket useful the moment an agent opens
-        // it, but neither should delay the reply the visitor is waiting on —
-        // classify/summarize in the background and backfill the row after.
-        (async () => {
-          try {
-            const [priority, fullHistory] = await Promise.all([
-              classifyPriority(message),
-              Promise.resolve(db.prepare("SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY created_at ASC").all(convId)),
-            ]);
-            const summary = await summarizeConversation(fullHistory);
-            db.prepare("UPDATE tickets SET priority = ?, ai_summary = ? WHERE id = ?").run(priority, summary, ticketId);
-          } catch {
-            // Best-effort — the ticket already exists with sane defaults.
-          }
-        })();
-      }
-    }
+    await escalateToHuman({ bot, vendorEmail: vendor?.email, convId, message, visitorName, source: "bot_low_confidence" });
   }
 
   return {
@@ -194,7 +238,7 @@ router.post("/escalate", async (req, res) => {
     db.prepare("UPDATE conversations SET status = 'escalated', ended_at = datetime('now') WHERE id = ?").run(conversationId);
 
     // Check if vendor has ticket add-on
-    const vendor = db.prepare("SELECT ticket_addon, company_name FROM vendors WHERE id = ?").get(conv.vendor_id);
+    const vendor = db.prepare("SELECT email, ticket_addon, company_name FROM vendors WHERE id = ?").get(conv.vendor_id);
     if (!vendor?.ticket_addon) {
       return res.json({ message: "Support ticket submitted. The team will get back to you.", ticketNumber: null });
     }
@@ -225,10 +269,14 @@ router.post("/escalate", async (req, res) => {
       }
     })();
 
-    // Send email notification
+    // Email notifications — customer confirmation and vendor alert are both
+    // best-effort, neither should fail the request.
     try {
-      const { sendTicketConfirmation } = await import("../services/email.js");
+      const { sendTicketConfirmation, sendNewTicketAlert } = await import("../services/email.js");
       await sendTicketConfirmation(email, ticketNumber, description?.slice(0, 100) || "Support Request");
+      if (vendor.email) {
+        await sendNewTicketAlert(vendor.email, ticketNumber, description?.slice(0, 100) || "Support Request");
+      }
     } catch {
       // Email failure is non-critical
     }
