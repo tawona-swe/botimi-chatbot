@@ -390,12 +390,12 @@ export default function LandingPage() {
                   </p>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2 text-on-surface-variant font-label-md">
-                      <span className="material-symbols-outlined text-primary text-sm">check_circle</span> Vectorized
-                      Context Search
+                      <span className="material-symbols-outlined text-primary text-sm">check_circle</span> Hybrid
+                      Vector + Keyword Search
                     </li>
                     <li className="flex items-center gap-2 text-on-surface-variant font-label-md">
-                      <span className="material-symbols-outlined text-primary text-sm">check_circle</span> Real-time Data
-                      Syncing
+                      <span className="material-symbols-outlined text-primary text-sm">check_circle</span> Auto-Refreshes
+                      Weekly
                     </li>
                   </ul>
                 </div>

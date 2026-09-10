@@ -8,7 +8,7 @@ const steps = [
     icon: "credit_card",
     title: "Choose Your Plan",
     description:
-      "Pick the tier that fits your needs — Starter, Growth, or Scale. All plans include a 14-day free trial with no credit card required.",
+      "Pick the tier that fits your needs — Starter, Growth, or Business. All plans include a 14-day free trial with no credit card required.",
     color: "from-primary/20 to-primary/5",
     iconColor: "text-primary",
   },
@@ -24,7 +24,7 @@ const steps = [
     icon: "smart_toy",
     title: "Train Your AI Bot",
     description:
-      "Paste your website URL or upload documents. Our AI automatically crawls and indexes your content so your bot is ready to answer questions accurately.",
+      "Paste your website URL or upload documents. Our AI automatically crawls and indexes your content so your bot is ready to answer questions accurately — then keeps checking back weekly, so new pages you add get picked up without you lifting a finger.",
     color: "from-primary/20 to-primary/5",
     iconColor: "text-primary",
   },
