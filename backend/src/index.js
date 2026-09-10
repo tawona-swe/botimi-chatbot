@@ -156,6 +156,19 @@ setInterval(() => {
   runBillingCycle().catch((err) => console.error("[Cron] Pesepay billing cycle error:", err));
 }, 60 * 60 * 1000); // every hour
 
+// --------------- Trial Expiry ---------------
+// Suspends any vendor still on 'trialing' whose 14-day trial has passed.
+const { checkTrialExpirations } = await import("./services/trial.js");
+setInterval(() => {
+  console.log("[Cron] Checking trial expirations...");
+  checkTrialExpirations().catch((err) => console.error("[Cron] Trial expiration check error:", err));
+}, 60 * 60 * 1000); // every hour
+
+// Also run once after startup
+setTimeout(() => {
+  checkTrialExpirations().catch((err) => console.error("[Cron] Initial trial expiration check error:", err));
+}, 30_000);
+
 // --------------- GDPR Data Cleanup ---------------
 // Auto-delete conversation logs older than 90 days
 setInterval(() => {

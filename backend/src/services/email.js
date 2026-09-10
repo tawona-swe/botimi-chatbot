@@ -112,6 +112,24 @@ export async function sendNewTicketAlert(vendorEmail, ticketNumber, subject, pri
 }
 
 /**
+ * Notify a vendor their 14-day trial has ended and their account is now
+ * suspended until they choose a plan.
+ */
+export async function sendTrialExpiredAlert(vendorEmail) {
+  return sendEmail({
+    to: vendorEmail,
+    subject: "Your botimi trial has ended",
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+        <h1 style="color: #c0c1ff;">Your Trial Has Ended</h1>
+        <p>Your 14-day free trial is over, so your bot is paused until you choose a plan — your data and settings are all still here.</p>
+        <a href="${config.frontendUrl}/settings" style="display: inline-block; background: #c0c1ff; color: #1000a9; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Choose a Plan</a>
+      </div>
+    `,
+  });
+}
+
+/**
  * Send overage alert to vendor.
  */
 export async function sendOverageAlert(vendorEmail, usagePct, planName) {
