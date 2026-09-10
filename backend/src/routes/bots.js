@@ -270,12 +270,20 @@ router.post("/:id/upload", upload.single("file"), async (req, res) => {
     if (ext === ".txt") {
       text = readFileSync(filePath, "utf-8");
     } else if (ext === ".pdf") {
-      // Try pdf-parse if available, otherwise fall back to basic extraction
+      // pdf-parse v2 rewrote its API to a class (verified against the
+      // actual installed version's README) — the previous `.default(buffer)`
+      // call here was silently failing on every real upload (pdfParse
+      // resolved to undefined, threw, and fell into the placeholder-text
+      // fallback below) since this dependency was bumped past v1.
       try {
-        const pdfParse = (await import("pdf-parse")).default;
+        const { PDFParse } = await import("pdf-parse");
         const pdfBuffer = readFileSync(filePath);
-        const pdfData = await pdfParse(pdfBuffer);
-        text = pdfData.text;
+        const parser = new PDFParse({ data: pdfBuffer });
+        try {
+          text = (await parser.getText()).text;
+        } finally {
+          await parser.destroy();
+        }
       } catch {
         text = `[PDF uploaded: ${req.file.originalname}]`;
       }
