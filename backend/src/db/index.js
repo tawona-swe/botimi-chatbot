@@ -51,6 +51,18 @@ const COLUMN_MIGRATIONS = [
   // stays a lifetime counter for analytics, neither gates access anymore.
   ["vendors", "conversation_credits", "INTEGER NOT NULL DEFAULT 0"],
   ["pesepay_charges", "charge_type", "TEXT NOT NULL DEFAULT 'subscription'"],
+  // Marks a vendor row as internal (botimi's own dogfooding/test accounts,
+  // e.g. the WhatsApp demo bot) rather than a real customer — excluded from
+  // admin business metrics (MRR, churn, cohorts) so internal accounts don't
+  // skew numbers meant to describe actual paying customers. Distinct from
+  // is_superadmin, which is about platform access, not account "reality."
+  ["vendors", "is_internal", "INTEGER NOT NULL DEFAULT 0"],
+  // When a vendor's subscription_status became 'canceled' — needed for a real
+  // point-in-time cohort retention curve (which cohort week was still active
+  // N weeks later). Vendors that were already canceled before this column
+  // existed have NULL here; the cohort view treats that as "unknown exact
+  // date," not "never canceled" — see project_admin_dashboard memory.
+  ["vendors", "canceled_at", "TEXT"],
 ];
 
 function runColumnMigrations() {

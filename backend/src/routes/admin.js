@@ -9,40 +9,54 @@ const router = Router();
 router.use(authenticate);
 router.use(requireSuperadmin);
 
+// Every business-metric query in /overview and /cohorts excludes internal
+// accounts (botimi's own superadmin login, dogfooding bots like the WhatsApp
+// demo) — mixing those into MRR/churn/cohort numbers would misrepresent
+// real customer behavior. This is NOT applied to /vendors or moderation
+// endpoints, which are operational (an admin still needs to see/manage
+// internal accounts there).
+const REAL_VENDOR_FILTER = "is_internal = 0";
+
 /**
  * GET /api/admin/overview
- * Platform-wide analytics dashboard.
+ * Platform-wide analytics dashboard. ?days=7|30|90 controls the two daily
+ * trend series (default 30) — every other figure is all-time or "as of now."
  */
 router.get("/overview", (req, res) => {
-  // Total vendors
-  const totalVendors = db.prepare("SELECT COUNT(*) as count FROM vendors").get();
-  const activeVendors = db.prepare("SELECT COUNT(*) as count FROM vendors WHERE subscription_status = 'active' AND is_suspended = 0").get();
-  const trialVendors = db.prepare("SELECT COUNT(*) as count FROM vendors WHERE subscription_plan = 'trial'").get();
-  const churnedVendors = db.prepare("SELECT COUNT(*) as count FROM vendors WHERE subscription_status = 'canceled'").get();
+  const days = [7, 30, 90].includes(parseInt(req.query.days)) ? parseInt(req.query.days) : 30;
 
-  // Conversations
-  const totalConversations = db.prepare("SELECT COUNT(*) as count FROM conversations").get();
-  const todayConversations = db.prepare("SELECT COUNT(*) as count FROM conversations WHERE date(created_at) = date('now')").get();
-  const resolvedByBot = db.prepare("SELECT COUNT(*) as count FROM conversations WHERE resolved_by_bot = 1").get();
+  // Total vendors
+  const totalVendors = db.prepare(`SELECT COUNT(*) as count FROM vendors WHERE ${REAL_VENDOR_FILTER}`).get();
+  const activeVendors = db.prepare(`SELECT COUNT(*) as count FROM vendors WHERE subscription_status = 'active' AND is_suspended = 0 AND ${REAL_VENDOR_FILTER}`).get();
+  const trialVendors = db.prepare(`SELECT COUNT(*) as count FROM vendors WHERE subscription_plan = 'trial' AND ${REAL_VENDOR_FILTER}`).get();
+  const churnedVendors = db.prepare(`SELECT COUNT(*) as count FROM vendors WHERE subscription_status = 'canceled' AND ${REAL_VENDOR_FILTER}`).get();
+
+  // Conversations — scoped to real vendors' bots only.
+  const totalConversations = db.prepare(`SELECT COUNT(*) as count FROM conversations c JOIN vendors v ON v.id = c.vendor_id WHERE v.${REAL_VENDOR_FILTER}`).get();
+  const todayConversations = db.prepare(`SELECT COUNT(*) as count FROM conversations c JOIN vendors v ON v.id = c.vendor_id WHERE date(c.created_at) = date('now') AND v.${REAL_VENDOR_FILTER}`).get();
+  const resolvedByBot = db.prepare(`SELECT COUNT(*) as count FROM conversations c JOIN vendors v ON v.id = c.vendor_id WHERE c.resolved_by_bot = 1 AND v.${REAL_VENDOR_FILTER}`).get();
   const resolutionRate = totalConversations.count > 0
     ? Math.round((resolvedByBot.count / totalConversations.count) * 100)
     : 0;
 
   // Tickets
-  const openTickets = db.prepare("SELECT COUNT(*) as count FROM tickets WHERE status IN ('open', 'in_progress')").get();
-  const totalTickets = db.prepare("SELECT COUNT(*) as count FROM tickets").get();
+  const openTickets = db.prepare(`SELECT COUNT(*) as count FROM tickets t JOIN vendors v ON v.id = t.vendor_id WHERE t.status IN ('open', 'in_progress') AND v.${REAL_VENDOR_FILTER}`).get();
+  const totalTickets = db.prepare(`SELECT COUNT(*) as count FROM tickets t JOIN vendors v ON v.id = t.vendor_id WHERE v.${REAL_VENDOR_FILTER}`).get();
 
-  // Flagged messages (content moderation)
+  // Flagged messages (content moderation) — deliberately NOT filtered by
+  // is_internal: moderation should still catch anything flagged anywhere.
   const flaggedMessages = db.prepare("SELECT COUNT(*) as count FROM messages WHERE flagged = 1").get();
 
   // Conversations by plan
   const byPlan = db.prepare(`
     SELECT v.subscription_plan as plan, COUNT(c.id) as count
     FROM conversations c JOIN vendors v ON v.id = c.vendor_id
+    WHERE v.${REAL_VENDOR_FILTER}
     GROUP BY v.subscription_plan ORDER BY count DESC
   `).all();
 
-  // Model usage breakdown
+  // Model usage breakdown — deliberately NOT filtered: this tracks real
+  // inference/API cost regardless of which account triggered it.
   const modelUsage = db.prepare(`
     SELECT model_used, COUNT(*) as count
     FROM messages WHERE model_used != '' AND model_used IS NOT NULL
@@ -56,7 +70,7 @@ router.get("/overview", (req, res) => {
   // already caught in the guest/dashboard assistant prompts.
   const activePlanVendors = db.prepare(`
     SELECT subscription_plan, country FROM vendors
-    WHERE subscription_status = 'active' AND is_suspended = 0
+    WHERE subscription_status = 'active' AND is_suspended = 0 AND ${REAL_VENDOR_FILTER}
   `).all();
 
   const mrr = activePlanVendors.reduce((sum, v) => {
@@ -65,7 +79,7 @@ router.get("/overview", (req, res) => {
 
   // Growth (new vendors this month)
   const newVendorsThisMonth = db.prepare(
-    "SELECT COUNT(*) as count FROM vendors WHERE created_at >= datetime('now', '-30 days')"
+    `SELECT COUNT(*) as count FROM vendors WHERE created_at >= datetime('now', '-30 days') AND ${REAL_VENDOR_FILTER}`
   ).get();
 
   // Churn rate as a percentage — the raw churnedVendors count alone doesn't
@@ -74,6 +88,14 @@ router.get("/overview", (req, res) => {
     ? Math.round((churnedVendors.count / totalVendors.count) * 1000) / 10
     : 0;
 
+  // Churn broken down by the plan the vendor was on — which tier actually
+  // loses the most customers, not just an overall blended rate.
+  const churnByPlan = db.prepare(`
+    SELECT subscription_plan as plan, COUNT(*) as count FROM vendors
+    WHERE subscription_status = 'canceled' AND ${REAL_VENDOR_FILTER}
+    GROUP BY subscription_plan ORDER BY count DESC
+  `).all();
+
   // Platform-wide feedback (thumbs up/down) — per-vendor analytics already
   // surfaces this (routes/analytics.js), but it was never aggregated across
   // the whole platform for the admin view.
@@ -81,31 +103,48 @@ router.get("/overview", (req, res) => {
     SELECT
       SUM(CASE WHEN rating = 'up' THEN 1 ELSE 0 END) as up,
       SUM(CASE WHEN rating = 'down' THEN 1 ELSE 0 END) as down
-    FROM messages WHERE role = 'bot' AND rating IS NOT NULL
+    FROM messages m JOIN conversations c ON c.id = m.conversation_id JOIN vendors v ON v.id = c.vendor_id
+    WHERE m.role = 'bot' AND m.rating IS NOT NULL AND v.${REAL_VENDOR_FILTER}
   `).get();
   const feedbackTotal = (feedback.up || 0) + (feedback.down || 0);
   const satisfactionRate = feedbackTotal > 0 ? Math.round(((feedback.up || 0) / feedbackTotal) * 100) : null;
 
-  // Daily time series for the last 30 days — one grouped query each, then
-  // filled to a complete gap-free series in JS so a day with zero activity
-  // still renders as a real 0 point instead of vanishing from the chart.
+  // Per-vendor feedback breakdown — which specific accounts are getting
+  // negative ratings, not just a platform-wide blend. Sorted worst-first
+  // (lowest satisfaction, among vendors with at least one rating) since
+  // that's the actionable end of the list.
+  const feedbackByVendor = db.prepare(`
+    SELECT v.id, v.company_name, v.email,
+      SUM(CASE WHEN m.rating = 'up' THEN 1 ELSE 0 END) as up,
+      SUM(CASE WHEN m.rating = 'down' THEN 1 ELSE 0 END) as down
+    FROM messages m JOIN conversations c ON c.id = m.conversation_id JOIN vendors v ON v.id = c.vendor_id
+    WHERE m.role = 'bot' AND m.rating IS NOT NULL AND v.${REAL_VENDOR_FILTER}
+    GROUP BY v.id
+    ORDER BY (CAST(SUM(CASE WHEN m.rating = 'up' THEN 1 ELSE 0 END) AS REAL) / (SUM(CASE WHEN m.rating = 'up' THEN 1 ELSE 0 END) + SUM(CASE WHEN m.rating = 'down' THEN 1 ELSE 0 END))) ASC
+    LIMIT 10
+  `).all().map((r) => ({ ...r, satisfactionRate: Math.round((r.up / (r.up + r.down)) * 100) }));
+
+  // Daily time series for the requested range — one grouped query each,
+  // then filled to a complete gap-free series in JS so a day with zero
+  // activity still renders as a real 0 point instead of vanishing.
   const dailySignupRows = db.prepare(`
     SELECT date(created_at) as day, COUNT(*) as count FROM vendors
-    WHERE created_at >= datetime('now', '-30 days') GROUP BY day
-  `).all();
+    WHERE created_at >= datetime('now', ?) AND ${REAL_VENDOR_FILTER} GROUP BY day
+  `).all(`-${days} days`);
   const dailyConversationRows = db.prepare(`
-    SELECT date(created_at) as day, COUNT(*) as count FROM conversations
-    WHERE created_at >= datetime('now', '-30 days') GROUP BY day
-  `).all();
+    SELECT date(c.created_at) as day, COUNT(*) as count
+    FROM conversations c JOIN vendors v ON v.id = c.vendor_id
+    WHERE c.created_at >= datetime('now', ?) AND v.${REAL_VENDOR_FILTER} GROUP BY day
+  `).all(`-${days} days`);
 
   function fillDailySeries(rows) {
     const byDay = Object.fromEntries(rows.map((r) => [r.day, r.count]));
-    const days = [];
-    for (let i = 29; i >= 0; i--) {
+    const result = [];
+    for (let i = days - 1; i >= 0; i--) {
       const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-      days.push({ date: d, count: byDay[d] || 0 });
+      result.push({ date: d, count: byDay[d] || 0 });
     }
-    return days;
+    return result;
   }
 
   res.json({
@@ -114,6 +153,7 @@ router.get("/overview", (req, res) => {
     trialVendors: trialVendors.count,
     churnedVendors: churnedVendors.count,
     churnRate,
+    churnByPlan,
     newVendorsThisMonth: newVendorsThisMonth.count,
     totalConversations: totalConversations.count,
     todayConversations: todayConversations.count,
@@ -124,11 +164,86 @@ router.get("/overview", (req, res) => {
     feedbackUp: feedback.up || 0,
     feedbackDown: feedback.down || 0,
     satisfactionRate,
+    feedbackByVendor,
     mrr,
     byPlan,
     modelUsage,
+    days,
     dailySignups: fillDailySeries(dailySignupRows),
     dailyConversations: fillDailySeries(dailyConversationRows),
+  });
+});
+
+/**
+ * GET /api/admin/cohorts
+ * Weekly signup-cohort retention: of the vendors who signed up in a given
+ * week, what % were still not canceled N weeks later.
+ *
+ * Retention before this feature existed is necessarily approximate: a
+ * vendor already canceled before the `canceled_at` column was added has no
+ * recorded cancellation date, so it's treated as churned immediately (a
+ * conservative floor, not a reconstruction of the real date) — flagged via
+ * `unknownChurnCount` per cell and the top-level `note`, not silently
+ * assumed accurate.
+ */
+router.get("/cohorts", (req, res) => {
+  const vendors = db.prepare(`SELECT id, created_at, subscription_status, canceled_at FROM vendors WHERE ${REAL_VENDOR_FILTER}`).all();
+
+  function startOfWeek(sqliteDatetime) {
+    const d = new Date(sqliteDatetime.replace(" ", "T") + "Z");
+    const daysSinceMonday = (d.getUTCDay() + 6) % 7; // getUTCDay: 0=Sun..6=Sat
+    d.setUTCDate(d.getUTCDate() - daysSinceMonday);
+    d.setUTCHours(0, 0, 0, 0);
+    return d;
+  }
+
+  const cohorts = new Map();
+  for (const v of vendors) {
+    const key = startOfWeek(v.created_at).toISOString().slice(0, 10);
+    if (!cohorts.has(key)) cohorts.set(key, []);
+    cohorts.get(key).push(v);
+  }
+
+  const MAX_OFFSET_WEEKS = 8;
+  const now = Date.now();
+
+  const rows = [...cohorts.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([cohortWeek, members]) => {
+      const weekStartMs = new Date(`${cohortWeek}T00:00:00Z`).getTime();
+      const weeksElapsed = Math.floor((now - weekStartMs) / (7 * 24 * 60 * 60 * 1000));
+      const maxOffset = Math.min(weeksElapsed, MAX_OFFSET_WEEKS);
+
+      const retention = [];
+      for (let offsetWeeks = 0; offsetWeeks <= maxOffset; offsetWeeks++) {
+        const checkpointMs = weekStartMs + offsetWeeks * 7 * 24 * 60 * 60 * 1000;
+        let retained = 0;
+        let unknownChurn = 0;
+        for (const m of members) {
+          if (m.subscription_status !== "canceled") {
+            retained++;
+          } else if (m.canceled_at) {
+            const canceledMs = new Date(m.canceled_at.replace(" ", "T") + "Z").getTime();
+            if (canceledMs > checkpointMs) retained++;
+          } else {
+            unknownChurn++;
+          }
+        }
+        retention.push({
+          offsetWeeks,
+          retainedCount: retained,
+          totalCount: members.length,
+          retainedPct: Math.round((retained / members.length) * 100),
+          unknownChurnCount: unknownChurn,
+        });
+      }
+
+      return { cohortWeek, cohortSize: members.length, retention };
+    });
+
+  res.json({
+    cohorts: rows,
+    note: "Retention for cancellations that happened before canceled_at tracking existed is approximated as churned immediately (a conservative floor) — see unknownChurnCount per cell.",
   });
 });
 
@@ -191,6 +306,15 @@ router.patch("/vendors/:id", (req, res) => {
       updates.push(`${field} = ?`);
       values.push(req.body[field]);
     }
+  }
+
+  // Manual status change needs the same canceled_at bookkeeping as the
+  // automatic dunning cancellation (pesepayBilling.js), so cohort retention
+  // can tell a real cancellation date from "never set" either way.
+  if (req.body.subscription_status === "canceled") {
+    updates.push("canceled_at = datetime('now')");
+  } else if (req.body.subscription_status !== undefined) {
+    updates.push("canceled_at = NULL");
   }
 
   if (updates.length === 0) {

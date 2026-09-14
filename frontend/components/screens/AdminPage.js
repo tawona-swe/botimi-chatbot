@@ -19,6 +19,7 @@ const CHART_PAD = { top: 12, right: 12, bottom: 20, left: 12 };
  */
 function MiniTrendChart({ title, data, color = "var(--color-primary)" }) {
   const [hoverIdx, setHoverIdx] = useState(null);
+  const [showTable, setShowTable] = useState(false);
   const svgRef = useRef(null);
 
   const values = data.map((d) => d.count);
@@ -50,52 +51,82 @@ function MiniTrendChart({ title, data, color = "var(--color-primary)" }) {
     <div className="bg-surface-container border border-outline-variant rounded-2xl p-6">
       <div className="flex items-baseline justify-between mb-1">
         <h3 className="font-display text-sm font-bold text-on-surface">{title}</h3>
-        <span className="text-xs text-on-surface-variant">{total.toLocaleString()} in last 30 days</span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-on-surface-variant">{total.toLocaleString()} in last {data.length} days</span>
+          <button
+            onClick={() => setShowTable((v) => !v)}
+            className="text-[11px] text-on-surface-variant hover:text-primary underline decoration-dotted"
+          >
+            {showTable ? "View chart" : "View as table"}
+          </button>
+        </div>
       </div>
-      <div className="relative">
-        <svg
-          ref={svgRef}
-          viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
-          className="w-full h-[140px]"
-          onMouseMove={handleMove}
-          onMouseLeave={() => setHoverIdx(null)}
-        >
-          {gridLines.map((frac) => (
-            <line
-              key={frac}
-              x1={CHART_PAD.left} x2={CHART_WIDTH - CHART_PAD.right}
-              y1={CHART_PAD.top + innerH * (1 - frac)} y2={CHART_PAD.top + innerH * (1 - frac)}
-              stroke="var(--color-outline-variant)" strokeWidth="1"
-            />
-          ))}
-          <path d={areaPath} fill={color} opacity="0.1" stroke="none" />
-          <path d={linePath} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
 
-          {/* End-dot + value, per spec: lines get labeled at the end, not on every point */}
-          <circle cx={xFor(data.length - 1)} cy={yFor(latest.count)} r="4" fill={color} stroke="var(--color-surface-container)" strokeWidth="2" />
-
-          {hovered && (
-            <>
+      {showTable ? (
+        <div className="max-h-[140px] overflow-y-auto scrollbar-thin">
+          <table className="w-full text-xs">
+            <thead className="sticky top-0 bg-surface-container">
+              <tr className="text-on-surface-variant text-left">
+                <th className="font-medium py-1">Date</th>
+                <th className="font-medium py-1 text-right">Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...data].reverse().map((d) => (
+                <tr key={d.date} className="border-t border-outline/5">
+                  <td className="py-1 text-on-surface-variant">{new Date(d.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</td>
+                  <td className="py-1 text-right text-on-surface tabular-nums">{d.count.toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="relative">
+          <svg
+            ref={svgRef}
+            viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
+            className="w-full h-[140px]"
+            onMouseMove={handleMove}
+            onMouseLeave={() => setHoverIdx(null)}
+          >
+            {gridLines.map((frac) => (
               <line
-                x1={xFor(hoverIdx)} x2={xFor(hoverIdx)}
-                y1={CHART_PAD.top} y2={CHART_PAD.top + innerH}
+                key={frac}
+                x1={CHART_PAD.left} x2={CHART_WIDTH - CHART_PAD.right}
+                y1={CHART_PAD.top + innerH * (1 - frac)} y2={CHART_PAD.top + innerH * (1 - frac)}
                 stroke="var(--color-outline-variant)" strokeWidth="1"
               />
-              <circle cx={xFor(hoverIdx)} cy={yFor(hovered.count)} r="4" fill={color} stroke="var(--color-surface-container)" strokeWidth="2" />
-            </>
-          )}
-        </svg>
+            ))}
+            <path d={areaPath} fill={color} opacity="0.1" stroke="none" />
+            <path d={linePath} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
 
-        {hovered && (
-          <div
-            className="absolute top-0 -translate-x-1/2 bg-surface-container-highest border border-outline-variant rounded-lg px-2.5 py-1.5 text-xs pointer-events-none shadow-lg"
-            style={{ left: `${(xFor(hoverIdx) / CHART_WIDTH) * 100}%` }}
-          >
-            <p className="font-bold text-on-surface">{hovered.count.toLocaleString()}</p>
-            <p className="text-on-surface-variant text-[10px]">{new Date(hovered.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</p>
-          </div>
-        )}
-      </div>
+            {/* End-dot + value, per spec: lines get labeled at the end, not on every point */}
+            <circle cx={xFor(data.length - 1)} cy={yFor(latest.count)} r="4" fill={color} stroke="var(--color-surface-container)" strokeWidth="2" />
+
+            {hovered && (
+              <>
+                <line
+                  x1={xFor(hoverIdx)} x2={xFor(hoverIdx)}
+                  y1={CHART_PAD.top} y2={CHART_PAD.top + innerH}
+                  stroke="var(--color-outline-variant)" strokeWidth="1"
+                />
+                <circle cx={xFor(hoverIdx)} cy={yFor(hovered.count)} r="4" fill={color} stroke="var(--color-surface-container)" strokeWidth="2" />
+              </>
+            )}
+          </svg>
+
+          {hovered && (
+            <div
+              className="absolute top-0 -translate-x-1/2 bg-surface-container-highest border border-outline-variant rounded-lg px-2.5 py-1.5 text-xs pointer-events-none shadow-lg"
+              style={{ left: `${(xFor(hoverIdx) / CHART_WIDTH) * 100}%` }}
+            >
+              <p className="font-bold text-on-surface">{hovered.count.toLocaleString()}</p>
+              <p className="text-on-surface-variant text-[10px]">{new Date(hovered.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -113,6 +144,9 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [vendorSearch, setVendorSearch] = useState("");
   const [vendorFilter, setVendorFilter] = useState("");
+  const [trendDays, setTrendDays] = useState(30);
+  const [cohorts, setCohorts] = useState(null);
+  const [cohortsLoading, setCohortsLoading] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("botimiSidebarCollapsed");
@@ -136,6 +170,22 @@ export default function AdminPage() {
     }
   }, [isAuthenticated, vendor?.isSuperadmin]);
 
+  // Re-fetch just the overview (not vendors/flagged) when the trend range
+  // changes — everything else on the page is unaffected by the date range.
+  useEffect(() => {
+    if (isAuthenticated && vendor?.isSuperadmin && overview) {
+      api.getAdminOverview(trendDays).then(setOverview).catch((err) => console.error("Failed to reload overview:", err));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trendDays]);
+
+  useEffect(() => {
+    if (isAuthenticated && vendor?.isSuperadmin && activeTab === "retention" && !cohorts) {
+      loadCohorts();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, isAuthenticated, vendor?.isSuperadmin]);
+
   const toggleSidebar = () => {
     setSidebarCollapsed(prev => {
       localStorage.setItem("botimiSidebarCollapsed", String(!prev));
@@ -143,11 +193,23 @@ export default function AdminPage() {
     });
   };
 
+  async function loadCohorts() {
+    setCohortsLoading(true);
+    try {
+      const data = await api.getAdminCohorts();
+      setCohorts(data);
+    } catch (err) {
+      console.error("Failed to load cohorts:", err);
+    } finally {
+      setCohortsLoading(false);
+    }
+  }
+
   async function loadData() {
     setLoading(true);
     try {
       const [overviewData, vendorsData, flaggedData] = await Promise.all([
-        api.getAdminOverview(),
+        api.getAdminOverview(trendDays),
         api.getAdminVendors({ limit: 100 }),
         api.getAdminFlaggedMessages({ limit: 50 }),
       ]);
@@ -247,6 +309,7 @@ export default function AdminPage() {
           {[
             { id: "overview", label: "Overview", icon: "dashboard" },
             { id: "vendors", label: "Vendors", icon: "groups" },
+            { id: "retention", label: "Retention", icon: "donut_large" },
             { id: "moderation", label: "Moderation", icon: "flag" },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -331,10 +394,114 @@ export default function AdminPage() {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <MiniTrendChart title="New Vendors" data={overview.dailySignups} color="var(--color-primary)" />
-                <MiniTrendChart title="Conversations" data={overview.dailyConversations} color="var(--color-secondary)" />
+                <div className="bg-surface-container border border-outline-variant rounded-2xl p-6">
+                  <h3 className="font-display text-sm font-bold text-on-surface mb-4">Churn by Plan</h3>
+                  {overview.churnByPlan.length === 0 ? (
+                    <p className="text-sm text-on-surface-variant">No cancellations yet</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {overview.churnByPlan.map(p => (
+                        <div key={p.plan} className="flex items-center justify-between">
+                          <span className="text-sm capitalize text-on-surface">{p.plan || "unknown"}</span>
+                          <span className="text-xs text-on-surface-variant">{p.count} canceled</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-surface-container border border-outline-variant rounded-2xl p-6">
+                  <h3 className="font-display text-sm font-bold text-on-surface mb-4">Feedback by Vendor</h3>
+                  <p className="text-xs text-on-surface-variant -mt-3 mb-3">Lowest satisfaction first — where to look first</p>
+                  {overview.feedbackByVendor.length === 0 ? (
+                    <p className="text-sm text-on-surface-variant">No feedback yet</p>
+                  ) : (
+                    <div className="space-y-3 max-h-[180px] overflow-y-auto scrollbar-thin">
+                      {overview.feedbackByVendor.map(v => (
+                        <div key={v.id} className="flex items-center justify-between gap-3">
+                          <span className="text-sm text-on-surface truncate">{v.company_name || v.email}</span>
+                          <span className={`text-xs shrink-0 ${v.satisfactionRate < 50 ? "text-rose-400" : "text-on-surface-variant"}`}>
+                            {v.satisfactionRate}% · {v.up}↑ {v.down}↓
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-end gap-2 mb-3">
+                  {[7, 30, 90].map(d => (
+                    <button
+                      key={d}
+                      onClick={() => setTrendDays(d)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                        trendDays === d ? "bg-primary text-on-primary" : "bg-surface-container border border-outline-variant text-on-surface-variant hover:text-on-surface"
+                      }`}
+                    >
+                      {d}d
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <MiniTrendChart title="New Vendors" data={overview.dailySignups} color="var(--color-primary)" />
+                  <MiniTrendChart title="Conversations" data={overview.dailyConversations} color="var(--color-secondary)" />
+                </div>
               </div>
             </>
+          )}
+
+          {/* === RETENTION TAB === */}
+          {activeTab === "retention" && (
+            <div className="bg-surface-container border border-outline-variant rounded-2xl p-6">
+              <h3 className="font-display text-sm font-bold text-on-surface mb-1">Weekly Signup Cohorts</h3>
+              <p className="text-xs text-on-surface-variant mb-4">Of the vendors who signed up in a given week, % still not canceled N weeks later.</p>
+              {cohortsLoading ? (
+                <p className="text-sm text-on-surface-variant">Loading...</p>
+              ) : !cohorts || cohorts.cohorts.length === 0 ? (
+                <p className="text-sm text-on-surface-variant">No signup data yet</p>
+              ) : (
+                <>
+                  <div className="overflow-x-auto scrollbar-thin">
+                    <table className="text-sm border-collapse">
+                      <thead>
+                        <tr>
+                          <th className="text-left p-2 font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Cohort</th>
+                          <th className="text-left p-2 font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">Size</th>
+                          {Array.from({ length: Math.max(...cohorts.cohorts.map(c => c.retention.length)) }, (_, i) => (
+                            <th key={i} className="text-center p-2 font-label-md text-[11px] text-on-surface-variant uppercase tracking-wider">W{i}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {cohorts.cohorts.map(c => (
+                          <tr key={c.cohortWeek} className="border-t border-outline/5">
+                            <td className="p-2 text-on-surface-variant whitespace-nowrap">{formatDate(c.cohortWeek)}</td>
+                            <td className="p-2 text-on-surface-variant">{c.cohortSize}</td>
+                            {c.retention.map(r => (
+                              <td key={r.offsetWeeks} className="p-2 text-center">
+                                <span
+                                  className="inline-block px-2 py-1 rounded-lg text-xs font-bold tabular-nums"
+                                  style={{
+                                    backgroundColor: `color-mix(in srgb, var(--color-primary) ${r.retainedPct}%, transparent)`,
+                                    color: r.retainedPct > 50 ? "var(--color-on-primary)" : "var(--color-on-surface)",
+                                  }}
+                                  title={`${r.retainedCount}/${r.totalCount} retained${r.unknownChurnCount ? ` (${r.unknownChurnCount} unknown-date cancellation${r.unknownChurnCount > 1 ? "s" : ""})` : ""}`}
+                                >
+                                  {r.retainedPct}%
+                                </span>
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-[11px] text-on-surface-variant/70 mt-4">{cohorts.note}</p>
+                </>
+              )}
+            </div>
           )}
 
           {/* === VENDORS TAB === */}

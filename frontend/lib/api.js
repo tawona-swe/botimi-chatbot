@@ -309,8 +309,12 @@ class ApiClient {
   }
 
   // Super Admin
-  getAdminOverview() {
-    return this.request("GET", "/admin/overview");
+  getAdminOverview(days) {
+    return this.request("GET", `/admin/overview${days ? `?days=${days}` : ""}`);
+  }
+
+  getAdminCohorts() {
+    return this.request("GET", "/admin/cohorts");
   }
 
   getAdminVendors(params = {}) {

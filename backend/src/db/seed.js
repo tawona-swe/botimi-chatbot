@@ -38,9 +38,9 @@ async function seed() {
   const adminHash = await bcrypt.hash("admin123", 12);
   db.prepare(`
     INSERT INTO vendors (id, email, password_hash, name, company_name, industry,
-      subscription_plan, subscription_status, is_superadmin, conversations_limit, conversation_credits,
+      subscription_plan, subscription_status, is_superadmin, is_internal, conversations_limit, conversation_credits,
       trial_ends_at, brand_color)
-    VALUES (?, ?, ?, ?, ?, ?, 'scale', 'active', 1, 999999, 999999, ?, '#ff6b6b')
+    VALUES (?, ?, ?, ?, ?, ?, 'scale', 'active', 1, 1, 999999, 999999, ?, '#ff6b6b')
   `).run(adminVendorId, "admin@botimi.ai", adminHash, "Super Admin", "botimi Platform", "Technology", trialEnd);
   console.log("[Seed] Created super admin: admin@botimi.ai / admin123");
 

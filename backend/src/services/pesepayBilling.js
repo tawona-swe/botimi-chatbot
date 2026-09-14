@@ -245,7 +245,7 @@ function markTopUpPaid(vendorId, packId) {
 function markVendorPaymentFailed(vendor) {
   const attempts = vendor.dunning_attempts + 1;
   if (attempts >= MAX_DUNNING_ATTEMPTS) {
-    db.prepare("UPDATE vendors SET subscription_status = 'canceled', is_suspended = 1, dunning_attempts = ? WHERE id = ?").run(attempts, vendor.id);
+    db.prepare("UPDATE vendors SET subscription_status = 'canceled', is_suspended = 1, dunning_attempts = ?, canceled_at = datetime('now') WHERE id = ?").run(attempts, vendor.id);
     return;
   }
   const backoffDays = RETRY_BACKOFF_DAYS[attempts - 1] || 7;
