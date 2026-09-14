@@ -129,7 +129,7 @@ export async function handleChatMessage({ apiKey, message, conversationId, visit
       INSERT INTO messages (id, conversation_id, role, content)
       VALUES (?, ?, 'bot', ?)
     `).run(botMessageId, convId, handoffMessage);
-    db.prepare("UPDATE conversations SET message_count = message_count + 1, resolved_by_bot = 0, status = 'escalated' WHERE id = ?").run(convId);
+    db.prepare("UPDATE conversations SET message_count = message_count + 1, resolved_by_bot = 0, status = 'escalated', escalation_reason = 'credits_exhausted' WHERE id = ?").run(convId);
 
     await escalateToHuman({ bot, vendorEmail: vendor?.email, convId, message, visitorName, source: "credits_exhausted" });
 
@@ -146,13 +146,17 @@ export async function handleChatMessage({ apiKey, message, conversationId, visit
   const result = await generateRagResponse(bot.id, message, history.slice(0, -1), source);
 
   const botMessageId = uuidv4();
+  // better-sqlite3 rejects raw JS booleans as bind params — result.confident
+  // is true/false/null (null when there's no knowledge base yet), so map
+  // explicitly to 1/0/null rather than letting the driver throw.
+  const confidentValue = result.confident === null ? null : (result.confident ? 1 : 0);
   db.prepare(`
-    INSERT INTO messages (id, conversation_id, role, content, model_used, tokens_used, latency_ms, sources)
-    VALUES (?, ?, 'bot', ?, ?, ?, ?, ?)
+    INSERT INTO messages (id, conversation_id, role, content, model_used, tokens_used, latency_ms, sources, confident)
+    VALUES (?, ?, 'bot', ?, ?, ?, ?, ?, ?)
   `).run(
     botMessageId, convId, result.content,
     result.model || "llama3-70b", result.tokensUsed, result.latencyMs,
-    JSON.stringify(result.sources)
+    JSON.stringify(result.sources), confidentValue
   );
 
   db.prepare("UPDATE conversations SET message_count = message_count + 1 WHERE id = ?").run(convId);
@@ -162,7 +166,7 @@ export async function handleChatMessage({ apiKey, message, conversationId, visit
   if (result.confident === true) {
     db.prepare("UPDATE conversations SET resolved_by_bot = 1 WHERE id = ?").run(convId);
   } else if (result.confident === false) {
-    db.prepare("UPDATE conversations SET resolved_by_bot = 0, status = 'escalated' WHERE id = ?").run(convId);
+    db.prepare("UPDATE conversations SET resolved_by_bot = 0, status = 'escalated', escalation_reason = 'bot_low_confidence' WHERE id = ?").run(convId);
     await escalateToHuman({ bot, vendorEmail: vendor?.email, convId, message, visitorName, source: "bot_low_confidence" });
   }
 

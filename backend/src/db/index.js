@@ -63,6 +63,20 @@ const COLUMN_MIGRATIONS = [
   // existed have NULL here; the cohort view treats that as "unknown exact
   // date," not "never canceled" — see project_admin_dashboard memory.
   ["vendors", "canceled_at", "TEXT"],
+  // Why a conversation got escalated ('bot_low_confidence' | 'credits_exhausted'),
+  // tracked independently of whether the vendor pays for the ticket add-on.
+  // Tickets (escalateToHuman in chat.js) only get created when ticket_addon
+  // is on, but "which questions couldn't the bot confidently answer" is a
+  // free-tier insight every vendor should see, not gated behind a paid
+  // add-on that's about human-escalation convenience, not content gaps.
+  ["conversations", "escalation_reason", "TEXT DEFAULT ''"],
+  // Per-message confidence (1/0/NULL — NULL when there's no knowledge base
+  // at all yet, so confidence doesn't apply). A conversation-level flag
+  // isn't precise enough for "which questions couldn't the bot answer": a
+  // single long conversation can have both confident and unconfident turns,
+  // and only the message level can say exactly which question triggered
+  // which answer.
+  ["messages", "confident", "INTEGER"],
 ];
 
 function runColumnMigrations() {

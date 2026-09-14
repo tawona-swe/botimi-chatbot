@@ -113,6 +113,51 @@ router.get("/overview", (req, res) => {
 });
 
 /**
+ * GET /api/analytics/unanswered-questions
+ * The specific questions the bot answered with low confidence — a knowledge
+ * gap report, not a support-ticket feed. Available regardless of whether
+ * the vendor pays for the ticket add-on (see messages.confident in
+ * db/index.js's migration comment for why this is tracked independently of
+ * ticket creation). Each row pairs the low-confidence bot answer with the
+ * exact user message that triggered it, found via the nearest-preceding
+ * user message in the same conversation — correct even when a single
+ * conversation has both confident and unconfident turns.
+ */
+router.get("/unanswered-questions", (req, res) => {
+  const vendorId = req.vendor.id;
+  const limit = Math.min(parseInt(req.query.limit, 10) || 30, 100);
+
+  const rows = db.prepare(`
+    SELECT
+      m.id as messageId,
+      m.content as answer,
+      m.created_at as answeredAt,
+      c.id as conversationId,
+      c.visitor_name as visitorName,
+      (
+        SELECT content FROM messages um
+        WHERE um.conversation_id = m.conversation_id AND um.role = 'user' AND um.created_at <= m.created_at
+        ORDER BY um.created_at DESC LIMIT 1
+      ) as question
+    FROM messages m
+    JOIN conversations c ON c.id = m.conversation_id
+    WHERE c.vendor_id = ? AND m.role = 'bot' AND m.confident = 0
+    ORDER BY m.created_at DESC
+    LIMIT ?
+  `).all(vendorId, limit);
+  // Deliberately excludes confident IS NULL: that value is ambiguous right
+  // now between "genuinely no knowledge-base match" (a real signal, from
+  // rag.js's isConfident=null branch) and "this message predates the
+  // confident column" (every message before this feature shipped) — every
+  // pre-existing bot message in the DB is NULL for the latter reason, so
+  // including NULL here would surface old, correctly-answered messages as
+  // false "unanswered questions." Only confident=0 is unambiguous (it never
+  // existed before this feature), so that's the only thing queried.
+
+  res.json({ questions: rows.filter((r) => r.question) });
+});
+
+/**
  * GET /api/analytics/tickets
  * Ticket analytics for vendors with ticket add-on.
  */

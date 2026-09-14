@@ -14,6 +14,7 @@ export default function AnalyticsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [analytics, setAnalytics] = useState(null);
   const [ticketAnalytics, setTicketAnalytics] = useState(null);
+  const [unanswered, setUnanswered] = useState(null);
   const [loading, setLoading] = useState(true);
   const [chartLoading, setChartLoading] = useState(false);
   const [timeRange, setTimeRange] = useState("7d"); // 7d | 30d | 90d
@@ -21,12 +22,14 @@ export default function AnalyticsPage() {
   async function loadData() {
     setLoading(true);
     try {
-      const [overview, tickets] = await Promise.all([
+      const [overview, tickets, unansweredData] = await Promise.all([
         api.getAnalytics(),
         api.getTicketAnalytics().catch(() => null),
+        api.getUnansweredQuestions().catch(() => null),
       ]);
       setAnalytics(overview);
       setTicketAnalytics(tickets);
+      setUnanswered(unansweredData);
     } catch (err) {
       console.error("Failed to load analytics:", err);
     } finally {
@@ -312,6 +315,28 @@ export default function AnalyticsPage() {
               </div>
             </div>
           )}
+
+          {/* Knowledge Gaps — questions the bot answered with low confidence */}
+          <div className="glass-panel rounded-2xl p-6 border border-outline-variant">
+            <h2 className="font-display font-bold text-on-surface mb-1">Questions Your Bot Couldn't Answer Well</h2>
+            <p className="text-xs text-on-surface-variant mb-4">Add content covering these to your knowledge base to close the gap.</p>
+            {unanswered?.questions?.length > 0 ? (
+              <div className="space-y-3 max-h-[400px] overflow-y-auto scrollbar-thin">
+                {unanswered.questions.map((q) => (
+                  <div key={q.messageId} className="bg-surface-container-lowest rounded-xl p-4 border border-outline/5">
+                    <p className="text-sm text-on-surface font-medium">{q.question}</p>
+                    <p className="text-xs text-on-surface-variant mt-1.5 line-clamp-2">{q.answer}</p>
+                    <p className="text-[10px] text-on-surface-variant/60 mt-2">{new Date(q.answeredAt).toLocaleDateString()}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <span className="material-symbols-outlined text-3xl text-on-surface-variant/20 mb-2">quiz</span>
+                <p className="text-xs text-on-surface-variant">No knowledge gaps found yet</p>
+              </div>
+            )}
+          </div>
 
         </div>
       </main>

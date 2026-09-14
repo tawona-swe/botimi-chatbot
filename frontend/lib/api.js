@@ -194,6 +194,10 @@ class ApiClient {
     return this.request("GET", "/analytics/tickets");
   }
 
+  getUnansweredQuestions() {
+    return this.request("GET", "/analytics/unanswered-questions");
+  }
+
   // Tickets
   getTickets(params = {}) {
     const qs = new URLSearchParams(params).toString();
