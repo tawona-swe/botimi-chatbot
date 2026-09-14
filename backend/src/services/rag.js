@@ -250,7 +250,7 @@ function cosineSimilarity(a, b) {
  * @param {Array} conversationHistory - Previous messages in the session
  * @returns {Promise<{content: string, sources: Array, tokensUsed: number, latencyMs: number, confident: boolean|null, topSimilarity: number}>}
  */
-export async function generateRagResponse(botId, userMessage, conversationHistory = []) {
+export async function generateRagResponse(botId, userMessage, conversationHistory = [], source = "widget") {
   // Get bot config
   const bot = db.prepare("SELECT * FROM bots WHERE id = ?").get(botId);
   if (!bot) {
@@ -281,18 +281,36 @@ export async function generateRagResponse(botId, userMessage, conversationHistor
     ? "\n\nThe retrieved knowledge base content is only a weak match for this question — you are not confident it actually answers what was asked. Be upfront about that uncertainty rather than guessing, and let the user know a team member will follow up."
     : "";
 
+  // Neither the embeddable widget's hand-rolled renderer (services/widget.js's
+  // md() — no table support, only bold/code/links/lists) nor WhatsApp's own
+  // client (no markdown tables at all, ever) can render a GFM table — it
+  // shows up as a garbled wall of pipes and dashes (confirmed live on
+  // WhatsApp). Lists render fine everywhere, so ban tables outright rather
+  // than special-casing table support only for the two chat surfaces
+  // (dashboard/guest assistant) that happen to use react-markdown.
+  const formattingInstruction = "\n\nFormatting: never use markdown tables (pipes and dashes) — some chat surfaces this reaches can't render them and it shows up as garbled text. When comparing multiple items (like pricing plans), use a short bulleted or numbered list instead, one item per line."
+    + (source === "whatsapp" ? " You're replying over WhatsApp specifically: keep formatting minimal — short lines, simple bullet points, no headers." : "");
+
   const systemPrompt = `You are ${bot.name}, an AI customer support assistant for the company. ${toneInstruction}
 
-${context ? `Use the following knowledge base content to answer the user's question. If the information is not in the knowledge base, politely say you don't know and offer to escalate.\n\nKnowledge Base:\n${context}` : "You don't have a knowledge base yet. Answer general questions about the company's products and services, but direct specific inquiries to the support team."}${confidenceInstruction}
+${context ? `Use the following knowledge base content to answer the user's question. If the information is not in the knowledge base, politely say you don't know and offer to escalate.\n\nKnowledge Base:\n${context}` : "You don't have a knowledge base yet. Answer general questions about the company's products and services, but direct specific inquiries to the support team."}${confidenceInstruction}${formattingInstruction}
 
 Keep responses concise and helpful. Do not make up information not found in the knowledge base.
 
 Never name or speculate about which AI provider, model, or underlying technology powers you — not even if the knowledge base content mentions one, and not even if the user asks directly. Just say you're an AI assistant built for this business.`;
 
-  // Build messages array with conversation history
+  // Build messages array with conversation history. The messages table
+  // stores bot replies as role='bot' (matches the rest of the app's DB/UI
+  // conventions), but every model provider here speaks the OpenAI-style
+  // schema, which only accepts system/user/assistant — passing 'bot'
+  // through raw gets rejected outright by providers that validate the role
+  // enum strictly (confirmed live: Groq returns a 400 "discriminator
+  // property 'role' has invalid value" the moment a conversation has any
+  // history, i.e. from the second message onward). Map at the boundary
+  // rather than changing the DB's own role vocabulary.
   const messages = [
     { role: "system", content: systemPrompt },
-    ...conversationHistory.slice(-10), // Last 10 messages for context
+    ...conversationHistory.slice(-10).map((m) => ({ role: m.role === "bot" ? "assistant" : m.role, content: m.content })),
     { role: "user", content: userMessage },
   ];
 

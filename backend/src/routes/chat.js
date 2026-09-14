@@ -143,7 +143,7 @@ export async function handleChatMessage({ apiKey, message, conversationId, visit
     "SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY created_at ASC"
   ).all(convId);
 
-  const result = await generateRagResponse(bot.id, message, history.slice(0, -1));
+  const result = await generateRagResponse(bot.id, message, history.slice(0, -1), source);
 
   const botMessageId = uuidv4();
   db.prepare(`
