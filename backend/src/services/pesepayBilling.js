@@ -143,11 +143,18 @@ export async function chargeVendor(vendor, planId, phoneNumber, payCurrency = "z
  * fallback for the three no-input-field wallet methods (Zimswitch, Innbucks,
  * PayGo) that have zero sandbox coverage and no documented test triggers, so
  * botimi can't safely build/verify bespoke seamless integrations for them.
+ *
+ * Always charged at the international rate, regardless of the vendor's
+ * claimed country: isLocalVendor is a self-reported field, and unlike
+ * Ecocash/Omari (which require a real Zimbabwean phone number to receive the
+ * PIN push), card/redirect has no independent signal to verify a "local"
+ * claim against. Charging the local rate here would let any vendor
+ * self-report their way to the discounted price.
  */
 export async function initiateCardCheckout(vendor, planId) {
   const plan = config.plans[planId];
   if (!plan) throw new Error(`Unknown plan: ${planId}`);
-  const usdAmount = planPrice(planId, isLocalVendor(vendor));
+  const usdAmount = planPrice(planId, false);
 
   const { referenceNumber, redirectUrl } = await initiateRedirectPayment({
     usdAmount, reasonForPayment: `botimi ${plan.name} plan`,
@@ -183,11 +190,14 @@ export async function chargeTopUp(vendor, packId, phoneNumber, payCurrency = "zi
   return { chargeId, referenceNumber: result.referenceNumber, transactionStatus: result.transactionStatus };
 }
 
-/** Buy a top-up pack via the same card/wallet redirect flow used for plans. */
+/**
+ * Buy a top-up pack via the same card/wallet redirect flow used for plans.
+ * Always the international rate — same reasoning as initiateCardCheckout.
+ */
 export async function initiateTopUpCardCheckout(vendor, packId) {
   const pack = config.topUps[packId];
   if (!pack) throw new Error(`Unknown top-up pack: ${packId}`);
-  const usdAmount = topUpPrice(packId, isLocalVendor(vendor));
+  const usdAmount = topUpPrice(packId, false);
 
   const { referenceNumber, redirectUrl } = await initiateRedirectPayment({
     usdAmount, reasonForPayment: `botimi top-up: ${pack.conversations} conversations`,

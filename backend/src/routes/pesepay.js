@@ -104,16 +104,20 @@ router.post("/checkout-card", async (req, res) => {
  * GET /api/pesepay/plans
  * The price sheet for the authenticated vendor's billing country (local vs.
  * international — see isLocalVendor), so the frontend never has to
- * duplicate the pricing logic.
+ * duplicate the pricing logic. Each entry also carries cardPrice — always
+ * the international rate, since card checkout charges that regardless of
+ * the vendor's claimed country (see initiateCardCheckout) — so the UI can
+ * show the price that will actually be charged for that payment method
+ * instead of one that only holds for Ecocash/Omari.
  */
 router.get("/plans", (req, res) => {
   const vendor = db.prepare("SELECT country FROM vendors WHERE id = ?").get(req.vendor.id);
   const local = isLocalVendor(vendor);
   const plans = Object.fromEntries(
-    VALID_PLANS.map((id) => [id, { ...config.plans[id], price: planPrice(id, local) }])
+    VALID_PLANS.map((id) => [id, { ...config.plans[id], price: planPrice(id, local), cardPrice: planPrice(id, false) }])
   );
   const topUps = Object.fromEntries(
-    VALID_TOPUPS.map((id) => [id, { ...config.topUps[id], price: topUpPrice(id, local) }])
+    VALID_TOPUPS.map((id) => [id, { ...config.topUps[id], price: topUpPrice(id, local), cardPrice: topUpPrice(id, false) }])
   );
   res.json({ local, plans, topUps });
 });

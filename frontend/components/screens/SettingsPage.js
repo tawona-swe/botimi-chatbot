@@ -626,7 +626,11 @@ export default function SettingsPage() {
                               disabled={cardCheckoutLoading}
                               className="w-full py-2 text-[11px] font-semibold text-on-surface-variant hover:text-primary transition-colors disabled:opacity-50"
                             >
-                              {cardCheckoutLoading ? "Redirecting…" : "Or pay another way (card, Zimswitch, Innbucks & more)"}
+                              {cardCheckoutLoading
+                                ? "Redirecting…"
+                                : plan.cardPrice !== plan.price
+                                  ? `Or pay by card ($${plan.cardPrice}/mo, Zimswitch, Innbucks & more)`
+                                  : "Or pay another way (card, Zimswitch, Innbucks & more)"}
                             </button>
                           </div>
                         ) : (
@@ -724,7 +728,11 @@ export default function SettingsPage() {
                             disabled={topUpCardLoading}
                             className="w-full py-2 text-[11px] font-semibold text-on-surface-variant hover:text-primary transition-colors disabled:opacity-50"
                           >
-                            {topUpCardLoading ? "Redirecting…" : "Or pay another way (card, Zimswitch, Innbucks & more)"}
+                            {topUpCardLoading
+                              ? "Redirecting…"
+                              : pack.cardPrice !== pack.price
+                                ? `Or pay by card ($${pack.cardPrice}, Zimswitch, Innbucks & more)`
+                                : "Or pay another way (card, Zimswitch, Innbucks & more)"}
                           </button>
                         </div>
                       ) : (

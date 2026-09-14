@@ -41,7 +41,7 @@ export default function OnboardingPlan() {
     .map((id) => (pricing.plans[id] ? { id, ...pricing.plans[id] } : null))
     .filter(Boolean);
 
-  const skipForNow = () => router.push("/dashboard");
+  const skipForNow = () => router.push("/onboarding");
 
   const handleCheckout = async (planId) => {
     if (!/^0\d{9}$/.test(phone)) {
@@ -99,7 +99,7 @@ export default function OnboardingPlan() {
     <main className="min-h-screen bg-background px-margin-mobile md:px-margin-desktop py-16">
       <div className="max-w-container-max mx-auto">
         <div className="text-center mb-12">
-          <p className="font-label-md text-label-md text-primary mb-2">Step 2 of 2</p>
+          <p className="font-label-md text-label-md text-primary mb-2">Step 1 of 2</p>
           <h1 className="font-display text-headline-lg text-on-surface mb-3">Choose a plan, or start on your free trial</h1>
           <p className="text-on-surface-variant max-w-xl mx-auto">
             You already have a 14-day free trial active — no payment required. Activate a plan now if you're ready, or skip and decide later from Settings.
@@ -112,10 +112,10 @@ export default function OnboardingPlan() {
             <h2 className="font-display text-lg font-bold text-on-surface mb-2">Plan activated</h2>
             <p className="text-sm text-on-surface-variant mb-6">Your payment was confirmed and your plan is live.</p>
             <button
-              onClick={() => router.push("/dashboard")}
+              onClick={() => router.push("/onboarding")}
               className="w-full bg-primary text-on-primary rounded-xl text-sm font-bold py-3 hover:brightness-110 active:scale-[0.98] transition-all"
             >
-              Go to dashboard
+              Set up your bot
             </button>
           </div>
         ) : (
@@ -157,7 +157,11 @@ export default function OnboardingPlan() {
                         disabled={cardLoading}
                         className="w-full py-2 text-[11px] font-semibold text-on-surface-variant hover:text-primary transition-colors disabled:opacity-50"
                       >
-                        {cardLoading ? "Redirecting…" : "Or pay another way (card, Zimswitch, Innbucks & more)"}
+                        {cardLoading
+                          ? "Redirecting…"
+                          : plan.cardPrice !== plan.price
+                            ? `Or pay by card (${'$' + plan.cardPrice}/mo, Zimswitch, Innbucks & more)`
+                            : "Or pay another way (card, Zimswitch, Innbucks & more)"}
                       </button>
                     </div>
                   ) : (
