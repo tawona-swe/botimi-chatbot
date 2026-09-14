@@ -35,6 +35,15 @@ migrate();
 
 const app = express();
 
+// Trust the first hop's X-Forwarded-For (a single reverse proxy in front —
+// ngrok in local dev, a real load balancer/proxy in production). Without
+// this, express-rate-limit refuses to trust the header at all once one
+// shows up (ERR_ERL_UNEXPECTED_X_FORWARDED_FOR) and can't tell distinct
+// clients apart behind the proxy. `1` (not `true`) — trust exactly one
+// hop, not an unbounded chain, so a client can't spoof its own rate-limit
+// identity by sending a fake X-Forwarded-For itself.
+app.set("trust proxy", 1);
+
 // --------------- Middleware ---------------
 app.use(helmet({
   contentSecurityPolicy: false,

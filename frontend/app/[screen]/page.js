@@ -4,9 +4,6 @@ import Dashboard from "../../components/screens/Dashboard";
 import SupportInbox from "../../components/screens/SupportInbox";
 import OnboardingWizard from "../../components/screens/OnboardingWizard";
 import OnboardingPlan from "../../components/screens/OnboardingPlan";
-import OnboardingRedesign from "../../components/screens/OnboardingRedesign";
-import OnboardingStep2 from "../../components/screens/OnboardingStep2";
-import OnboardingStep3 from "../../components/screens/OnboardingStep3";
 import DocsPage from "../../components/screens/DocsPage";
 import BotsPage from "../../components/screens/BotsPage";
 import AnalyticsPage from "../../components/screens/AnalyticsPage";
@@ -25,9 +22,6 @@ const screenInfo = {
   support: { title: "Support Inbox", Component: SupportInbox },
   onboarding: { title: "Onboarding Wizard", Component: OnboardingWizard },
   "onboarding-plan": { title: "Choose Your Plan", Component: OnboardingPlan },
-  "onboarding-redesign": { title: "Onboarding Redesign", Component: OnboardingRedesign },
-  "onboarding-customize": { title: "Onboarding Step 2", Component: OnboardingStep2 },
-  "onboarding-install": { title: "Onboarding Step 3", Component: OnboardingStep3 },
   "docs": { title: "Documentation & Playground", Component: DocsPage },
   bots: { title: "Bot Management", Component: BotsPage },
   analytics: { title: "Analytics", Component: AnalyticsPage },
