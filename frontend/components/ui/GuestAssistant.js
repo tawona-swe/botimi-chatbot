@@ -2,8 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../lib/api";
+
+const MARKDOWN_PROSE_CLASSES = "[&_p]:my-2 [&_p]:first:mt-0 [&_p]:last:mb-0 [&_ul]:my-2 [&_ul]:pl-5 [&_ul]:list-disc [&_ol]:my-2 [&_ol]:pl-5 [&_ol]:list-decimal [&_li]:my-0.5 [&_strong]:font-bold [&_a]:underline [&_code]:bg-black/10 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono";
 
 const GREETING = "Hi! I'm the botimi site guide. Ask me about pricing, how botimi works, or how to get started — I can also take you straight to the right page.";
 
@@ -81,12 +85,12 @@ export default function GuestAssistant() {
 
           <div ref={bodyRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
             {messages.map((m, i) => (
-              <div key={i} className={`max-w-[85%] px-3 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+              <div key={i} className={`max-w-[85%] px-3 py-2 rounded-2xl text-sm leading-relaxed ${
                 m.role === "user"
-                  ? "ml-auto bg-primary text-on-primary rounded-br-sm"
-                  : "bg-surface-container-high text-on-surface rounded-bl-sm"
+                  ? "ml-auto bg-primary text-on-primary rounded-br-sm whitespace-pre-wrap"
+                  : `bg-surface-container-high text-on-surface rounded-bl-sm ${MARKDOWN_PROSE_CLASSES}`
               }`}>
-                {m.content}
+                {m.role === "user" ? m.content : <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>}
               </div>
             ))}
             {sending && (
