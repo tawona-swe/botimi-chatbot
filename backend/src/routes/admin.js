@@ -1,6 +1,7 @@
 import { Router } from "express";
 import db from "../db/index.js";
 import { authenticate, requireSuperadmin } from "../middleware/auth.js";
+import { isLocalVendor, planPrice } from "../config.js";
 
 const router = Router();
 
@@ -48,17 +49,18 @@ router.get("/overview", (req, res) => {
     GROUP BY model_used ORDER BY count DESC
   `).all();
 
-  // Revenue estimation (simplified: count of active vendors * plan price)
-  const planPrices = { starter: 29, growth: 79, scale: 199 };
-  const revenueByPlan = db.prepare(`
-    SELECT subscription_plan, COUNT(*) as count
-    FROM vendors WHERE subscription_status = 'active' AND is_suspended = 0
-    GROUP BY subscription_plan
+  // Revenue estimation — per-vendor, not per-plan, since local (Zimbabwe)
+  // and international vendors on the same plan pay different amounts (see
+  // config.js's isLocalVendor/planPrice). A flat price-per-plan table here
+  // would silently drift from config.js's real numbers, same class of bug
+  // already caught in the guest/dashboard assistant prompts.
+  const activePlanVendors = db.prepare(`
+    SELECT subscription_plan, country FROM vendors
+    WHERE subscription_status = 'active' AND is_suspended = 0
   `).all();
 
-  const mrr = revenueByPlan.reduce((sum, r) => {
-    const price = planPrices[r.subscription_plan] || 0;
-    return sum + (price * r.count);
+  const mrr = activePlanVendors.reduce((sum, v) => {
+    return sum + (planPrice(v.subscription_plan, isLocalVendor(v)) || 0);
   }, 0);
 
   // Growth (new vendors this month)
