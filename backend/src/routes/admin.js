@@ -68,11 +68,52 @@ router.get("/overview", (req, res) => {
     "SELECT COUNT(*) as count FROM vendors WHERE created_at >= datetime('now', '-30 days')"
   ).get();
 
+  // Churn rate as a percentage — the raw churnedVendors count alone doesn't
+  // say whether that's a lot or a little without dividing by the base.
+  const churnRate = totalVendors.count > 0
+    ? Math.round((churnedVendors.count / totalVendors.count) * 1000) / 10
+    : 0;
+
+  // Platform-wide feedback (thumbs up/down) — per-vendor analytics already
+  // surfaces this (routes/analytics.js), but it was never aggregated across
+  // the whole platform for the admin view.
+  const feedback = db.prepare(`
+    SELECT
+      SUM(CASE WHEN rating = 'up' THEN 1 ELSE 0 END) as up,
+      SUM(CASE WHEN rating = 'down' THEN 1 ELSE 0 END) as down
+    FROM messages WHERE role = 'bot' AND rating IS NOT NULL
+  `).get();
+  const feedbackTotal = (feedback.up || 0) + (feedback.down || 0);
+  const satisfactionRate = feedbackTotal > 0 ? Math.round(((feedback.up || 0) / feedbackTotal) * 100) : null;
+
+  // Daily time series for the last 30 days — one grouped query each, then
+  // filled to a complete gap-free series in JS so a day with zero activity
+  // still renders as a real 0 point instead of vanishing from the chart.
+  const dailySignupRows = db.prepare(`
+    SELECT date(created_at) as day, COUNT(*) as count FROM vendors
+    WHERE created_at >= datetime('now', '-30 days') GROUP BY day
+  `).all();
+  const dailyConversationRows = db.prepare(`
+    SELECT date(created_at) as day, COUNT(*) as count FROM conversations
+    WHERE created_at >= datetime('now', '-30 days') GROUP BY day
+  `).all();
+
+  function fillDailySeries(rows) {
+    const byDay = Object.fromEntries(rows.map((r) => [r.day, r.count]));
+    const days = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      days.push({ date: d, count: byDay[d] || 0 });
+    }
+    return days;
+  }
+
   res.json({
     totalVendors: totalVendors.count,
     activeVendors: activeVendors.count,
     trialVendors: trialVendors.count,
     churnedVendors: churnedVendors.count,
+    churnRate,
     newVendorsThisMonth: newVendorsThisMonth.count,
     totalConversations: totalConversations.count,
     todayConversations: todayConversations.count,
@@ -80,9 +121,14 @@ router.get("/overview", (req, res) => {
     openTickets: openTickets.count,
     totalTickets: totalTickets.count,
     flaggedMessages: flaggedMessages.count,
+    feedbackUp: feedback.up || 0,
+    feedbackDown: feedback.down || 0,
+    satisfactionRate,
     mrr,
     byPlan,
     modelUsage,
+    dailySignups: fillDailySeries(dailySignupRows),
+    dailyConversations: fillDailySeries(dailyConversationRows),
   });
 });
 

@@ -1,10 +1,104 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../ui/Sidebar";
 import api from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
+
+const CHART_WIDTH = 600;
+const CHART_HEIGHT = 140;
+const CHART_PAD = { top: 12, right: 12, bottom: 20, left: 12 };
+
+/**
+ * A single-series 30-day trend chart — no legend (single series doesn't
+ * need one, the title already says what's plotted), hairline gridlines,
+ * a 2px line with a ~10% opacity area wash, and a hover crosshair+tooltip
+ * that snaps to the nearest day. Renders on a fixed viewBox and scales via
+ * width:100%, so it stays crisp at any container width.
+ */
+function MiniTrendChart({ title, data, color = "var(--color-primary)" }) {
+  const [hoverIdx, setHoverIdx] = useState(null);
+  const svgRef = useRef(null);
+
+  const values = data.map((d) => d.count);
+  const max = Math.max(...values, 1);
+  const innerW = CHART_WIDTH - CHART_PAD.left - CHART_PAD.right;
+  const innerH = CHART_HEIGHT - CHART_PAD.top - CHART_PAD.bottom;
+
+  const xFor = (i) => CHART_PAD.left + (i / (data.length - 1)) * innerW;
+  const yFor = (v) => CHART_PAD.top + innerH - (v / max) * innerH;
+
+  const linePath = data.map((d, i) => `${i === 0 ? "M" : "L"} ${xFor(i)} ${yFor(d.count)}`).join(" ");
+  const areaPath = `${linePath} L ${xFor(data.length - 1)} ${CHART_PAD.top + innerH} L ${xFor(0)} ${CHART_PAD.top + innerH} Z`;
+
+  const total = values.reduce((a, b) => a + b, 0);
+  const latest = data[data.length - 1];
+
+  const handleMove = (e) => {
+    if (!svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const relX = ((e.clientX - rect.left) / rect.width) * CHART_WIDTH;
+    const idx = Math.round(((relX - CHART_PAD.left) / innerW) * (data.length - 1));
+    setHoverIdx(Math.max(0, Math.min(data.length - 1, idx)));
+  };
+
+  const hovered = hoverIdx !== null ? data[hoverIdx] : null;
+  const gridLines = [0, 0.5, 1];
+
+  return (
+    <div className="bg-surface-container border border-outline-variant rounded-2xl p-6">
+      <div className="flex items-baseline justify-between mb-1">
+        <h3 className="font-display text-sm font-bold text-on-surface">{title}</h3>
+        <span className="text-xs text-on-surface-variant">{total.toLocaleString()} in last 30 days</span>
+      </div>
+      <div className="relative">
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
+          className="w-full h-[140px]"
+          onMouseMove={handleMove}
+          onMouseLeave={() => setHoverIdx(null)}
+        >
+          {gridLines.map((frac) => (
+            <line
+              key={frac}
+              x1={CHART_PAD.left} x2={CHART_WIDTH - CHART_PAD.right}
+              y1={CHART_PAD.top + innerH * (1 - frac)} y2={CHART_PAD.top + innerH * (1 - frac)}
+              stroke="var(--color-outline-variant)" strokeWidth="1"
+            />
+          ))}
+          <path d={areaPath} fill={color} opacity="0.1" stroke="none" />
+          <path d={linePath} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+
+          {/* End-dot + value, per spec: lines get labeled at the end, not on every point */}
+          <circle cx={xFor(data.length - 1)} cy={yFor(latest.count)} r="4" fill={color} stroke="var(--color-surface-container)" strokeWidth="2" />
+
+          {hovered && (
+            <>
+              <line
+                x1={xFor(hoverIdx)} x2={xFor(hoverIdx)}
+                y1={CHART_PAD.top} y2={CHART_PAD.top + innerH}
+                stroke="var(--color-outline-variant)" strokeWidth="1"
+              />
+              <circle cx={xFor(hoverIdx)} cy={yFor(hovered.count)} r="4" fill={color} stroke="var(--color-surface-container)" strokeWidth="2" />
+            </>
+          )}
+        </svg>
+
+        {hovered && (
+          <div
+            className="absolute top-0 -translate-x-1/2 bg-surface-container-highest border border-outline-variant rounded-lg px-2.5 py-1.5 text-xs pointer-events-none shadow-lg"
+            style={{ left: `${(xFor(hoverIdx) / CHART_WIDTH) * 100}%` }}
+          >
+            <p className="font-bold text-on-surface">{hovered.count.toLocaleString()}</p>
+            <p className="text-on-surface-variant text-[10px]">{new Date(hovered.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function AdminPage() {
   const { vendor, isAuthenticated, loading: authLoading } = useAuth();
@@ -178,6 +272,13 @@ export default function AdminPage() {
                   { label: "Monthly Recurring Revenue", value: `$${formatNumber(overview.mrr)}`, sub: `${overview.newVendorsThisMonth} new this month`, icon: "payments", color: "text-secondary" },
                   { label: "Conversations", value: formatNumber(overview.totalConversations), sub: `${overview.todayConversations} today · ${overview.resolutionRate}% resolved`, icon: "forum", color: "text-tertiary" },
                   { label: "Open Tickets", value: formatNumber(overview.openTickets), sub: `${overview.flaggedMessages} flagged messages`, icon: "confirmation_number", color: "text-amber-400" },
+                  {
+                    label: "Satisfaction",
+                    value: overview.satisfactionRate === null ? "—" : `${overview.satisfactionRate}%`,
+                    sub: overview.satisfactionRate === null ? "No feedback yet" : `${overview.feedbackUp} up · ${overview.feedbackDown} down`,
+                    icon: "thumb_up", color: "text-green-400",
+                  },
+                  { label: "Churn Rate", value: `${overview.churnRate}%`, sub: `${overview.churnedVendors} canceled of ${overview.totalVendors}`, icon: "trending_down", color: "text-rose-400" },
                 ].map(card => (
                   <div key={card.label} className="bg-surface-container border border-outline-variant rounded-2xl p-5">
                     <div className="flex justify-between items-start mb-3">
@@ -227,6 +328,11 @@ export default function AdminPage() {
                     </div>
                   )}
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <MiniTrendChart title="New Vendors" data={overview.dailySignups} color="var(--color-primary)" />
+                <MiniTrendChart title="Conversations" data={overview.dailyConversations} color="var(--color-secondary)" />
               </div>
             </>
           )}
