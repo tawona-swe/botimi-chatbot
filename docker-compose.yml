@@ -1,0 +1,85 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DATABASE_PATH: /app/data/botimi.db
+    volumes:
+      # Named volume, not a bind mount to a path in the repo -- survives
+      # `docker compose down`, image rebuilds, and `git pull`s. It is NOT
+      # survived by `docker compose down -v` (the -v deletes named volumes
+      # too) -- never run that here without a fresh Litestream restore or a
+      # manual backup in hand first.
+      - botimi_data:/app/data
+    # Not exposed to the host at all -- only reachable by other containers
+    # on this compose network (caddy), never directly from the internet.
+    expose:
+      - "3001"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Baked into the browser bundle at build time (see next.config.mjs
+        # and lib/api.js) -- must be the real public URL, set in .env.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
+    restart: unless-stopped
+    environment:
+      BACKEND_INTERNAL_URL: http://backend:3001
+    expose:
+      - "3000"
+    depends_on:
+      - backend
+
+  # Reverse proxy + automatic HTTPS. Caddy requests and renews its own
+  # Let's Encrypt certificate for DOMAIN with zero manual certbot setup --
+  # DNS for that domain just needs to already point at this VPS's IP before
+  # the containers start, or the certificate request fails.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      DOMAIN: ${DOMAIN}
+    depends_on:
+      - backend
+      - frontend
+
+  # Continuous replication of the live SQLite file to S3-compatible object
+  # storage -- real point-in-time durability without waiting on a Postgres
+  # migration. Reads the same volume backend writes to; does not modify the
+  # database itself, only tails its WAL. If LITESTREAM_* vars are left
+  # blank, this container will just fail to authenticate and restart-loop --
+  # that's a visible, safe failure (docker compose logs litestream), not a
+  # silent one, but it does mean backups aren't running until configured.
+  litestream:
+    image: litestream/litestream:0.5
+    restart: unless-stopped
+    volumes:
+      - botimi_data:/app/data
+      - ./litestream.yml:/etc/litestream.yml:ro
+    environment:
+      LITESTREAM_ACCESS_KEY_ID: ${LITESTREAM_ACCESS_KEY_ID}
+      LITESTREAM_SECRET_ACCESS_KEY: ${LITESTREAM_SECRET_ACCESS_KEY}
+      LITESTREAM_BUCKET: ${LITESTREAM_BUCKET}
+      LITESTREAM_ENDPOINT: ${LITESTREAM_ENDPOINT}
+      LITESTREAM_REGION: ${LITESTREAM_REGION:-us-east-1}
+    command: ["replicate"]
+    depends_on:
+      - backend
+
+volumes:
+  botimi_data:
+  caddy_data:
+  caddy_config:

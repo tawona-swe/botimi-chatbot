@@ -1,0 +1,5 @@
+# Shell scripts run on a Linux VPS -- CRLF line endings (which this repo's
+# Windows checkouts would otherwise introduce) break the shebang line and
+# every command in a bash script. Force LF regardless of platform/checkout
+# settings, for these specifically.
+*.sh text eol=lf

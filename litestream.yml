@@ -1,0 +1,12 @@
+dbs:
+  - path: /app/data/botimi.db
+    replicas:
+      - type: s3
+        bucket: ${LITESTREAM_BUCKET}
+        path: botimi-db
+        endpoint: ${LITESTREAM_ENDPOINT}
+        region: ${LITESTREAM_REGION}
+        # How far back point-in-time recovery reaches. Litestream prunes
+        # older WAL segments beyond this automatically -- raise it if you
+        # want a longer recovery window, at the cost of more storage used.
+        retention: 72h

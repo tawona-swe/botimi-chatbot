@@ -1,0 +1,19 @@
+{$DOMAIN} {
+	# Everything under /api/* goes to the backend container -- this is what
+	# the browser actually talks to directly (see lib/api.js's NEXT_PUBLIC_API_URL),
+	# not Next.js's own server-side rewrite, so this split has to happen here.
+	handle /api/* {
+		reverse_proxy backend:3001
+	}
+
+	# Everything else is the Next.js app.
+	handle {
+		reverse_proxy frontend:3000
+	}
+
+	encode gzip
+
+	# Caddy issues and renews the TLS certificate for this automatically --
+	# no certbot, no manual renewal cron. Requires DOMAIN's DNS A record to
+	# already point at this VPS before the containers start.
+}
