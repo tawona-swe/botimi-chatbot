@@ -102,8 +102,9 @@ export default function LandingPage() {
       <header className="fixed top-0 left-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant">
         <nav className="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto h-16">
           <div className="flex items-center gap-8">
-            <Link href="/" target="_top" className="font-display text-headline-md font-extrabold text-primary">
+            <Link href="/" target="_top" className="font-display text-headline-md font-extrabold text-primary inline-flex items-baseline gap-[0.16em]">
               botimi
+              <span className="inline-block w-[6px] h-[6px] rounded-full bg-tertiary self-start mt-[5px] shrink-0" />
             </Link>
             <div className="hidden md:flex gap-6">
               <Link
@@ -645,11 +646,12 @@ export default function LandingPage() {
       <footer className="bg-surface-container-lowest border-t border-outline-variant py-stack-xl">
         <div className="flex flex-col md:flex-row justify-between items-center px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto gap-8">
           <div className="flex flex-col gap-4 items-center md:items-start">
-            <Link href="/" target="_top" className="font-display text-headline-md text-primary font-bold">
+            <Link href="/" target="_top" className="font-display text-headline-md text-primary font-bold inline-flex items-baseline gap-[0.16em]">
               botimi
+              <span className="inline-block w-[6px] h-[6px] rounded-full bg-tertiary self-start mt-[5px] shrink-0" />
             </Link>
             <p className="font-body-sm text-body-sm text-on-surface-variant text-center md:text-left">
-              &copy; 2024 botimi AI Ecosystem. All rights reserved.
+              &copy; {new Date().getFullYear()} botimi AI Ecosystem. All rights reserved.
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-8">

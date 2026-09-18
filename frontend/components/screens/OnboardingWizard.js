@@ -240,10 +240,14 @@ export default function OnboardingWizard() {
       <header className="bg-background/90 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50">
         <div className="flex justify-between items-center w-full px-6 lg:px-margin-desktop max-w-container-max mx-auto h-16">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-on-primary text-xs font-bold">B</span>
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center relative">
+              <span className="text-on-primary text-xs font-bold">b</span>
+              <span className="absolute top-0.5 right-0.5 w-1 h-1 rounded-full bg-tertiary" />
             </div>
-            <Link href="/" className="font-display text-headline-md font-extrabold text-primary">botimi</Link>
+            <Link href="/" className="font-display text-headline-md font-extrabold text-primary inline-flex items-baseline gap-[0.16em]">
+              botimi
+              <span className="inline-block w-[6px] h-[6px] rounded-full bg-tertiary self-start mt-[5px] shrink-0" />
+            </Link>
             <span className="text-xs text-on-surface-variant font-medium bg-surface-container px-2.5 py-1 rounded-full border border-outline-variant">Setup</span>
           </div>
           <div className="hidden md:flex items-center gap-6">
@@ -652,7 +656,7 @@ export default function OnboardingWizard() {
 
       <footer className="bg-surface-container-lowest/80 border-t border-outline-variant py-6 mt-8">
         <div className="flex flex-col md:flex-row justify-between items-center px-6 lg:px-margin-desktop max-w-container-max mx-auto w-full gap-4">
-          <span className="text-xs text-on-surface-variant/60">&copy; 2024 botimi AI Ecosystem. All rights reserved.</span>
+          <span className="text-xs text-on-surface-variant/60">&copy; {new Date().getFullYear()} botimi AI Ecosystem. All rights reserved.</span>
           <div className="flex gap-6">
             <Link className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/dashboard">Dashboard</Link>
             <Link className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/support">Support</Link>

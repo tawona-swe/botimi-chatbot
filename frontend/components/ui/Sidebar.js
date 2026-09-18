@@ -62,12 +62,16 @@ export default function Sidebar({ activeLabel, isCollapsed, onToggle, mobileOpen
       <div className={`mb-stack-xl flex items-center ${isCollapsed ? 'flex-col gap-4 mt-4' : 'justify-between px-2'}`}>
         {!isCollapsed ? (
           <Link href="/" target="_top" className="block overflow-hidden">
-            <h1 className="font-display text-headline-md font-bold text-primary whitespace-nowrap">botimi Pro</h1>
+            <h1 className="font-display text-headline-md font-bold text-on-surface whitespace-nowrap inline-flex items-baseline gap-[0.16em]">
+              botimi Pro
+              <span className="inline-block w-[5px] h-[5px] rounded-full bg-tertiary self-start mt-[3px] shrink-0" />
+            </h1>
             <p className="font-label-md text-label-md text-on-surface-variant opacity-70 whitespace-nowrap">Enterprise Tier</p>
           </Link>
         ) : (
-          <Link href="/" target="_top" className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-primary">hub</span>
+          <Link href="/" target="_top" className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 relative" style={{ background: "linear-gradient(150deg, var(--color-primary), var(--color-secondary))" }}>
+            <span className="font-display font-black text-lg" style={{ color: "var(--color-on-primary)" }}>b</span>
+            <span className="absolute top-1 right-1.5 w-[5px] h-[5px] rounded-full bg-tertiary" />
           </Link>
         )}
         {onToggle && (

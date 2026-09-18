@@ -123,8 +123,9 @@ export default function DocsPage() {
               <span className="material-symbols-outlined text-xl">{sidebarOpen ? "close" : "menu"}</span>
             </button>
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <span className="text-[10px] text-on-primary font-bold">B</span>
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center relative">
+                <span className="text-[10px] text-on-primary font-bold">b</span>
+                <span className="absolute top-0.5 right-0.5 w-1 h-1 rounded-full bg-tertiary" />
               </div>
               <span className="font-bold text-on-surface text-sm">botimi</span>
               <span className="hidden sm:inline ml-1.5 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded">Docs</span>
@@ -436,7 +437,7 @@ export default function DocsPage() {
       {/* DOCS FOOTER */}
       <footer className="border-t border-outline-variant/30 py-4 bg-surface-container-low">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
-          <span className="text-[10px] text-on-surface-variant/40">&copy; 2024 botimi</span>
+          <span className="text-[10px] text-on-surface-variant/40">&copy; {new Date().getFullYear()} botimi</span>
           <div className="flex gap-4">
             <Link href="/" className="text-[10px] text-on-surface-variant/40 hover:text-on-surface-variant transition-colors">Home</Link>
             <Link href="/pricing" className="text-[10px] text-on-surface-variant/40 hover:text-on-surface-variant transition-colors">Pricing</Link>
