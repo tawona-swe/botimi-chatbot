@@ -230,21 +230,31 @@ router.post("/:id/suggest-reply", async (req, res) => {
  * Assign ticket to a real team member (preferred) or a free-text agent name
  * (legacy — kept for back-compat with any existing callers).
  */
-router.post("/:id/assign", (req, res) => {
-  const ticket = db.prepare("SELECT id FROM tickets WHERE id = ? AND vendor_id = ?").get(req.params.id, req.vendor.id);
+router.post("/:id/assign", async (req, res) => {
+  const ticket = db.prepare("SELECT id, ticket_number, subject FROM tickets WHERE id = ? AND vendor_id = ?").get(req.params.id, req.vendor.id);
   if (!ticket) return res.status(404).json({ error: "Ticket not found" });
 
   const { teamMemberId, agentName } = req.body;
+  let notifyEmail = null;
 
   if (teamMemberId === req.vendor.id) {
     // Assigning to the account owner — not a team_members row, so no FK to set.
     db.prepare("UPDATE tickets SET assigned_team_member_id = NULL, assigned_to = ?, status = 'in_progress', updated_at = datetime('now') WHERE id = ?").run(req.vendor.name || req.vendor.email, req.params.id);
+    notifyEmail = req.vendor.email;
   } else if (teamMemberId) {
-    const member = db.prepare("SELECT id, name FROM team_members WHERE id = ? AND vendor_id = ?").get(teamMemberId, req.vendor.id);
+    const member = db.prepare("SELECT id, name, email FROM team_members WHERE id = ? AND vendor_id = ?").get(teamMemberId, req.vendor.id);
     if (!member) return res.status(404).json({ error: "Team member not found" });
     db.prepare("UPDATE tickets SET assigned_team_member_id = ?, assigned_to = ?, status = 'in_progress', updated_at = datetime('now') WHERE id = ?").run(member.id, member.name, req.params.id);
+    notifyEmail = member.email;
   } else {
     db.prepare("UPDATE tickets SET assigned_team_member_id = NULL, assigned_to = ?, status = 'in_progress', updated_at = datetime('now') WHERE id = ?").run(agentName || "", req.params.id);
+  }
+
+  if (notifyEmail) {
+    const { sendTicketAssignedEmail } = await import("../services/email.js");
+    sendTicketAssignedEmail(notifyEmail, ticket.ticket_number, ticket.subject).catch((err) =>
+      console.error("[Tickets] Failed to send assignment email:", err.message)
+    );
   }
 
   const updated = db.prepare("SELECT * FROM tickets WHERE id = ?").get(req.params.id);

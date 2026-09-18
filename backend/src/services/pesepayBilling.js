@@ -217,7 +217,7 @@ export async function initiateTopUpCardCheckout(vendor, packId) {
  * plan's included amount. Credits are a single stacking balance (renewals
  * and top-ups both just add to it), not a cap that resets to zero.
  */
-function markVendorPaid(vendorId, planId, method, customerReference, currencyCode) {
+function markVendorPaid(vendor, planId, method, customerReference, currencyCode, amount) {
   const plan = config.plans[planId];
   const nextChargeAt = toSqliteDatetime(new Date(Date.now() + BILLING_CYCLE_DAYS * 24 * 60 * 60 * 1000));
   const currency = currencyCode === "USD" ? "usd" : "zig";
@@ -233,19 +233,37 @@ function markVendorPaid(vendorId, planId, method, customerReference, currencyCod
       dunning_attempts = 0,
       conversation_credits = conversation_credits + ?
     WHERE id = ?
-  `).run(planId, method, ["ecocash", "omari"].includes(method) ? customerReference : "", currency, nextChargeAt, plan.conversationsPerMonth, vendorId);
+  `).run(planId, method, ["ecocash", "omari"].includes(method) ? customerReference : "", currency, nextChargeAt, plan.conversationsPerMonth, vendor.id);
+
+  if (vendor.email) {
+    import("./email.js")
+      .then(({ sendPaymentReceiptEmail }) => sendPaymentReceiptEmail(vendor.email, plan.name, amount, currencyCode))
+      .catch((err) => console.error("[PesepayBilling] Failed to send payment receipt:", err.message));
+  }
 }
 
-/** Called after a top-up charge succeeds — just adds credits, nothing else. */
-function markTopUpPaid(vendorId, packId) {
+/** Called after a top-up charge succeeds — adds credits and sends a receipt. */
+function markTopUpPaid(vendor, packId, currencyCode, amount) {
   const pack = config.topUps[packId];
-  db.prepare("UPDATE vendors SET conversation_credits = conversation_credits + ? WHERE id = ?").run(pack.conversations, vendorId);
+  db.prepare("UPDATE vendors SET conversation_credits = conversation_credits + ? WHERE id = ?").run(pack.conversations, vendor.id);
+
+  if (vendor.email) {
+    import("./email.js")
+      .then(({ sendTopUpReceiptEmail }) => sendTopUpReceiptEmail(vendor.email, pack.conversations, amount, currencyCode))
+      .catch((err) => console.error("[PesepayBilling] Failed to send top-up receipt:", err.message));
+  }
 }
 
 function markVendorPaymentFailed(vendor) {
   const attempts = vendor.dunning_attempts + 1;
   if (attempts >= MAX_DUNNING_ATTEMPTS) {
     db.prepare("UPDATE vendors SET subscription_status = 'canceled', is_suspended = 1, dunning_attempts = ?, canceled_at = datetime('now') WHERE id = ?").run(attempts, vendor.id);
+    if (vendor.email) {
+      const planName = config.plans[vendor.subscription_plan]?.name || vendor.subscription_plan;
+      import("./email.js")
+        .then(({ sendSubscriptionCanceledEmail }) => sendSubscriptionCanceledEmail(vendor.email, planName))
+        .catch((err) => console.error("[PesepayBilling] Failed to send cancellation email:", err.message));
+    }
     return;
   }
   const backoffDays = RETRY_BACKOFF_DAYS[attempts - 1] || 7;
@@ -275,9 +293,9 @@ export async function resolveCharge(referenceNumber) {
   if (transaction.transactionStatus === "SUCCESS") {
     db.prepare("UPDATE pesepay_charges SET status = 'paid' WHERE id = ?").run(charge.id);
     if (charge.charge_type === "topup") {
-      markTopUpPaid(vendor.id, charge.plan_id);
+      markTopUpPaid(vendor, charge.plan_id, charge.currency_code, charge.amount);
     } else {
-      markVendorPaid(vendor.id, charge.plan_id, charge.method, charge.customer_reference, charge.currency_code);
+      markVendorPaid(vendor, charge.plan_id, charge.method, charge.customer_reference, charge.currency_code, charge.amount);
     }
   } else if (transaction.transactionStatus === "FAILED") {
     db.prepare("UPDATE pesepay_charges SET status = 'failed' WHERE id = ?").run(charge.id);
