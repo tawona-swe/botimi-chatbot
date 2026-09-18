@@ -289,7 +289,9 @@ export async function generateRagResponse(botId, userMessage, conversationHistor
   // than special-casing table support only for the two chat surfaces
   // (dashboard/guest assistant) that happen to use react-markdown.
   const formattingInstruction = "\n\nFormatting: never use markdown tables (pipes and dashes) — some chat surfaces this reaches can't render them and it shows up as garbled text. When comparing multiple items (like pricing plans), use a short bulleted or numbered list instead, one item per line."
-    + (source === "whatsapp" ? " You're replying over WhatsApp specifically: keep formatting minimal — short lines, simple bullet points, no headers." : "");
+    + (source === "whatsapp"
+      ? " You're replying over WhatsApp specifically: keep formatting minimal — short lines, no headers. WhatsApp's own formatting is asterisks for *bold* and underscores for _italic_, but its parser only reliably applies bold/italic within a plain sentence — never put a bold or italic span at the very start of a bullet/hyphen list line (e.g. never write \"- *Feature* – description\"), since WhatsApp's bullet-marker parsing and its bold parsing conflict on the same line and the asterisks show up as literal text instead of rendering. For bulleted lists on WhatsApp, use plain unformatted text after the hyphen."
+      : "");
 
   const systemPrompt = `You are ${bot.name}, an AI customer support assistant for the company. ${toneInstruction}
 
