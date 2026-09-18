@@ -1,3 +1,11 @@
+# Pinned explicitly rather than left to default to the clone directory's
+# name -- the shared infra/edge/Caddyfile references containers as
+# "botimi-backend-1" / "botimi-frontend-1" (Compose's
+# <project>-<service>-<n> naming), which only stays correct if this project
+# is always named "botimi" regardless of what folder someone happens to
+# clone it into.
+name: botimi
+
 services:
   backend:
     build:
@@ -16,9 +24,13 @@ services:
       # manual backup in hand first.
       - botimi_data:/app/data
     # Not exposed to the host at all -- only reachable by other containers
-    # on this compose network (caddy), never directly from the internet.
+    # on the shared "edge" network (this VPS's one Caddy instance, defined
+    # in infra/edge -- see that directory's own README), never directly
+    # from the internet.
     expose:
       - "3001"
+    networks:
+      - edge
 
   frontend:
     build:
@@ -35,26 +47,8 @@ services:
       - "3000"
     depends_on:
       - backend
-
-  # Reverse proxy + automatic HTTPS. Caddy requests and renews its own
-  # Let's Encrypt certificate for DOMAIN with zero manual certbot setup --
-  # DNS for that domain just needs to already point at this VPS's IP before
-  # the containers start, or the certificate request fails.
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    environment:
-      DOMAIN: ${DOMAIN}
-    depends_on:
-      - backend
-      - frontend
+    networks:
+      - edge
 
   # Continuous replication of the live SQLite file to S3-compatible object
   # storage -- real point-in-time durability without waiting on a Postgres
@@ -78,8 +72,17 @@ services:
     command: ["replicate"]
     depends_on:
       - backend
+    # No network needed at all -- litestream only touches the shared
+    # volume on disk, never talks to backend/frontend/Caddy over the
+    # network.
+
+networks:
+  edge:
+    external: true
+    # Created by infra/edge/docker-compose.yml, which must be deployed
+    # first -- `docker compose up` here fails with a clear "network edge
+    # declared as external, but could not be found" error otherwise, not a
+    # silent problem.
 
 volumes:
   botimi_data:
-  caddy_data:
-  caddy_config:

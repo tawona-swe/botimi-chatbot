@@ -1,0 +1,24 @@
+# One block per project sharing this VPS. Each project's containers join
+# the "edge" network (declared in this directory's docker-compose.yml) from
+# their OWN docker-compose.yml, using `external: true` -- see
+# botimi/docker-compose.yml for the reference example. Caddy reaches each
+# project's containers by their service name on that shared network, same
+# as if they were defined in this same compose file.
+#
+# Adding a new project later: add its own block below, `docker compose
+# restart caddy` here in infra/edge -- no rebuild needed, Caddy just
+# reloads its config.
+
+botimi.example.com {
+	handle /api/* {
+		reverse_proxy botimi-backend-1:3001
+	}
+	handle {
+		reverse_proxy botimi-frontend-1:3000
+	}
+	encode gzip
+}
+
+# newproject.example.com {
+# 	reverse_proxy newproject-app-1:PORT
+# }

@@ -2,18 +2,22 @@
 
 ## Architecture
 
-One public domain, three containers behind Caddy:
+This VPS hosts more than just botimi, so the reverse proxy is a **separate, shared layer** (`infra/edge/`) — not bundled into botimi's own `docker-compose.yml`. Every project on this box, including botimi, joins the same `edge` Docker network and gets its own site block in one shared Caddyfile:
 
 ```
-                    ┌─────────────┐
-  Internet ──443──▶ │    Caddy    │  (auto HTTPS, only exposed container)
-                    └──────┬──────┘
-                 /api/*    │    everything else
-                 ┌─────────┴─────────┐
+                    ┌──────────────────────────┐
+  Internet ──443──▶ │  infra/edge: Caddy       │  (the ONLY exposed container
+                    │  (auto HTTPS, one        │   on the whole VPS — every
+                    │   instance for every     │   project shares this one)
+                    │   project on this VPS)   │
+                    └────────────┬─────────────┘
+                     site block per project, e.g.:
+                 /api/*    │    everything else     (botimi.example.com)
+                 ┌─────────┴─────────┐              other-project.example.com { ... }
                  ▼                   ▼
           ┌────────────┐      ┌────────────┐
-          │  backend   │      │  frontend  │
-          │  (Express) │      │  (Next.js) │
+          │  backend   │      │  frontend  │        <- botimi's own
+          │  (Express) │      │  (Next.js) │           docker-compose.yml
           └─────┬──────┘      └────────────┘
                 │
                 ▼
@@ -24,7 +28,7 @@ One public domain, three containers behind Caddy:
         └───────────────┘        └─────────────┘
 ```
 
-The backend and frontend are never exposed to the internet directly — only Caddy is (see `docker-compose.yml`'s `ports` vs `expose`). Caddy splits traffic by path: `/api/*` to the backend, everything else to the frontend — this matches how the browser actually calls the API directly via `NEXT_PUBLIC_API_URL` (see `frontend/lib/api.js`), not through Next.js's own server.
+The backend and frontend are never exposed to the internet directly — only the shared Caddy instance is (see `infra/edge/`, and this project's own `docker-compose.yml` using `expose` rather than `ports`). Caddy splits botimi's traffic by path: `/api/*` to the backend, everything else to the frontend — this matches how the browser actually calls the API directly via `NEXT_PUBLIC_API_URL` (see `frontend/lib/api.js`), not through Next.js's own server. See `infra/edge/README.md` for how a second project plugs into the same shared proxy.
 
 **Database:** kept as SQLite (`better-sqlite3`) for this deployment — see project memory for the full reasoning. It scales fine on a single VPS for real growth; the ceiling is horizontal scaling (multiple app servers), not write throughput or data size, and that's a future migration to make when actually needed, not now. Litestream gives real off-box durability in the meantime without that migration.
 
@@ -33,6 +37,7 @@ The backend and frontend are never exposed to the internet directly — only Cad
 1. Buy the Contabo VPS, get root SSH access.
 2. `ssh root@your-vps-ip`, then run `deploy/setup-vps.sh` (copy its contents in, or `scp` it up first). Installs Docker, sets up the firewall (only SSH/80/443 reachable), enables fail2ban and automatic security updates.
 3. Follow the script's own printed next steps: create a non-root user, disable root/password SSH login, point your domain's DNS A record at the VPS's IP.
+4. Deploy the shared edge proxy **once, before any project** — see `infra/edge/README.md`. This creates the `edge` network and starts Caddy; it won't serve anything successfully until a project (below) is actually running behind it.
 
 ## First deploy
 
@@ -41,11 +46,21 @@ git clone <your-repo-url> botimi
 cd botimi
 cp .env.example .env
 nano .env   # fill in every value -- see comments in the file for what each one needs
-docker compose up -d --build
-docker compose logs -f caddy   # watch for the certificate to issue successfully
 ```
 
-Caddy needs the domain's DNS to already resolve to this VPS before it can get a certificate — if `docker compose logs caddy` shows certificate errors, check DNS propagation first (`dig +short yourdomain.com` from your own machine should show the VPS IP).
+Edit `infra/edge/Caddyfile` (on the VPS, not in this repo) to replace the placeholder domain with your real one in botimi's site block, then:
+```bash
+cd ~/infra/edge && docker compose restart caddy
+```
+
+Now build and start botimi itself:
+```bash
+cd ~/botimi
+docker compose up -d --build
+cd ~/infra/edge && docker compose logs -f caddy   # watch for the certificate to issue successfully
+```
+
+Caddy needs the domain's DNS to already resolve to this VPS before it can get a certificate — if the logs show certificate errors, check DNS propagation first (`dig +short yourdomain.com` from your own machine should show the VPS IP).
 
 Once it's up: visit `https://yourdomain.com`, sign up a real account, and do one real smoke-test pass end to end (signup → onboarding → train a bot → embed it → send it a message → a payment checkout) before calling this live. Dev and production differ in ways that occasionally surface something new — verify it here rather than assuming everything that worked locally still works.
 

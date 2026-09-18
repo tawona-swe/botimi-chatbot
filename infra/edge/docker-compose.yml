@@ -1,0 +1,30 @@
+# The one shared reverse proxy for the whole VPS -- not specific to botimi.
+# Deploy this ONCE per server, independent of any individual project's own
+# docker-compose.yml. Every project (botimi, and whatever comes after it)
+# joins the "edge" network below and gets its own site block in Caddyfile;
+# none of them run their own Caddy or bind ports 80/443 themselves, since
+# only one process on the machine can hold those ports at all.
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - edge
+
+networks:
+  edge:
+    name: edge
+    # Declared here (not `external: true`) since this compose file is what
+    # actually creates the network -- every project's own docker-compose.yml
+    # references it as external instead, joining a network this file owns.
+
+volumes:
+  caddy_data:
+  caddy_config:
