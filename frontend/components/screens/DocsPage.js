@@ -123,11 +123,11 @@ export default function DocsPage() {
               <span className="material-symbols-outlined text-xl">{sidebarOpen ? "close" : "menu"}</span>
             </button>
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center relative">
-                <span className="text-[10px] text-on-primary font-bold">b</span>
-                <span className="absolute top-0.5 right-0.5 w-1 h-1 rounded-full bg-tertiary" />
+              <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center relative">
+                <span className="text-[11px] text-on-primary" style={{ fontFamily: '"Outfit", sans-serif', fontWeight: 800 }}>b</span>
+                <span className="absolute rounded-full bg-tertiary" style={{ width: "3px", height: "3px", top: "8px", right: "9px" }} />
               </div>
-              <span className="font-bold text-on-surface text-sm">botimi</span>
+              <span className="font-bold text-on-surface text-sm" style={{ fontFamily: '"Outfit", sans-serif' }}>botimi</span>
               <span className="hidden sm:inline ml-1.5 px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-semibold rounded">Docs</span>
             </Link>
           </div>

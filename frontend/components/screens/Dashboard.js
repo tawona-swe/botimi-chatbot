@@ -428,9 +428,9 @@ export default function Dashboard() {
       <footer className="border-t border-outline-variant py-6 px-6 lg:px-8 bg-background relative z-10 mt-auto">
         <div className="max-w-container-max mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4">
-            <span className="font-display text-sm font-bold text-gradient-primary inline-flex items-baseline gap-[0.14em]">
+            <span className="text-sm font-bold text-primary relative inline-block" style={{ fontFamily: '"Outfit", sans-serif' }}>
               botimi
-              <span className="inline-block w-[4px] h-[4px] rounded-full bg-tertiary self-start mt-[3px] shrink-0" />
+              <span className="absolute rounded-full bg-tertiary" style={{ width: "4px", height: "4px", top: "-2px", right: "-6px" }} />
             </span>
             <span className="font-body-sm text-xs text-on-surface-variant">&copy; {new Date().getFullYear()} botimi AI Ecosystem.</span>
           </div>

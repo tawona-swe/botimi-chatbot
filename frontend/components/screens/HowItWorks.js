@@ -92,9 +92,9 @@ export default function HowItWorks() {
       <header className="fixed top-0 left-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant">
         <nav className="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto h-16">
           <div className="flex items-center gap-8">
-            <Link href="/" target="_top" className="font-display text-headline-md font-extrabold text-primary inline-flex items-baseline gap-[0.16em]">
+            <Link href="/" target="_top" className="text-headline-md font-extrabold text-primary relative inline-block" style={{ fontFamily: '"Outfit", sans-serif' }}>
               botimi
-              <span className="inline-block w-[6px] h-[6px] rounded-full bg-tertiary self-start mt-[5px] shrink-0" />
+              <span className="absolute rounded-full bg-tertiary" style={{ width: "6px", height: "6px", top: "-2px", right: "-8px" }} />
             </Link>
             <div className="hidden md:flex gap-6">
               <Link

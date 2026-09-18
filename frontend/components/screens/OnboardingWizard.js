@@ -241,12 +241,12 @@ export default function OnboardingWizard() {
         <div className="flex justify-between items-center w-full px-6 lg:px-margin-desktop max-w-container-max mx-auto h-16">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center relative">
-              <span className="text-on-primary text-xs font-bold">b</span>
-              <span className="absolute top-0.5 right-0.5 w-1 h-1 rounded-full bg-tertiary" />
+              <span className="text-on-primary text-sm" style={{ fontFamily: '"Outfit", sans-serif', fontWeight: 800 }}>b</span>
+              <span className="absolute rounded-full bg-tertiary" style={{ width: "4px", height: "4px", top: "9px", right: "10px" }} />
             </div>
-            <Link href="/" className="font-display text-headline-md font-extrabold text-primary inline-flex items-baseline gap-[0.16em]">
+            <Link href="/" className="text-headline-md font-extrabold text-primary relative inline-block" style={{ fontFamily: '"Outfit", sans-serif' }}>
               botimi
-              <span className="inline-block w-[6px] h-[6px] rounded-full bg-tertiary self-start mt-[5px] shrink-0" />
+              <span className="absolute rounded-full bg-tertiary" style={{ width: "6px", height: "6px", top: "-2px", right: "-8px" }} />
             </Link>
             <span className="text-xs text-on-surface-variant font-medium bg-surface-container px-2.5 py-1 rounded-full border border-outline-variant">Setup</span>
           </div>

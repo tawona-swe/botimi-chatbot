@@ -62,16 +62,19 @@ export default function Sidebar({ activeLabel, isCollapsed, onToggle, mobileOpen
       <div className={`mb-stack-xl flex items-center ${isCollapsed ? 'flex-col gap-4 mt-4' : 'justify-between px-2'}`}>
         {!isCollapsed ? (
           <Link href="/" target="_top" className="block overflow-hidden">
-            <h1 className="font-display text-headline-md font-bold text-on-surface whitespace-nowrap inline-flex items-baseline gap-[0.16em]">
-              botimi Pro
-              <span className="inline-block w-[5px] h-[5px] rounded-full bg-tertiary self-start mt-[3px] shrink-0" />
+            <h1 className="text-headline-md font-bold text-on-surface whitespace-nowrap" style={{ fontFamily: '"Outfit", sans-serif' }}>
+              <span className="relative inline-block">
+                botimi
+                <span className="absolute rounded-full bg-tertiary" style={{ width: "5px", height: "5px", top: "-2px", right: "-7px" }} />
+              </span>
+              {" Pro"}
             </h1>
             <p className="font-label-md text-label-md text-on-surface-variant opacity-70 whitespace-nowrap">Enterprise Tier</p>
           </Link>
         ) : (
-          <Link href="/" target="_top" className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 relative" style={{ background: "linear-gradient(150deg, var(--color-primary), var(--color-secondary))" }}>
-            <span className="font-display font-black text-lg" style={{ color: "var(--color-on-primary)" }}>b</span>
-            <span className="absolute top-1 right-1.5 w-[5px] h-[5px] rounded-full bg-tertiary" />
+          <Link href="/" target="_top" className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 relative" style={{ background: "var(--color-primary)" }}>
+            <span className="text-base leading-none" style={{ fontFamily: '"Outfit", sans-serif', fontWeight: 800, color: "var(--color-on-primary)" }}>b</span>
+            <span className="absolute rounded-full bg-tertiary" style={{ width: "4px", height: "4px", top: "10px", right: "11px" }} />
           </Link>
         )}
         {onToggle && (
