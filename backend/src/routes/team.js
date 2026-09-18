@@ -1,14 +1,26 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
+import crypto from "node:crypto";
 import db from "../db/index.js";
+import config from "../config.js";
 import { authenticate, requireTeamRole } from "../middleware/auth.js";
 import { v4 as uuidv4 } from "uuid";
 
 const router = Router();
 
-router.use(authenticate);
-
 const VALID_ROLES = ["owner", "admin", "agent"];
+
+// Same reasoning as auth.js's generateToken/toSqliteDatetime: a hashed
+// lookup token (not a password, so a fast hash is fine) and SQLite's own
+// datetime format for the expiry, not toISOString()'s.
+function generateInviteToken() {
+  const raw = crypto.randomBytes(32).toString("hex");
+  const hash = crypto.createHash("sha256").update(raw).digest("hex");
+  return { raw, hash };
+}
+function toSqliteDatetime(date) {
+  return date.toISOString().slice(0, 19).replace("T", " ");
+}
 
 function serialize(member) {
   return {
@@ -20,6 +32,46 @@ function serialize(member) {
     createdAt: member.created_at,
   };
 }
+
+/**
+ * POST /api/team/accept-invite
+ * Public (no auth) — the invitee has no session yet, so this must be
+ * registered before router.use(authenticate) below applies to everything
+ * else in this router.
+ */
+router.post("/accept-invite", async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ error: "Token and password are required" });
+  if (password.length < 8) return res.status(400).json({ error: "Password must be at least 8 characters" });
+
+  const hash = crypto.createHash("sha256").update(token).digest("hex");
+  const member = db.prepare(
+    "SELECT * FROM team_members WHERE invite_token = ? AND invite_token_expires_at > datetime('now')"
+  ).get(hash);
+
+  if (!member) {
+    return res.status(400).json({ error: "This invite link is invalid or has expired" });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  db.prepare("UPDATE team_members SET password_hash = ?, invite_token = NULL, invite_token_expires_at = NULL, is_active = 1 WHERE id = ?").run(passwordHash, member.id);
+
+  const jwt = (await import("jsonwebtoken")).default;
+  const vendor = db.prepare("SELECT * FROM vendors WHERE id = ?").get(member.vendor_id);
+  const jwtToken = jwt.sign({ vendorId: vendor.id, teamMemberId: member.id }, config.jwt.secret, { expiresIn: config.jwt.expiresIn });
+
+  const sessionId = uuidv4();
+  const sessionExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  db.prepare("INSERT INTO sessions (id, vendor_id, token, expires_at, team_member_id) VALUES (?, ?, ?, ?, ?)").run(sessionId, vendor.id, jwtToken, sessionExpiresAt, member.id);
+
+  res.json({
+    token: jwtToken,
+    vendor: { id: vendor.id, email: vendor.email, companyName: vendor.company_name, name: vendor.name, plan: vendor.subscription_plan },
+    teamMember: { id: member.id, email: member.email, name: member.name, role: member.role },
+  });
+});
+
+router.use(authenticate);
 
 /**
  * GET /api/team
@@ -35,14 +87,16 @@ router.get("/", (req, res) => {
 
 /**
  * POST /api/team/invite
- * Add a team member seat. No invite-email flow yet (transactional email isn't
- * configured) — the owner/admin sets a temp password directly and shares it.
+ * Add a team member seat. The invitee sets their own password via the
+ * emailed accept-invite link — the owner/admin no longer types a password
+ * for them (that meant sharing a real credential in plaintext out-of-band,
+ * which is what this replaces).
  */
 router.post("/invite", requireTeamRole("owner", "admin"), async (req, res) => {
-  const { email, name, password, role } = req.body;
+  const { email, name, role } = req.body;
 
-  if (!email || !password || password.length < 8) {
-    return res.status(400).json({ error: "Email and a password of at least 8 characters are required" });
+  if (!email) {
+    return res.status(400).json({ error: "Email is required" });
   }
 
   const normalizedRole = VALID_ROLES.includes(role) ? role : "agent";
@@ -56,13 +110,24 @@ router.post("/invite", requireTeamRole("owner", "admin"), async (req, res) => {
     return res.status(409).json({ error: "That email is already in use on botimi" });
   }
 
-  const passwordHash = await bcrypt.hash(password, 12);
+  // Unusable placeholder — password_hash stays NOT NULL, but nobody can
+  // derive a working password from a bcrypt hash of a random UUID, and it
+  // gets overwritten for real the moment the invite is accepted.
+  const placeholderHash = await bcrypt.hash(uuidv4(), 12);
+  const { raw, hash: inviteHash } = generateInviteToken();
+  const inviteExpiresAt = toSqliteDatetime(new Date(Date.now() + 48 * 60 * 60 * 1000)); // 48 hours
   const id = uuidv4();
 
   db.prepare(`
-    INSERT INTO team_members (id, vendor_id, email, password_hash, name, role)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(id, req.vendor.id, email.toLowerCase(), passwordHash, name || "", normalizedRole);
+    INSERT INTO team_members (id, vendor_id, email, password_hash, name, role, invite_token, invite_token_expires_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, req.vendor.id, email.toLowerCase(), placeholderHash, name || "", normalizedRole, inviteHash, inviteExpiresAt);
+
+  const acceptUrl = `${config.frontendUrl}/accept-invite?token=${raw}`;
+  const { sendTeamInviteEmail } = await import("../services/email.js");
+  sendTeamInviteEmail(email.toLowerCase(), req.vendor.company_name, acceptUrl).catch((err) =>
+    console.error("[Team] Failed to send invite email:", err.message)
+  );
 
   const member = db.prepare("SELECT * FROM team_members WHERE id = ?").get(id);
   res.status(201).json({ member: serialize(member) });

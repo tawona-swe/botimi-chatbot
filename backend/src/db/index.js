@@ -77,6 +77,19 @@ const COLUMN_MIGRATIONS = [
   // and only the message level can say exactly which question triggered
   // which answer.
   ["messages", "confident", "INTEGER"],
+  // Password-reset flow (vendors/owners only — team members reset via a
+  // fresh invite from their admin for now, not a self-serve reset). Stores
+  // a SHA-256 hash of the raw token, never the raw token itself, so a DB
+  // leak alone can't be used to reset accounts. NULL/expired means no
+  // reset is pending.
+  ["vendors", "reset_token", "TEXT"],
+  ["vendors", "reset_token_expires_at", "TEXT"],
+  // Team-invite flow: password_hash stays NOT NULL (unchanged schema
+  // constraint) by seeding it with an unusable random hash at invite time;
+  // invite_token (also a SHA-256 hash, same reasoning as reset_token above)
+  // gets cleared once the invitee sets their real password.
+  ["team_members", "invite_token", "TEXT"],
+  ["team_members", "invite_token_expires_at", "TEXT"],
 ];
 
 function runColumnMigrations() {

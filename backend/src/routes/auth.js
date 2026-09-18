@@ -1,6 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "node:crypto";
 import db from "../db/index.js";
 import config from "../config.js";
 import { authenticate } from "../middleware/auth.js";
@@ -8,6 +9,28 @@ import { authLimiter } from "../middleware/rateLimit.js";
 import { v4 as uuidv4 } from "uuid";
 
 const router = Router();
+
+// Reset/invite tokens: generate a high-entropy random token, store only its
+// SHA-256 hash (a DB leak alone then can't be used to reset an account),
+// and send the raw token in the email — this is a lookup hash, not a
+// password, so a fast hash is the right tool (bcrypt is deliberately slow
+// for password storage, not needed here for a random 32-byte value).
+function generateToken() {
+  const raw = crypto.randomBytes(32).toString("hex");
+  const hash = crypto.createHash("sha256").update(raw).digest("hex");
+  return { raw, hash };
+}
+
+// SQLite's datetime('now') produces "YYYY-MM-DD HH:MM:SS" (space-separated,
+// no milliseconds/Z) — comparing that against a JS .toISOString() value
+// ("YYYY-MM-DDTHH:MM:SS.sssZ") as plain strings breaks on the day an
+// expiry falls due, since 'T' (0x54) sorts after a space (0x20). Same bug
+// class already caught and fixed for next_charge_at and trial_ends_at
+// elsewhere in this codebase — always store expiry timestamps in SQLite's
+// own format, not toISOString()'s.
+function toSqliteDatetime(date) {
+  return date.toISOString().slice(0, 19).replace("T", " ");
+}
 
 /**
  * POST /api/auth/signup
@@ -264,6 +287,65 @@ router.post("/google", authLimiter, async (req, res) => {
     console.error("[Auth] Google OAuth error:", err);
     res.status(500).json({ error: "Failed to authenticate with Google" });
   }
+});
+
+/**
+ * POST /api/auth/forgot-password
+ * Request a password-reset link. Always returns the same generic response
+ * regardless of whether the email has an account, so this endpoint can't be
+ * used to enumerate registered emails.
+ */
+router.post("/forgot-password", authLimiter, async (req, res) => {
+  const { email } = req.body;
+  const generic = { message: "If an account exists for that email, a reset link has been sent." };
+
+  if (!email) return res.status(400).json({ error: "Email is required" });
+
+  try {
+    const vendor = db.prepare("SELECT id, name FROM vendors WHERE email = ?").get(email.toLowerCase());
+    if (vendor) {
+      const { raw, hash } = generateToken();
+      const expiresAt = toSqliteDatetime(new Date(Date.now() + 60 * 60 * 1000)); // 1 hour
+      db.prepare("UPDATE vendors SET reset_token = ?, reset_token_expires_at = ? WHERE id = ?").run(hash, expiresAt, vendor.id);
+
+      const resetUrl = `${config.frontendUrl}/reset-password?token=${raw}`;
+      const { sendPasswordResetEmail } = await import("../services/email.js");
+      await sendPasswordResetEmail(email.toLowerCase(), resetUrl).catch((err) =>
+        console.error("[Auth] Failed to send password reset email:", err.message)
+      );
+    }
+    res.json(generic);
+  } catch (err) {
+    console.error("[Auth] Forgot-password error:", err);
+    res.json(generic); // still generic on error — don't leak internal failures either
+  }
+});
+
+/**
+ * POST /api/auth/reset-password
+ * Complete a password reset. Invalidates every existing session for the
+ * account, same as any real reset flow should — a reset is exactly the
+ * moment an old session might be the attacker's, not the legitimate user's.
+ */
+router.post("/reset-password", authLimiter, async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ error: "Token and new password are required" });
+  if (password.length < 8) return res.status(400).json({ error: "Password must be at least 8 characters" });
+
+  const hash = crypto.createHash("sha256").update(token).digest("hex");
+  const vendor = db.prepare(
+    "SELECT id FROM vendors WHERE reset_token = ? AND reset_token_expires_at > datetime('now')"
+  ).get(hash);
+
+  if (!vendor) {
+    return res.status(400).json({ error: "This reset link is invalid or has expired" });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  db.prepare("UPDATE vendors SET password_hash = ?, reset_token = NULL, reset_token_expires_at = NULL WHERE id = ?").run(passwordHash, vendor.id);
+  db.prepare("DELETE FROM sessions WHERE vendor_id = ?").run(vendor.id);
+
+  res.json({ message: "Password reset successfully. Please log in with your new password." });
 });
 
 /**

@@ -108,6 +108,111 @@ export async function sendWelcomeEmail(vendorEmail, name) {
 }
 
 /**
+ * Password-reset link. Deliberately doesn't say whether the account exists
+ * -- callers should send this only after already deciding to (and always
+ * return the same generic response to the client either way, to avoid
+ * leaking which emails have accounts).
+ */
+export async function sendPasswordResetEmail(vendorEmail, resetUrl) {
+  return sendEmail({
+    to: vendorEmail,
+    subject: "Reset your botimi password",
+    html: renderEmailShell(`
+      <h1 style="color: ${BRAND.ink}; font-size: 22px; margin: 0 0 16px;">Reset your password</h1>
+      <p style="color: ${BRAND.ink}; line-height: 1.6;">We got a request to reset your botimi password. This link expires in 1 hour.</p>
+      ${renderButton(resetUrl, "Reset password")}
+      <p style="color: ${BRAND.inkSoft}; line-height: 1.6; font-size: 13px; margin-top: 20px;">Didn't request this? You can safely ignore this email — your password won't change.</p>
+    `),
+  });
+}
+
+/**
+ * Team invite — the invitee sets their own password via acceptUrl, instead
+ * of the previous flow where the inviting admin typed a password directly
+ * and had to share it out-of-band in plaintext.
+ */
+export async function sendTeamInviteEmail(inviteeEmail, inviterCompany, acceptUrl) {
+  return sendEmail({
+    to: inviteeEmail,
+    subject: `You've been invited to join ${inviterCompany || "a team"} on botimi`,
+    html: renderEmailShell(`
+      <h1 style="color: ${BRAND.ink}; font-size: 22px; margin: 0 0 16px;">You're invited</h1>
+      <p style="color: ${BRAND.ink}; line-height: 1.6;">${inviterCompany || "A botimi team"} has invited you to join their support team on botimi. Set up your password to get started — this link expires in 48 hours.</p>
+      ${renderButton(acceptUrl, "Accept invite")}
+    `),
+  });
+}
+
+/**
+ * Sent when a subscription is finally canceled after the dunning retries
+ * are exhausted (see pesepayBilling.js's markVendorPaymentFailed). Only
+ * card-paying vendors previously got any signal before this point
+ * (remindCardVendorToRenew) -- Ecocash/Omari vendors got nothing at all
+ * until the account was already suspended.
+ */
+export async function sendSubscriptionCanceledEmail(vendorEmail, planName) {
+  return sendEmail({
+    to: vendorEmail,
+    subject: "Your botimi subscription has been canceled",
+    html: renderEmailShell(`
+      <h1 style="color: ${BRAND.ink}; font-size: 22px; margin: 0 0 16px;">Subscription canceled</h1>
+      <p style="color: ${BRAND.ink}; line-height: 1.6;">We couldn't complete payment for your ${planName} plan after several attempts, so your subscription has been canceled and your bot is now paused.</p>
+      <p style="color: ${BRAND.ink}; line-height: 1.6;">Your data and settings are still here — reactivate any time.</p>
+      ${renderButton(`${config.frontendUrl}/settings`, "Choose a plan")}
+    `),
+  });
+}
+
+/**
+ * Payment receipt for a plan purchase or renewal.
+ */
+export async function sendPaymentReceiptEmail(vendorEmail, planName, amount, currencyCode) {
+  return sendEmail({
+    to: vendorEmail,
+    subject: `Receipt: your botimi ${planName} plan payment`,
+    html: renderEmailShell(`
+      <h1 style="color: ${BRAND.ink}; font-size: 22px; margin: 0 0 16px;">Payment received</h1>
+      <p style="color: ${BRAND.ink}; line-height: 1.6;">Thanks — your payment for the ${planName} plan went through.</p>
+      ${renderInfoBox(`<p style="margin: 0 0 6px;"><strong>Plan:</strong> ${planName}</p><p style="margin: 0;"><strong>Amount:</strong> ${amount} ${currencyCode}</p>`)}
+      ${renderButton(`${config.frontendUrl}/settings`, "View billing")}
+    `),
+  });
+}
+
+/**
+ * Receipt for a one-off conversation-credit top-up purchase.
+ */
+export async function sendTopUpReceiptEmail(vendorEmail, credits, amount, currencyCode) {
+  return sendEmail({
+    to: vendorEmail,
+    subject: "Receipt: your botimi credit top-up",
+    html: renderEmailShell(`
+      <h1 style="color: ${BRAND.ink}; font-size: 22px; margin: 0 0 16px;">Top-up received</h1>
+      <p style="color: ${BRAND.ink}; line-height: 1.6;">Your payment went through and the credits have been added to your balance.</p>
+      ${renderInfoBox(`<p style="margin: 0 0 6px;"><strong>Credits added:</strong> ${credits.toLocaleString()}</p><p style="margin: 0;"><strong>Amount:</strong> ${amount} ${currencyCode}</p>`)}
+      ${renderButton(`${config.frontendUrl}/settings`, "View billing")}
+    `),
+  });
+}
+
+/**
+ * Notify a team member a ticket has been assigned to them directly (manual
+ * reassignment) -- distinct from sendNewTicketAlert, which fires on a bot
+ * escalation to the whole account, not a specific person.
+ */
+export async function sendTicketAssignedEmail(assigneeEmail, ticketNumber, subject) {
+  return sendEmail({
+    to: assigneeEmail,
+    subject: `[${ticketNumber}] Assigned to you: ${subject}`,
+    html: renderEmailShell(`
+      <h1 style="color: ${BRAND.ink}; font-size: 22px; margin: 0 0 16px;">A ticket was assigned to you</h1>
+      ${renderInfoBox(`<p style="margin: 0 0 6px;"><strong>Ticket:</strong> ${ticketNumber}</p><p style="margin: 0;"><strong>Subject:</strong> ${subject}</p>`)}
+      ${renderButton(`${config.frontendUrl}/support`, "Open in Support Inbox")}
+    `),
+  });
+}
+
+/**
  * Send ticket confirmation to customer.
  */
 export async function sendTicketConfirmation(email, ticketNumber, subject) {

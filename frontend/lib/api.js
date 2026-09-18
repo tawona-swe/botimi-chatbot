@@ -80,6 +80,18 @@ class ApiClient {
     return this.request("POST", "/auth/login", { email, password });
   }
 
+  forgotPassword(email) {
+    return this.request("POST", "/auth/forgot-password", { email });
+  }
+
+  resetPassword(token, password) {
+    return this.request("POST", "/auth/reset-password", { token, password });
+  }
+
+  acceptTeamInvite(token, password) {
+    return this.request("POST", "/team/accept-invite", { token, password });
+  }
+
   logout() {
     return this.request("POST", "/auth/logout");
   }

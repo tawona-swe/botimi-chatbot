@@ -37,7 +37,7 @@ export default function SettingsPage() {
   const [topUpCardLoading, setTopUpCardLoading] = useState(false);
   const [team, setTeam] = useState({ owner: null, members: [] });
   const [teamLoading, setTeamLoading] = useState(true);
-  const [inviteForm, setInviteForm] = useState({ email: "", name: "", password: "", role: "agent" });
+  const [inviteForm, setInviteForm] = useState({ email: "", name: "", role: "agent" });
   const [inviteError, setInviteError] = useState("");
   const [inviting, setInviting] = useState(false);
   const canManageTeam = !teamMember || teamMember.role === "owner" || teamMember.role === "admin";
@@ -164,7 +164,7 @@ export default function SettingsPage() {
     setInviting(true);
     try {
       await api.inviteTeamMember(inviteForm);
-      setInviteForm({ email: "", name: "", password: "", role: "agent" });
+      setInviteForm({ email: "", name: "", role: "agent" });
       await loadTeam();
     } catch (err) {
       setInviteError(err.message || "Failed to invite team member");
@@ -513,13 +513,12 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <input type="email" required placeholder="Email" value={inviteForm.email} onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))} className="bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
                   <input type="text" placeholder="Name" value={inviteForm.name} onChange={e => setInviteForm(f => ({ ...f, name: e.target.value }))} className="bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
-                  <input type="text" required minLength={8} placeholder="Temporary password (min 8 chars)" value={inviteForm.password} onChange={e => setInviteForm(f => ({ ...f, password: e.target.value }))} className="bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
                   <select value={inviteForm.role} onChange={e => setInviteForm(f => ({ ...f, role: e.target.value }))} className="bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface">
                     <option value="agent">Agent</option>
                     <option value="admin">Admin</option>
                   </select>
                 </div>
-                <p className="text-[11px] text-on-surface-variant/60">There&apos;s no invite-email yet — share this password with them directly so they can log in and change it.</p>
+                <p className="text-[11px] text-on-surface-variant/60">We&apos;ll email them a link to set up their own password.</p>
                 {inviteError && <p className="text-[11px] text-error">{inviteError}</p>}
                 <button type="submit" disabled={inviting} className="px-5 py-2.5 bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50">
                   {inviting ? "Inviting..." : "Invite Teammate"}
