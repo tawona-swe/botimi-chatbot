@@ -123,7 +123,7 @@ export default function BotsPage() {
       name: selectedBot.name,
       welcome_message: selectedBot.welcome_message,
       response_tone: selectedBot.response_tone,
-      brand_color: selectedBot.brand_color || "#c0c1ff",
+      brand_color: selectedBot.brand_color || "#4A1A8A",
       is_active: selectedBot.is_active,
       quality_tier: qualityTierFor(selectedBot.model_provider || "groq", selectedBot.model_name || "llama3-70b"),
       confidence_threshold: selectedBot.confidence_threshold ?? 0.7,
@@ -490,7 +490,7 @@ export default function BotsPage() {
                       {[
                         { label: "Tone", val: selectedBot.response_tone },
                         { label: "Welcome Message", val: selectedBot.welcome_message },
-                        { label: "Color", val: selectedBot.brand_color || "#c0c1ff" },
+                        { label: "Color", val: selectedBot.brand_color || "#4A1A8A" },
                         { label: "Widget Position", val: selectedBot.widget_position },
                         { label: "Widget Theme", val: selectedBot.widget_theme },
                         { label: "Created", val: formatDate(selectedBot.created_at) },

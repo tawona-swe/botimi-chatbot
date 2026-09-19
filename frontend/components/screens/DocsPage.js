@@ -267,11 +267,12 @@ export default function DocsPage() {
     apiKey: "YOUR_BOT_ID",
     theme: "dark",          // "dark" | "light"
     position: "bottom-right", // "bottom-right" | "bottom-left"
-    color: "#c0c1ff",       // accent color
+    color: "#4A1A8A",       // accent color
     hideBranding: false     // hide "Powered by botimi"
   };
 </script>
-<script src="https://your-domain.com/api/widget/loader.js" async></script>`}</code></pre>
+<script src="https://app.botimi.co.zw/api/widget/loader.js" async></script>`}</code></pre>
+              <p className="text-sm text-on-surface-variant">The script tag always points to botimi&apos;s own domain (shown above) — not your website&apos;s. Only <code>apiKey</code> changes per bot; find yours under Settings → Embed.</p>
 
               <h2>3. Platform guides</h2>
               <ul>

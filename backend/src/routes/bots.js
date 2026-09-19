@@ -1,5 +1,6 @@
 import { Router } from "express";
 import db from "../db/index.js";
+import config from "../config.js";
 import { authenticate } from "../middleware/auth.js";
 import { crawlWebsite } from "../services/crawler.js";
 import { indexPages, getTrainingHealthScore } from "../services/rag.js";
@@ -357,17 +358,23 @@ router.get("/:id/embed", (req, res) => {
   // Check if vendor is on Scale plan (white-label eligible)
   const hideBranding = req.vendor.subscription_plan === 'scale';
 
+  // The script src must point at wherever /api/widget/loader.js is actually
+  // served from -- config.backendUrl, not FRONTEND_URL. In this deployment
+  // they resolve to the same domain today (Caddy splits /api/* to the
+  // backend on the same host as the frontend), but naming this after the
+  // frontend was misleading and would silently break if the two are ever
+  // split onto separate subdomains.
   const embedCode = `<!-- botimi Chat Widget -->
 <script>
   window.botimiConfig = {
     apiKey: "${bot.id}",
     theme: "${bot.widget_theme || 'dark'}",
     position: "${bot.widget_position || 'bottom-right'}",
-    color: "${bot.brand_color || '#c0c1ff'}",
+    color: "${bot.brand_color || '#4A1A8A'}",
     hideBranding: ${hideBranding}
   };
 </script>
-<script async src="${process.env.FRONTEND_URL || 'http://localhost:3000'}/api/widget/loader.js"></script>
+<script async src="${config.backendUrl}/api/widget/loader.js"></script>
 <!-- End botimi Chat Widget -->`;
 
   res.json({

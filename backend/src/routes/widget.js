@@ -34,7 +34,7 @@ router.get("/loader.js", (req, res) => {
 
   const apiBase = `${req.protocol}://${req.get('host')}`;
   const widgetJS = `(function(){'use strict';
-var c=window.botimiConfig||{},k=c.apiKey||'',t=c.theme||'dark',p=c.position||'bottom-right',cl=c.color||'#c0c1ff',hb=c.hideBranding||false;
+var c=window.botimiConfig||{},k=c.apiKey||'',t=c.theme||'dark',p=c.position||'bottom-right',cl=c.color||'#4A1A8A',hb=c.hideBranding||false;
 if(!k){console.warn('[botimi] No apiKey found.');return;}
 var B='${apiBase}';
 var s=document.createElement('style');

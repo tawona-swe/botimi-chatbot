@@ -119,10 +119,10 @@ export default function AnalyticsPage() {
           border-color: var(--glass-border-hover);
         }
         .ai-glow {
-          box-shadow: 0 0 40px -10px rgba(192, 193, 255, 0.15);
+          box-shadow: 0 0 40px -10px rgba(74, 26, 138, 0.15);
         }
         .ai-glow-hover:hover {
-          box-shadow: 0 0 40px -10px rgba(192, 193, 255, 0.25);
+          box-shadow: 0 0 40px -10px rgba(74, 26, 138, 0.25);
         }
       `}</style>
       <Sidebar activeLabel="Analytics" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />

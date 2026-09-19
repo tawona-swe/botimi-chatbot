@@ -71,7 +71,7 @@ export default function LandingPage() {
         .gradient-border {
           position: relative;
           border-radius: 1.5rem;
-          background: linear-gradient(to right, #c0c1ff, #4cd7f6);
+          background: linear-gradient(to right, #4A1A8A, #6A2BC2);
           padding: 1px;
         }
         .gradient-border-content {

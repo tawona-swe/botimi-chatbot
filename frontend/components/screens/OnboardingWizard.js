@@ -24,7 +24,7 @@ export default function OnboardingWizard() {
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [botName, setBotName] = useState("botimi AI");
   const [welcomeMessage, setWelcomeMessage] = useState("Hello! I'm your AI assistant. How can I help you today?");
-  const [accentColor, setAccentColor] = useState("#c0c1ff");
+  const [accentColor, setAccentColor] = useState("#4A1A8A");
   const [botIcon, setBotIcon] = useState("smart_toy");
   const [crawlStatus, setCrawlStatus] = useState("idle"); // idle | crawling | done | error
   const [crawlError, setCrawlError] = useState("");
@@ -39,7 +39,7 @@ export default function OnboardingWizard() {
         setBotId(bot.id);
         setBotName(bot.name || "botimi AI");
         setWelcomeMessage(bot.welcome_message || "Hello! I'm your AI assistant. How can I help you today?");
-        setAccentColor(bot.brand_color || "#c0c1ff");
+        setAccentColor(bot.brand_color || "#4A1A8A");
         setBotIcon(bot.avatar_icon || "smart_toy");
         // Fetch embed code
         try {
@@ -188,18 +188,18 @@ export default function OnboardingWizard() {
             transition: opacity 0.35s ease-in-out, transform 0.35s ease-in-out;
         }
         .glow-primary {
-            box-shadow: 0 0 40px rgba(192, 193, 255, 0.08);
+            box-shadow: 0 0 40px rgba(74, 26, 138, 0.08);
         }
         .glow-card {
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
         }
         .glow-card:hover {
-            box-shadow: 0 4px 24px rgba(192, 193, 255, 0.12);
+            box-shadow: 0 4px 24px rgba(74, 26, 138, 0.12);
         }
         input:focus, textarea:focus, select:focus {
             outline: none;
-            border-color: #c0c1ff;
-            box-shadow: 0 0 0 3px rgba(192, 193, 255, 0.15);
+            border-color: #4A1A8A;
+            box-shadow: 0 0 0 3px rgba(74, 26, 138, 0.15);
         }
         .hide-scrollbar::-webkit-scrollbar {
             display: none;
@@ -216,7 +216,7 @@ export default function OnboardingWizard() {
             100% { background-position: 200% 0; }
         }
         .shimmer {
-            background: linear-gradient(90deg, transparent 0%, rgba(192, 193, 255, 0.05) 50%, transparent 100%);
+            background: linear-gradient(90deg, transparent 0%, rgba(74, 26, 138, 0.05) 50%, transparent 100%);
             background-size: 200% 100%;
             animation: shimmer 3s ease-in-out infinite;
         }
@@ -424,7 +424,7 @@ export default function OnboardingWizard() {
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Accent Color</label>
                       <div className="flex gap-3 flex-wrap">
-                        {["#c0c1ff", "#4cd7f6", "#ffb783", "#f87171", "#a78bfa", "#34d399", "#fbbf24"].map((color) => {
+                        {["#4A1A8A", "#4cd7f6", "#ffb783", "#f87171", "#a78bfa", "#34d399", "#fbbf24"].map((color) => {
                           const active = color === accentColor;
                           return (
                             <button

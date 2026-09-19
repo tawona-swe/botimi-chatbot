@@ -30,7 +30,7 @@ async function seed() {
     INSERT INTO vendors (id, email, password_hash, name, company_name, industry,
       subscription_plan, subscription_status, conversations_used, conversations_limit, conversation_credits,
       trial_ends_at, brand_color)
-    VALUES (?, ?, ?, ?, ?, ?, 'growth', 'active', 0, 2000, 2000, ?, '#c0c1ff')
+    VALUES (?, ?, ?, ?, ?, ?, 'growth', 'active', 0, 2000, 2000, ?, '#4A1A8A')
   `).run(demoVendorId, "demo@botimi.ai", passwordHash, "Demo User", "botimi Demo Corp", "Technology", trialEnd);
   console.log("[Seed] Created demo vendor: demo@botimi.ai / password123");
 
@@ -49,7 +49,7 @@ async function seed() {
     INSERT INTO bots (id, vendor_id, name, description, welcome_message, response_tone,
       model_provider, model_name, brand_color, quick_replies, is_active)
     VALUES (?, ?, 'botimi Demo Bot', 'A demo AI chatbot for testing', 'Hello! I am the botimi demo assistant. Ask me anything!',
-      'friendly', 'groq', 'llama3-70b', '#c0c1ff', '["Pricing plans","API docs","Integrations","Talk to sales"]', 1)
+      'friendly', 'groq', 'llama3-70b', '#4A1A8A', '["Pricing plans","API docs","Integrations","Talk to sales"]', 1)
   `).run(demoBotId, demoVendorId);
   console.log("[Seed] Created demo bot");
 

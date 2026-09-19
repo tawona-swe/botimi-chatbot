@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS vendors (
   company_name      TEXT NOT NULL DEFAULT '',
   industry          TEXT DEFAULT '',
   logo_url          TEXT DEFAULT '',
-  brand_color       TEXT DEFAULT '#c0c1ff',
+  brand_color       TEXT DEFAULT '#4A1A8A',
   country           TEXT DEFAULT '',
   subscription_plan TEXT NOT NULL DEFAULT 'trial',  -- trial | starter | growth | scale
   subscription_status TEXT NOT NULL DEFAULT 'active', -- active | past_due | canceled | trialing
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS bots (
   confidence_threshold REAL NOT NULL DEFAULT 0.7,
   widget_position     TEXT NOT NULL DEFAULT 'bottom-right', -- bottom-left | bottom-right
   widget_theme        TEXT NOT NULL DEFAULT 'dark', -- dark | light
-  brand_color         TEXT DEFAULT '#c0c1ff',
+  brand_color         TEXT DEFAULT '#4A1A8A',
   bot_greeting        TEXT DEFAULT 'Hi there! 👋',
   working_hours_start TEXT DEFAULT '09:00',
   working_hours_end   TEXT DEFAULT '18:00',

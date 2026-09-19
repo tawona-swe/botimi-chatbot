@@ -121,12 +121,28 @@ function backfillKnowledgeChunksFts() {
   console.log(`[DB] Backfilled ${chunks.length} chunk(s) into the FTS keyword index.`);
 }
 
+// schema.sql's DEFAULT '#4A1A8A' (fixed from the old pre-rebrand '#c0c1ff')
+// only applies to rows inserted after this changed -- any vendor/bot that
+// signed up before now still has the stale color literally stored. Scoped
+// to rows still holding that exact leftover default, so it never touches a
+// vendor who genuinely chose '#c0c1ff' as their own brand color themselves
+// (indistinguishable from the old default, but not worth the edge case).
+// Runs on every boot; a no-op after the first time it finds nothing to fix.
+function fixStaleBrandColorDefault() {
+  const vendors = db.prepare("UPDATE vendors SET brand_color = '#4A1A8A' WHERE brand_color = '#c0c1ff'").run();
+  const bots = db.prepare("UPDATE bots SET brand_color = '#4A1A8A' WHERE brand_color = '#c0c1ff'").run();
+  if (vendors.changes > 0 || bots.changes > 0) {
+    console.log(`[DB] Updated stale default brand_color on ${vendors.changes} vendor(s) and ${bots.changes} bot(s).`);
+  }
+}
+
 export function migrate() {
   const schemaPath = resolve(__dirname, "schema.sql");
   const schema = readFileSync(schemaPath, "utf-8");
   db.exec(schema);
   runColumnMigrations();
   backfillKnowledgeChunksFts();
+  fixStaleBrandColorDefault();
   console.log("[DB] Migration complete.");
 }
 

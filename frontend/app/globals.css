@@ -403,7 +403,7 @@ a {
   min-height: 100vh;
   padding: 40px;
   background:
-    radial-gradient(circle at 18% 12%, rgba(192, 193, 255, 0.12), transparent 34%),
+    radial-gradient(circle at 18% 12%, rgba(74, 26, 138, 0.12), transparent 34%),
     radial-gradient(circle at 86% 18%, rgba(76, 215, 246, 0.11), transparent 30%),
     var(--background);
 }
@@ -542,7 +542,7 @@ a {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #c0c1ff;
+  background: #4A1A8A;
 }
 
 .material-symbols-outlined {

@@ -51,7 +51,7 @@ export default function SettingsPage() {
     company_name: "",
     industry: "",
     country: "",
-    brand_color: "#c0c1ff",
+    brand_color: "#4A1A8A",
   });
 
   useEffect(() => {
@@ -218,7 +218,7 @@ export default function SettingsPage() {
         company_name: data.vendor.company_name || "",
         industry: data.vendor.industry || "",
         country: data.vendor.country || "",
-        brand_color: data.vendor.brand_color || "#c0c1ff",
+        brand_color: data.vendor.brand_color || "#4A1A8A",
       });
     } catch (err) {
       console.error("Failed to load profile:", err);
@@ -362,7 +362,7 @@ export default function SettingsPage() {
       <style>{`
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
         .bg-dot { background-image: radial-gradient(var(--dot-color) 1px, transparent 1px); background-size: 24px 24px; }
-        input:focus, textarea:focus, select:focus { outline: none; border-color: #c0c1ff; box-shadow: 0 0 0 3px rgba(192,193,255,0.15); }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #4A1A8A; box-shadow: 0 0 0 3px rgba(74,26,138,0.15); }
       `}</style>
       <Sidebar activeLabel="Settings" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
       <main className={`flex-1 ${sidebarCollapsed ? 'ml-[80px]' : 'ml-[260px]'} max-lg:ml-0 min-h-screen flex flex-col bg-background text-on-background font-body-md relative transition-all duration-300`}>

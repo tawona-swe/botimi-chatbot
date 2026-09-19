@@ -180,7 +180,7 @@ export default function Dashboard() {
           background-size: 24px 24px;
         }
         .text-gradient-primary {
-          background: linear-gradient(135deg, #c0c1ff, #a78bfa);
+          background: linear-gradient(135deg, #4A1A8A, #6A2BC2);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -192,10 +192,10 @@ export default function Dashboard() {
           background-clip: text;
         }
         .ai-glow {
-          box-shadow: 0 0 40px -10px rgba(192, 193, 255, 0.15);
+          box-shadow: 0 0 40px -10px rgba(74, 26, 138, 0.15);
         }
         .ai-glow-hover:hover {
-          box-shadow: 0 0 40px -10px rgba(192, 193, 255, 0.25);
+          box-shadow: 0 0 40px -10px rgba(74, 26, 138, 0.25);
         }
       `}</style>
 
@@ -336,7 +336,7 @@ export default function Dashboard() {
                   <svg className="absolute w-full h-full -rotate-90" viewBox="0 0 96 96">
                     <defs>
                       <linearGradient id="healthGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#c0c1ff" />
+                        <stop offset="0%" stopColor="#4A1A8A" />
                         <stop offset="100%" stopColor="#67e8f9" />
                       </linearGradient>
                     </defs>
