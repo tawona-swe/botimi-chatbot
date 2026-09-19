@@ -50,9 +50,6 @@ export default function BotsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState({ name: "", websiteUrl: "" });
   const [createLoading, setCreateLoading] = useState(false);
-  const [whatsappPhoneId, setWhatsappPhoneId] = useState("");
-  const [whatsappToken, setWhatsappToken] = useState("");
-  const [whatsappSaving, setWhatsappSaving] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("botimiSidebarCollapsed");
@@ -150,22 +147,6 @@ export default function BotsPage() {
       console.error("Failed to save bot:", err);
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleSaveWhatsapp = async () => {
-    setWhatsappSaving(true);
-    try {
-      const data = await api.updateBot(selectedBot.id, {
-        whatsapp_phone_number_id: whatsappPhoneId.trim(),
-        whatsapp_access_token: whatsappToken.trim(),
-      });
-      setSelectedBot(data.bot);
-      setBots(prev => prev.map(b => b.id === selectedBot.id ? { ...b, ...data.bot } : b));
-    } catch (err) {
-      console.error("Failed to save WhatsApp connection:", err);
-    } finally {
-      setWhatsappSaving(false);
     }
   };
 
@@ -576,38 +557,17 @@ export default function BotsPage() {
                     )}
                   </div>
 
-                  {/* WhatsApp Connection */}
-                  <div className="bg-surface-container border border-outline-variant rounded-2xl p-6 space-y-4">
+                  {/* WhatsApp Connection — not yet self-serve, see note below */}
+                  <div className="bg-surface-container border border-outline-variant rounded-2xl p-6 space-y-3">
                     <div className="flex items-center gap-2">
                       <WhatsAppIcon className="w-5 h-5 text-[#25D366]" />
                       <h3 className="font-display font-bold text-on-surface">WhatsApp</h3>
-                      {selectedBot.whatsapp_phone_number_id && selectedBot.whatsapp_access_token ? (
-                        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 uppercase">Connected</span>
-                      ) : (
-                        <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant uppercase">Not connected</span>
-                      )}
+                      <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-tertiary/15 text-tertiary uppercase">Coming soon</span>
                     </div>
-                    <p className="text-xs text-on-surface-variant">Mirrors this bot on WhatsApp — same training and escalation logic as your website widget.</p>
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Phone Number ID</label>
-                      <input type="text" placeholder="From your Meta Business Portfolio" value={whatsappPhoneId} onChange={e => setWhatsappPhoneId(e.target.value)} className="w-full bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Access Token</label>
-                      <input type="password" placeholder="System User token — not the 24h temporary one" value={whatsappToken} onChange={e => setWhatsappToken(e.target.value)} className="w-full bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface placeholder:text-on-surface-variant/50" />
-                    </div>
-                    <button onClick={handleSaveWhatsapp} disabled={whatsappSaving} className="w-full px-4 py-2 bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 disabled:opacity-50">
-                      {whatsappSaving ? "Saving..." : "Save"}
-                    </button>
-                    <details className="text-xs text-on-surface-variant">
-                      <summary className="cursor-pointer font-semibold hover:text-on-surface transition-colors">Setup instructions</summary>
-                      <ol className="mt-2 space-y-1.5 list-decimal list-inside">
-                        <li>In your own Meta Business Portfolio (most businesses already have one), add the WhatsApp product and register the number you want this bot to use.</li>
-                        <li>Go to Business Settings → Users → System Users, create one, and generate a <strong>long-lived System User access token</strong> with <code className="bg-surface-container-lowest px-1 rounded font-mono">whatsapp_business_messaging</code> permission — not the default 24-hour temporary token from the quickstart, that one expires the next day.</li>
-                        <li>Set the webhook URL to <code className="bg-surface-container-lowest px-1 rounded font-mono break-all">{`{your-public-domain}/api/whatsapp/webhook`}</code> with the verify token botimi gives you — this needs a real public HTTPS URL, not localhost.</li>
-                        <li>Copy the Phone Number ID and your System User access token from the Meta dashboard and paste them above.</li>
-                      </ol>
-                    </details>
+                    <p className="text-xs text-on-surface-variant">
+                      Mirroring this bot on WhatsApp is still being finished — self-serve setup needs Meta's Tech Provider
+                      program, which we haven't completed yet. Reach out if you'd like early access in the meantime.
+                    </p>
                   </div>
                 </div>
 

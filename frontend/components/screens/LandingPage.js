@@ -463,10 +463,13 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="col-span-12 lg:col-span-6 bg-surface-container border border-outline-variant p-8 rounded-xl group hover:border-secondary/50 transition-colors">
-              <div className="w-12 h-12 bg-[#25D366]/15 rounded-lg flex items-center justify-center text-[#25D366] mb-6">
-                <WhatsAppIcon className="w-6 h-6" />
+              <div className="flex items-center justify-between mb-6">
+                <div className="w-12 h-12 bg-[#25D366]/15 rounded-lg flex items-center justify-center text-[#25D366]">
+                  <WhatsAppIcon className="w-6 h-6" />
+                </div>
+                <span className="px-2.5 py-1 bg-tertiary/15 text-tertiary rounded-full text-[10px] font-bold uppercase tracking-wider">Coming soon</span>
               </div>
-              <h3 className="font-headline-md text-headline-md text-on-surface mb-3">Now on WhatsApp</h3>
+              <h3 className="font-headline-md text-headline-md text-on-surface mb-3">WhatsApp</h3>
               <p className="text-on-surface-variant">
                 Connect your WhatsApp Business number and the exact same trained bot — same knowledge, same
                 escalation rules — answers customers there too.
