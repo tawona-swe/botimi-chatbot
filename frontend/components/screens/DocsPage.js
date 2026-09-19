@@ -212,7 +212,7 @@ export default function DocsPage() {
                 <div className="step-num">1</div>
                 <div>
                   <h3>Create an account</h3>
-                  <p className="mb-0!">Sign up at <Link href="/register" className="text-primary hover:underline">botimi.ai/register</Link> with your email or Google account. No credit card required.</p>
+                  <p className="mb-0!">Sign up at <Link href="/register" className="text-primary hover:underline">app.botimi.co.zw/register</Link> with your email or Google account. No credit card required.</p>
                 </div>
               </div>
 
@@ -319,7 +319,7 @@ export default function DocsPage() {
                   <div className="w-2.5 h-2.5 rounded-full bg-error/70" />
                   <div className="w-2.5 h-2.5 rounded-full bg-tertiary/70" />
                   <div className="w-2.5 h-2.5 rounded-full bg-secondary/70" />
-                  <span className="ml-3 text-[10px] text-on-surface-variant/50 font-mono">playground.botimi.ai</span>
+                  <span className="ml-3 text-[10px] text-on-surface-variant/50 font-mono">app.botimi.co.zw/docs</span>
                 </div>
 
                 {/* Chat area */}

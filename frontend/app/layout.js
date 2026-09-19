@@ -6,9 +6,35 @@ import DashboardAssistant from "../components/ui/DashboardAssistant";
 import GuestAssistant from "../components/ui/GuestAssistant";
 import { Toaster } from "react-hot-toast";
 
+const SITE_URL = "https://app.botimi.co.zw";
+const DEFAULT_DESCRIPTION = "Deploy an AI chatbot trained on your website or documents in minutes — website widget and WhatsApp, with human handoff and a built-in support inbox when it can't answer.";
+
 export const metadata = {
-  title: "botimi | AI Chatbots for Business",
-  description: "Deploy smart, context-aware AI chatbots for your business, trained on your data in minutes."
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "botimi | AI Chatbots for Business",
+    template: "%s | botimi",
+  },
+  description: DEFAULT_DESCRIPTION,
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+  },
+  openGraph: {
+    type: "website",
+    siteName: "botimi",
+    title: "botimi | AI Chatbots for Business",
+    description: DEFAULT_DESCRIPTION,
+    url: "/",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "botimi" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "botimi | AI Chatbots for Business",
+    description: DEFAULT_DESCRIPTION,
+    images: ["/opengraph-image"],
+  },
 };
 
 export default function RootLayout({ children }) {

@@ -130,7 +130,7 @@ export default function OnboardingWizard() {
     theme: "dark"
   };
 </script>
-<script async src="https://cdn.botimi.ai/widget.js"></script>`;
+<script async src="${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/widget/loader.js"></script>`;
     try {
       await navigator.clipboard.writeText(code);
       setCopied(true);
@@ -566,7 +566,7 @@ export default function OnboardingWizard() {
     theme: "dark"
   };
 </script>
-<script async src="https://cdn.botimi.ai/widget.js"></script>`)}</code>
+<script async src="${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/widget/loader.js"></script>`)}</code>
                   </pre>
                 </div>
                 <div className="p-5 bg-primary/5 border border-primary/20 rounded-xl flex items-start gap-4">

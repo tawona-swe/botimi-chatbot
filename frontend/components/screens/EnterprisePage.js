@@ -108,7 +108,7 @@ export default function EnterprisePage() {
               )}
               <button
                 className="bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-6 py-2"
-                onClick={() => (window.location.href = "mailto:sales@botimi.ai?subject=Enterprise%20integration")}
+                onClick={() => (window.location.href = "mailto:sales@botimi.co.zw?subject=Enterprise%20integration")}
               >
                 Talk to Sales
               </button>
@@ -133,7 +133,7 @@ export default function EnterprisePage() {
               <Link className="font-body-md text-body-md text-on-surface-variant font-medium hover:text-primary hover:bg-surface-container rounded-lg px-3 py-3 transition-colors duration-200" href="/dashboard" target="_top" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
             )}
             <div className="flex flex-col gap-2 mt-2 pt-3 border-t border-outline-variant">
-              <button className="w-full bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-6 py-3" onClick={() => (window.location.href = "mailto:sales@botimi.ai?subject=Enterprise%20integration")}>Talk to Sales</button>
+              <button className="w-full bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-6 py-3" onClick={() => (window.location.href = "mailto:sales@botimi.co.zw?subject=Enterprise%20integration")}>Talk to Sales</button>
             </div>
           </div>
         )}
@@ -164,7 +164,7 @@ export default function EnterprisePage() {
             </p>
             <button
               className="bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-10 py-4 text-lg"
-              onClick={() => (window.location.href = "mailto:sales@botimi.ai?subject=Enterprise%20integration")}
+              onClick={() => (window.location.href = "mailto:sales@botimi.co.zw?subject=Enterprise%20integration")}
             >
               Talk to Sales
             </button>
@@ -240,7 +240,7 @@ export default function EnterprisePage() {
             <div className="flex flex-col md:flex-row gap-4 justify-center relative z-10">
               <button
                 className="bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all px-10 py-4 text-lg"
-                onClick={() => (window.location.href = "mailto:sales@botimi.ai?subject=Enterprise%20integration")}
+                onClick={() => (window.location.href = "mailto:sales@botimi.co.zw?subject=Enterprise%20integration")}
               >
                 Talk to Sales
               </button>

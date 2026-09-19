@@ -14,9 +14,16 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "**.botimi.ai",
+        hostname: "**.botimi.co.zw",
       },
     ],
+  },
+  async redirects() {
+    // /landing rendered the exact same content as the real homepage ("/")
+    // -- a duplicate-content problem for search engines. Permanent redirect
+    // instead of just a canonical tag, since nothing legitimately needs
+    // /landing to resolve on its own (confirmed no internal links point to it).
+    return [{ source: "/landing", destination: "/", permanent: true }];
   },
   async rewrites() {
     // In Docker, the frontend and backend are separate containers -- there
