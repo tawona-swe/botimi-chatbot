@@ -565,8 +565,8 @@ export default function BotsPage() {
                       <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-tertiary/15 text-tertiary uppercase">Coming soon</span>
                     </div>
                     <p className="text-xs text-on-surface-variant">
-                      Mirroring this bot on WhatsApp is still being finished — self-serve setup needs Meta's Tech Provider
-                      program, which we haven't completed yet. Reach out if you'd like early access in the meantime.
+                      Mirroring this bot on WhatsApp is still being finished — self-serve setup needs Meta&rsquo;s Tech Provider
+                      program, which we haven&rsquo;t completed yet. Reach out if you&rsquo;d like early access in the meantime.
                     </p>
                   </div>
                 </div>
