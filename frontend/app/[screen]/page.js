@@ -12,12 +12,16 @@ import AdminPage from "../../components/screens/AdminPage";
 import PricingPage from "../../components/screens/PricingPage";
 import HowItWorks from "../../components/screens/HowItWorks";
 import EnterprisePage from "../../components/screens/EnterprisePage";
+import PrivacyPolicy from "../../components/screens/PrivacyPolicy";
+import TermsOfService from "../../components/screens/TermsOfService";
 
 const screenInfo = {
   landing: { title: "Landing Page", Component: LandingPage },
   "how-it-works": { title: "How It Works", Component: HowItWorks },
   pricing: { title: "Pricing", Component: PricingPage },
   enterprise: { title: "Enterprise Integrations", Component: EnterprisePage },
+  privacy: { title: "Privacy Policy", Component: PrivacyPolicy },
+  terms: { title: "Terms & Conditions", Component: TermsOfService },
   dashboard: { title: "Vendor Dashboard", Component: Dashboard },
   support: { title: "Support Inbox", Component: SupportInbox },
   onboarding: { title: "Onboarding Wizard", Component: OnboardingWizard },

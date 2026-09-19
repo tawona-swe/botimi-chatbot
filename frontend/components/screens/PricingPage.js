@@ -569,6 +569,20 @@ export default function PricingPage() {
             >
               Dashboard
             </Link>
+            <Link
+              className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors"
+              href="/privacy"
+              target="_top"
+            >
+              Privacy
+            </Link>
+            <Link
+              className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors"
+              href="/terms"
+              target="_top"
+            >
+              Terms
+            </Link>
           </div>
           <div className="flex gap-4">
             <a

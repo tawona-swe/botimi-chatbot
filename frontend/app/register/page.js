@@ -181,6 +181,13 @@ export default function RegisterPage() {
               {isSubmitting ? 'Creating account...' : 'Create account'}
             </button>
 
+            <p className="text-center text-xs text-gray-400">
+              By creating an account, you agree to our{' '}
+              <Link href="/terms" className="underline hover:text-primary transition-colors">Terms &amp; Conditions</Link>
+              {' '}and{' '}
+              <Link href="/privacy" className="underline hover:text-primary transition-colors">Privacy Policy</Link>.
+            </p>
+
             <div className="flex items-center gap-3">
               <div className="flex-1 h-px bg-gray-100" />
               <span className="text-xs text-gray-400 font-medium">or continue with</span>
