@@ -50,45 +50,45 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-20 bg-white">
+    <div className="h-screen overflow-hidden grid grid-cols-1 lg:grid-cols-20 bg-background">
       {/* LEFT — LOGIN FORM */}
-      <div className="lg:col-span-9 relative flex items-center justify-center px-8 lg:px-16 xl:px-24 py-12 bg-white overflow-hidden">
+      <div className="lg:col-span-9 relative flex items-center justify-center px-8 lg:px-16 xl:px-24 py-8 bg-background overflow-hidden">
         {/* Left-side decoration */}
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary opacity-[0.08] blur-[100px]" />
           <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-secondary opacity-[0.08] blur-[100px]" />
-          <div className="absolute top-[15%] left-[8%] w-3 h-3 rounded-full bg-primary opacity-20 animate-float-slow" />
-          <div className="absolute top-[68%] right-[10%] w-2 h-2 rounded-full bg-secondary opacity-25 animate-float-reverse" />
-          <div className="absolute bottom-[14%] left-[18%] w-2.5 h-2.5 rounded-full bg-primary opacity-15 animate-float" />
         </div>
 
-        <div className="relative z-10 w-full max-w-md space-y-8">
+        <div className="relative z-10 w-full max-w-md space-y-6">
           {/* Brand + Heading */}
           <div>
-            <Link href="/" className="inline-flex items-center gap-2 mb-8">
-              <span className="text-lg font-bold text-primary">botimi</span>
+            <Link href="/" className="inline-flex items-center gap-2 mb-6">
+              <span className="relative inline-block text-lg font-bold text-primary" style={{ fontFamily: '"Outfit", sans-serif' }}>
+                botimi
+                <span className="absolute rounded-full bg-tertiary" style={{ width: "5px", height: "5px", top: "-2px", right: "-7px" }} />
+              </span>
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">Welcome back</h1>
-            <p className="mt-2 text-sm text-gray-500">
+            <h1 className="text-3xl font-bold text-on-surface">Welcome back</h1>
+            <p className="mt-2 text-sm text-on-surface-variant">
               Enter your credentials to access your account
             </p>
           </div>
 
-          <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+          <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
             {/* Email */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
+              <label className="block text-sm font-semibold text-on-surface-variant mb-1.5">Email</label>
               <div className="relative">
-                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50" />
                 <input
                   type="email"
                   {...register('email')}
                   placeholder="you@example.com"
-                  className="w-full border border-gray-200 rounded-xl py-3 pr-4 pl-11 text-sm text-gray-900 bg-gray-50/50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all"
+                  className="w-full border border-outline-variant rounded-xl py-3 pr-4 pl-11 text-sm text-on-surface bg-surface-container-lowest placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 />
               </div>
               {errors.email && (
-                <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+                <p className="mt-1.5 text-xs text-error flex items-center gap-1">
                   <span>•</span> {errors.email.message}
                 </p>
               )}
@@ -96,26 +96,26 @@ export default function LoginPage() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
+              <label className="block text-sm font-semibold text-on-surface-variant mb-1.5">Password</label>
               <div className="relative">
-                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   {...register('password')}
                   placeholder="Enter your password"
-                  className="w-full border border-gray-200 rounded-xl py-3 pr-12 pl-11 text-sm text-gray-900 bg-gray-50/50 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all"
+                  className="w-full border border-outline-variant rounded-xl py-3 pr-12 pl-11 text-sm text-on-surface bg-surface-container-lowest placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 hover:text-on-surface-variant transition-colors"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
               {errors.password && (
-                <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+                <p className="mt-1.5 text-xs text-error flex items-center gap-1">
                   <span>•</span> {errors.password.message}
                 </p>
               )}
@@ -136,9 +136,9 @@ export default function LoginPage() {
             </button>
 
             <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-gray-100" />
-              <span className="text-xs text-gray-400 font-medium">or continue with</span>
-              <div className="flex-1 h-px bg-gray-100" />
+              <div className="flex-1 h-px bg-outline-variant" />
+              <span className="text-xs text-on-surface-variant/70 font-medium">or continue with</span>
+              <div className="flex-1 h-px bg-outline-variant" />
             </div>
 
             <GoogleAuthButton
@@ -146,7 +146,7 @@ export default function LoginPage() {
               onCredential={handleGoogleCredential}
             />
 
-            <p className="text-center text-sm text-gray-500">
+            <p className="text-center text-sm text-on-surface-variant">
               Don&apos;t have an account?{' '}
               <Link href="/register" className="font-semibold text-primary hover:text-primary/80 transition-colors">
                 Sign up
@@ -163,23 +163,17 @@ export default function LoginPage() {
           <div className="absolute -top-24 -left-20 w-96 h-96 rounded-full bg-primary opacity-25 blur-[100px] animate-float" />
           <div className="absolute -top-10 left-32 w-80 h-80 rounded-full bg-secondary opacity-20 blur-[80px] animate-float-reverse" />
           <div className="absolute bottom-0 -right-10 w-[30rem] h-[30rem] rounded-full bg-primary opacity-20 blur-[120px] animate-float-slow" />
-          {/* Floating bubbles & dice */}
-          <div className="absolute top-[12%] left-[15%] w-4 h-4 rounded-full bg-white/10 animate-float-slow" />
-          <div className="absolute top-[30%] right-[20%] w-3 h-3 rounded-full bg-primary/20 animate-float-reverse" />
-          <div className="absolute bottom-[25%] left-[10%] w-5 h-5 rounded-full bg-secondary/15 animate-float" />
-          <div className="absolute top-[50%] left-[40%] w-2 h-2 rounded-full bg-white/8 animate-float-slow" />
-          <div className="absolute top-[8%] right-[35%] w-6 h-6 rounded-lg bg-white/5 animate-float-reverse" />
-          <div className="absolute bottom-[35%] right-[25%] w-4 h-4 rounded-lg bg-primary/15 animate-float-slow" />
-          <div className="absolute top-[65%] right-[10%] w-3 h-3 rounded-lg bg-secondary/10 animate-float" />
-          <div className="absolute bottom-[15%] left-[30%] w-5 h-5 rounded-full bg-white/6 animate-float-reverse" />
-          <div className="absolute top-[20%] left-[60%] w-2 h-2 rounded-lg bg-primary/10 animate-float-slow" />
-          <div className="absolute top-[75%] left-[20%] w-3 h-3 rounded-full bg-secondary/8 animate-float" />
+          <div className="absolute top-[15%] left-[12%] w-3 h-3 rounded-full bg-white/10 animate-float-slow" />
+          <div className="absolute bottom-[20%] right-[15%] w-2.5 h-2.5 rounded-full bg-tertiary/25 animate-float-reverse" />
         </div>
 
         {/* Content */}
         <div className="relative z-10 max-w-md text-left px-10 animate-fade-in-up">
           <div className="flex items-center gap-3 mb-8">
-            <span className="text-2xl font-bold text-white">botimi</span>
+            <span className="relative inline-block text-2xl font-bold text-white" style={{ fontFamily: '"Outfit", sans-serif' }}>
+              botimi
+              <span className="absolute rounded-full bg-tertiary" style={{ width: "6px", height: "6px", top: "-2px", right: "-9px" }} />
+            </span>
           </div>
 
           <h2 className="text-4xl font-semibold leading-tight text-white delay-1 animate-fade-in-up">
