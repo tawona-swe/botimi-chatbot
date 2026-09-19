@@ -48,7 +48,12 @@ export default function CsatPage() {
       `}</style>
       <div className="min-h-screen bg-background text-on-background flex items-center justify-center p-6">
         <div className="w-full max-w-md bg-surface-container border border-outline-variant rounded-2xl p-8 text-center">
-          <Link href="/" className="font-display text-headline-md font-extrabold text-primary block mb-6">botimi</Link>
+          <Link href="/" className="inline-block mb-6">
+            <span className="relative inline-block text-headline-md font-extrabold text-primary" style={{ fontFamily: '"Outfit", sans-serif' }}>
+              botimi
+              <span className="absolute rounded-full bg-tertiary" style={{ width: "5px", height: "5px", top: "-2px", right: "-7px" }} />
+            </span>
+          </Link>
 
           {loading ? (
             <p className="text-sm text-on-surface-variant">Loading...</p>
