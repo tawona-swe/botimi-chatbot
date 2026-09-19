@@ -21,7 +21,7 @@ export default function PrivacyPolicy() {
         <div className="max-w-[720px] mx-auto">
           <p className="font-label-md text-label-md text-primary mb-2">Legal</p>
           <h1 className="font-display text-headline-lg text-on-surface mb-2">Privacy Policy</h1>
-          <p className="text-sm text-on-surface-variant mb-12">Last updated: {new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</p>
+          <p className="text-sm text-on-surface-variant mb-12">Last updated: September 19, 2026</p>
 
           <div className="space-y-10 text-on-surface [&_h2]:font-display [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-on-surface [&_h2]:mb-3 [&_p]:text-sm [&_p]:leading-relaxed [&_p]:text-on-surface-variant [&_p]:mb-3 [&_li]:text-sm [&_li]:leading-relaxed [&_li]:text-on-surface-variant [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5">
 
