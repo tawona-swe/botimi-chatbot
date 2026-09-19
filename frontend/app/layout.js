@@ -7,7 +7,7 @@ import GuestAssistant from "../components/ui/GuestAssistant";
 import { Toaster } from "react-hot-toast";
 
 export const metadata = {
-  title: "botimi — AI Chatbots for Your Business",
+  title: "botimi | AI Chatbots for Business",
   description: "Deploy smart, context-aware AI chatbots for your business, trained on your data in minutes."
 };
 
