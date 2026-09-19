@@ -6,11 +6,19 @@ import { useAuth } from "../../context/AuthContext";
 export default function PricingPage() {
   const { vendor } = useAuth();
   const [isDark, setIsDark] = useState(false);
+  // Defaults to international (matches the server-rendered HTML, avoiding a
+  // hydration mismatch), then flips to local Zimbabwe pricing after mount
+  // if the visitor's browser timezone suggests they're there.
   const [isLocal, setIsLocal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"));
+    try {
+      if (Intl.DateTimeFormat().resolvedOptions().timeZone === "Africa/Harare") {
+        setIsLocal(true);
+      }
+    } catch (e) {}
   }, []);
 
   const toggleTheme = () => {

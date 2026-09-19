@@ -8,9 +8,20 @@ export default function LandingPage() {
   const { vendor } = useAuth();
   const [isDark, setIsDark] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // Defaults to international pricing (matches the server-rendered HTML,
+  // avoiding a hydration mismatch), then flips to local Zimbabwe pricing
+  // after mount if the visitor's browser timezone suggests they're there --
+  // otherwise a Zimbabwean visitor's first impression is USD pricing with
+  // no indication cheaper local pricing even exists.
+  const [isLocal, setIsLocal] = useState(false);
 
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"));
+    try {
+      if (Intl.DateTimeFormat().resolvedOptions().timeZone === "Africa/Harare") {
+        setIsLocal(true);
+      }
+    } catch (e) {}
   }, []);
 
   const toggleTheme = () => {
@@ -518,11 +529,33 @@ export default function LandingPage() {
               Choose the tier that fits your volume. All plans include 1-click install and context-aware responses.
             </p>
           </div>
+
+          <div className="flex items-center justify-center gap-4 mb-10">
+            <span className={`font-body-md text-body-md ${!isLocal ? "text-on-surface font-semibold" : "text-on-surface-variant"}`}>
+              International
+            </span>
+            <button
+              onClick={() => setIsLocal(!isLocal)}
+              className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
+                isLocal ? "bg-primary" : "bg-outline-variant"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${
+                  isLocal ? "translate-x-7" : "translate-x-0"
+                }`}
+              />
+            </button>
+            <span className={`font-body-md text-body-md ${isLocal ? "text-on-surface font-semibold" : "text-on-surface-variant"}`}>
+              Zimbabwe
+            </span>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
             <div className="bg-surface-container border border-outline-variant p-8 rounded-xl flex flex-col hover:border-primary/30 transition-all duration-300">
               <p className="font-label-md text-label-md text-primary mb-2">Starter</p>
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-headline-lg font-display text-on-surface font-bold">$39</span>
+                <span className="text-headline-lg font-display text-on-surface font-bold">${isLocal ? 19 : 39}</span>
                 <span className="text-on-surface-variant">/month</span>
               </div>
               <p className="text-on-surface-variant text-sm mb-8">
@@ -552,7 +585,7 @@ export default function LandingPage() {
               </div>
               <p className="font-label-md text-label-md text-primary mb-2">Growth</p>
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-headline-lg font-display text-on-surface font-bold">$99</span>
+                <span className="text-headline-lg font-display text-on-surface font-bold">${isLocal ? 49 : 99}</span>
                 <span className="text-on-surface-variant">/month</span>
               </div>
               <p className="text-on-surface-variant text-sm mb-8">
@@ -582,7 +615,7 @@ export default function LandingPage() {
             <div className="bg-surface-container border border-outline-variant p-8 rounded-xl flex flex-col hover:border-primary/30 transition-all duration-300">
               <p className="font-label-md text-label-md text-primary mb-2">Business</p>
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-headline-lg font-display text-on-surface font-bold">$279</span>
+                <span className="text-headline-lg font-display text-on-surface font-bold">${isLocal ? 129 : 279}</span>
                 <span className="text-on-surface-variant">/month</span>
               </div>
               <p className="text-on-surface-variant text-sm mb-8">
