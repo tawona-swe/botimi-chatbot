@@ -9,6 +9,12 @@ FROM mcr.microsoft.com/playwright:v1.62.1-jammy
 
 WORKDIR /app
 
+# better-sqlite3 has no prebuilt binary for this image's Node version and
+# falls back to compiling from source via node-gyp, which needs a C++
+# toolchain the Playwright base image doesn't ship with.
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install dependencies first, separately from the source copy below, so
 # `docker build` can cache this layer and skip the (slow) npm install on
 # every rebuild that only changes application code.
