@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { notFound } from "next/navigation";
 import Dashboard from "../../components/screens/Dashboard";
 import SupportInbox from "../../components/screens/SupportInbox";
 import OnboardingWizard from "../../components/screens/OnboardingWizard";
@@ -73,7 +73,9 @@ export async function generateMetadata({ params }) {
   const { screen: slug } = await params;
   const info = screenInfo[slug];
 
-  if (!info) return { title: "Screen not found" };
+  // notFound() below is what actually produces a real 404 -- this is just
+  // defensive, since Next supersedes it with the not-found boundary anyway.
+  if (!info) return { robots: { index: false, follow: false } };
 
   // Private, behind-auth app screens (dashboard, settings, admin, etc.)
   // shouldn't be indexed -- their static HTML shell is technically
@@ -98,19 +100,34 @@ export async function generateMetadata({ params }) {
 
 export default async function ScreenPage({ params }) {
   const { screen: slug } = await params;
+  const info = screenInfo[slug];
 
-  if (!screenInfo[slug]) {
+  // A previous version of this returned 200 with "screen not found" content
+  // instead of a real 404 -- a "soft 404" Google explicitly flags as a
+  // problem (it wastes crawl budget and can get flagged in Search Console).
+  // notFound() triggers Next's actual 404 status + the nearest not-found.js.
+  if (!info) notFound();
+
+  if (info.public) {
+    const breadcrumbJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://app.botimi.co.zw/" },
+        { "@type": "ListItem", position: 2, name: info.title, item: `https://app.botimi.co.zw/${slug}` },
+      ],
+    };
     return (
-      <main className="missing-page">
-        <div className="missing-card">
-          <h1>Screen not found</h1>
-          <p>The requested botimi UI screen is not registered in this Next.js app.</p>
-          <Link href="/">Back to all screens</Link>
-        </div>
-      </main>
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        />
+        <info.Component />
+      </>
     );
   }
 
-  const { Component } = screenInfo[slug];
+  const { Component } = info;
   return <Component />;
 }
