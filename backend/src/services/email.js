@@ -6,7 +6,7 @@ let emailClient = null;
  * Send an email using Resend or SendGrid compatible API.
  * Falls back to console logging in development.
  */
-export async function sendEmail({ to, subject, html, from }) {
+export async function sendEmail({ to, subject, html, from, replyTo }) {
   const fromAddress = from || config.email.from;
 
   if (config.isDev) {
@@ -31,6 +31,7 @@ export async function sendEmail({ to, subject, html, from }) {
           to,
           subject,
           html,
+          ...(replyTo ? { reply_to: replyTo } : {}),
         }),
       });
 
@@ -297,6 +298,48 @@ export async function sendRenewalReminder(vendorEmail, planName) {
       <h1 style="color: ${BRAND.ink}; font-size: 22px; margin: 0 0 16px;">Time to renew</h1>
       <p style="color: ${BRAND.ink}; line-height: 1.6;">Your ${planName} plan is due for renewal. Since you pay by card, we can't charge you automatically — click below to renew and keep your bot running without interruption.</p>
       ${renderButton(`${config.frontendUrl}/settings`, "Renew now")}
+    `),
+  });
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function stripHtmlTags(html) {
+  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Relay an inbound email (support@botimi.co.zw etc) to the real address a
+ * human actually checks. Resend receives the mail but has no forwarding
+ * toggle of its own -- see routes/emailWebhook.js, which calls this after
+ * verifying and fetching the full message. replyTo is the original sender,
+ * so replying to the forwarded email replies straight back to them instead
+ * of to noreply@. The original body is escaped and shown as preformatted
+ * text rather than rendered as HTML, since it's untrusted content from
+ * whoever emailed in.
+ */
+export async function sendInboundEmailForward({ to, from, subject, text, html, attachments }) {
+  const bodyText = text || (html ? stripHtmlTags(html) : "(no content)");
+  const attachmentNote = attachments?.length
+    ? `<p style="color: ${BRAND.inkSoft}; font-size: 13px;">${attachments.length} attachment(s): ${attachments.map((a) => escapeHtml(a.filename)).join(", ")} — view in the <a href="https://resend.com/emails">Resend dashboard</a>.</p>`
+    : "";
+
+  return sendEmail({
+    to,
+    replyTo: from,
+    subject: `[botimi inbound] ${subject || "(no subject)"}`,
+    html: renderEmailShell(`
+      <h1 style="color: ${BRAND.ink}; font-size: 20px; margin: 0 0 16px;">New message to your support inbox</h1>
+      ${renderInfoBox(`<p style="margin: 0 0 6px;"><strong>From:</strong> ${escapeHtml(from)}</p><p style="margin: 0;"><strong>Subject:</strong> ${escapeHtml(subject || "(no subject)")}</p>`)}
+      <pre style="white-space: pre-wrap; font-family: inherit; color: ${BRAND.ink}; line-height: 1.6; background: ${BRAND.surfaceAlt}; padding: 16px; border-radius: 10px; font-size: 14px; margin: 0;">${escapeHtml(bodyText)}</pre>
+      ${attachmentNote}
+      <p style="color: ${BRAND.inkSoft}; font-size: 13px; margin-top: 16px;">Reply to this email to respond directly to ${escapeHtml(from)}.</p>
     `),
   });
 }

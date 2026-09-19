@@ -48,6 +48,13 @@ const config = {
   email: {
     apiKey: process.env.RESEND_API_KEY || "",
     from: process.env.EMAIL_FROM || "noreply@botimi.ai",
+    // Signing secret for Resend's inbound-email webhook (Settings > Webhooks
+    // in the Resend dashboard, "whsec_..." — a different value from the API
+    // key above). Without it the webhook route refuses every request.
+    inboundWebhookSecret: process.env.RESEND_INBOUND_WEBHOOK_SECRET || "",
+    // Real inbox a human actually checks — inbound mail to support@ has
+    // nowhere to go without this set.
+    forwardTo: process.env.SUPPORT_FORWARD_TO_EMAIL || "",
   },
 
   pesepay: {

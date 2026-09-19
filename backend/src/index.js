@@ -69,8 +69,15 @@ app.use(cors((req, callback) => {
 
 app.use(morgan(config.isDev ? "dev" : "combined"));
 
-// JSON body parser
-app.use(express.json({ limit: "10mb" }));
+// JSON body parser. The verify hook stashes the raw bytes on the request --
+// needed by /api/email/webhook to check Resend's signature, since HMAC
+// verification breaks the instant you re-serialize the already-parsed body.
+app.use(express.json({
+  limit: "10mb",
+  verify: (req, _res, buf) => {
+    req.rawBody = buf;
+  },
+}));
 app.use(express.urlencoded({ extended: true }));
 
 // General rate limiter
@@ -120,6 +127,9 @@ app.use("/api/canned-responses", (await import("./routes/cannedResponses.js")).d
 
 // WhatsApp channel (public webhook — called by Meta, not a browser)
 app.use("/api/whatsapp", (await import("./routes/whatsapp.js")).default);
+
+// Inbound email forwarding (public webhook — called by Resend, not a browser)
+app.use("/api/email", (await import("./routes/emailWebhook.js")).default);
 
 // Public ticket CSAT (no auth — ticket UUID is the access token)
 app.use("/api/public/tickets", (await import("./routes/ticketsPublic.js")).default);
