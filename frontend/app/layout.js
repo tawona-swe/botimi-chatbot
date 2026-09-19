@@ -1,5 +1,6 @@
 import "./globals.css";
 import Script from "next/script";
+import { DM_Sans, JetBrains_Mono, Caveat } from "next/font/google";
 import { AuthProvider } from "../context/AuthContext";
 import { AssistantProvider } from "../context/AssistantContext";
 import DashboardAssistant from "../components/ui/DashboardAssistant";
@@ -8,6 +9,21 @@ import { Toaster } from "react-hot-toast";
 
 const SITE_URL = "https://app.botimi.co.zw";
 const DEFAULT_DESCRIPTION = "Deploy an AI chatbot trained on your website or documents in minutes — website widget and WhatsApp, with human handoff and a built-in support inbox when it can't answer.";
+
+// Self-hosted via next/font instead of the old fonts.googleapis.com <link>
+// tag -- removes a render-blocking external request and a third-party
+// (Google Fonts CDN) connection entirely for these three. Only the fonts
+// referenced from exactly one place (the Tailwind config below) are safe
+// to move this way; "Outfit" is used via ~18 scattered inline style
+// literals across the app (every wordmark instance) and isn't touched
+// here -- migrating it blind, with no way to visually verify every one of
+// those still renders correctly, isn't worth the risk. Still loaded from
+// the classic <link> tag below, same as Material Symbols (an icon font,
+// same reasoning). "Instrument Serif" was also on that link and is now
+// removed outright -- confirmed unused anywhere in the codebase.
+const dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-dm-sans", display: "swap" });
+const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-jetbrains-mono", display: "swap" });
+const caveat = Caveat({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-caveat", display: "swap" });
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
@@ -39,7 +55,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={`${dmSans.variable} ${jetbrainsMono.variable} ${caveat.variable}`}>
       <head>
         {/* cdn.tailwindcss.com JIT-compiles this app's whole utility CSS in the
             browser on every full page load, which takes a few real seconds —
@@ -55,7 +71,7 @@ export default function RootLayout({ children }) {
             position: fixed; inset: 0; z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
             background: #f8f9fc;
-            font-family: "DM Sans", sans-serif;
+            font-family: var(--font-dm-sans), sans-serif;
           }
           html.dark #tw-loader { background: #13131b; }
           html.tw-ready #tw-loader { display: none; }
@@ -98,7 +114,7 @@ export default function RootLayout({ children }) {
             `
           }}
         />
-        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@700;800&family=JetBrains+Mono:wght@400;500&family=Caveat:wght@400;500;600;700&family=Instrument+Serif:ital@1&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
         <Script
           id="theme-init"
           strategy="beforeInteractive"
@@ -204,16 +220,16 @@ export default function RootLayout({ children }) {
                       "stack-md": "16px"
                     },
                     fontFamily: {
-                      "label-md": ["DM Sans", "sans-serif"],
-                      "headline-lg-mobile": ["DM Sans", "sans-serif"],
-                      "body-md": ["DM Sans", "sans-serif"],
-                      "code-sm": ["JetBrains Mono", "monospace"],
-                      "headline-lg": ["DM Sans", "sans-serif"],
-                      "body-lg": ["DM Sans", "sans-serif"],
-                      display: ["DM Sans", "sans-serif"],
-                      "headline-md": ["DM Sans", "sans-serif"],
-                      "body-sm": ["DM Sans", "sans-serif"],
-                      script: ["Caveat", "cursive"]
+                      "label-md": ["var(--font-dm-sans)", "sans-serif"],
+                      "headline-lg-mobile": ["var(--font-dm-sans)", "sans-serif"],
+                      "body-md": ["var(--font-dm-sans)", "sans-serif"],
+                      "code-sm": ["var(--font-jetbrains-mono)", "monospace"],
+                      "headline-lg": ["var(--font-dm-sans)", "sans-serif"],
+                      "body-lg": ["var(--font-dm-sans)", "sans-serif"],
+                      display: ["var(--font-dm-sans)", "sans-serif"],
+                      "headline-md": ["var(--font-dm-sans)", "sans-serif"],
+                      "body-sm": ["var(--font-dm-sans)", "sans-serif"],
+                      script: ["var(--font-caveat)", "cursive"]
                     },
                     fontSize: {
                       "label-md": ["12px", { lineHeight: "15px", letterSpacing: "0.02em", fontWeight: "500" }],
