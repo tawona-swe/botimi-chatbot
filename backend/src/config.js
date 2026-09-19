@@ -30,6 +30,15 @@ const config = {
     apiKey: process.env.OPENCODE_ZEN_API_KEY || "",
   },
 
+  // Falls back to NEXT_PUBLIC_GOOGLE_CLIENT_ID so the same value set for the
+  // frontend build works here too -- docker-compose's env_file passes the
+  // whole root .env into the backend container already. Only needs its own
+  // GOOGLE_CLIENT_ID when frontend and backend run from separate env files
+  // (e.g. local dev).
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
+  },
+
   whatsapp: {
     accessToken: process.env.WHATSAPP_ACCESS_TOKEN || "",
     verifyToken: process.env.WHATSAPP_VERIFY_TOKEN || "",

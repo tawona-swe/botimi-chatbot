@@ -202,6 +202,11 @@ router.post("/google", authLimiter, async (req, res) => {
       return res.status(400).json({ error: "Google ID token is required" });
     }
 
+    if (!config.google.clientId) {
+      console.error("[Auth] GOOGLE_CLIENT_ID is not configured; refusing Google sign-in");
+      return res.status(503).json({ error: "Google sign-in is not configured" });
+    }
+
     // Verify the Google ID token using Google's token info endpoint
     let googlePayload;
     try {
@@ -210,6 +215,14 @@ router.post("/google", authLimiter, async (req, res) => {
       googlePayload = await response.json();
     } catch {
       return res.status(401).json({ error: "Invalid or expired Google token" });
+    }
+
+    // aud must match our own client ID -- tokeninfo only proves the token is a
+    // genuine Google ID token, not that it was issued for THIS app. Without
+    // this check, a valid ID token from any Google OAuth client (including
+    // one an attacker controls) would authenticate as any vendor by email.
+    if (googlePayload.aud !== config.google.clientId) {
+      return res.status(401).json({ error: "Invalid Google token audience" });
     }
 
     const googleEmail = googlePayload.email;

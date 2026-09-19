@@ -9,7 +9,7 @@
 # restart caddy` here in infra/edge -- no rebuild needed, Caddy just
 # reloads its config.
 
-botimi.example.com {
+app.botimi.co.zw {
 	handle /api/* {
 		reverse_proxy botimi-backend-1:3001
 	}
