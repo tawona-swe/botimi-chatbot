@@ -661,6 +661,8 @@ export default function OnboardingWizard() {
             <Link className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/dashboard">Dashboard</Link>
             <Link className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/support">Support</Link>
             <Link className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/docs">Docs</Link>
+            <Link className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/privacy">Privacy</Link>
+            <Link className="text-xs text-on-surface-variant/80 hover:text-primary transition-colors" href="/terms">Terms</Link>
           </div>
         </div>
       </footer>

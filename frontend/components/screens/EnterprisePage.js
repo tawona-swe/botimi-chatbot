@@ -269,6 +269,8 @@ export default function EnterprisePage() {
             <Link className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/how-it-works" target="_top">How It Works</Link>
             <Link className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/enterprise" target="_top">Enterprise</Link>
             <Link className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/dashboard" target="_top">Dashboard</Link>
+            <Link className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/privacy" target="_top">Privacy</Link>
+            <Link className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/terms" target="_top">Terms</Link>
           </div>
         </div>
       </footer>

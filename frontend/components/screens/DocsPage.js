@@ -441,6 +441,8 @@ export default function DocsPage() {
           <div className="flex gap-4">
             <Link href="/" className="text-[10px] text-on-surface-variant/40 hover:text-on-surface-variant transition-colors">Home</Link>
             <Link href="/pricing" className="text-[10px] text-on-surface-variant/40 hover:text-on-surface-variant transition-colors">Pricing</Link>
+            <Link href="/privacy" className="text-[10px] text-on-surface-variant/40 hover:text-on-surface-variant transition-colors">Privacy</Link>
+            <Link href="/terms" className="text-[10px] text-on-surface-variant/40 hover:text-on-surface-variant transition-colors">Terms</Link>
           </div>
         </div>
       </footer>

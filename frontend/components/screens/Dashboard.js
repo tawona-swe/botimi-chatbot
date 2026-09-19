@@ -438,6 +438,8 @@ export default function Dashboard() {
             <Link className="font-body-sm text-xs text-on-surface-variant hover:text-primary transition-colors" href="/">Home</Link>
             <Link className="font-body-sm text-xs text-on-surface-variant hover:text-primary transition-colors" href="/support">Support</Link>
             <Link className="font-body-sm text-xs text-on-surface-variant hover:text-primary transition-colors" href="/onboarding">Onboarding</Link>
+            <Link className="font-body-sm text-xs text-on-surface-variant hover:text-primary transition-colors" href="/privacy">Privacy</Link>
+            <Link className="font-body-sm text-xs text-on-surface-variant hover:text-primary transition-colors" href="/terms">Terms</Link>
           </div>
         </div>
       </footer>

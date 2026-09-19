@@ -355,6 +355,8 @@ export default function HowItWorks() {
             <Link className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/how-it-works" target="_top">How It Works</Link>
             <Link className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/enterprise" target="_top">Enterprise</Link>
             <Link className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/dashboard" target="_top">Dashboard</Link>
+            <Link className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/privacy" target="_top">Privacy</Link>
+            <Link className="font-body-sm text-body-sm text-on-surface-variant hover:text-secondary transition-colors" href="/terms" target="_top">Terms</Link>
           </div>
           <div className="flex gap-4">
             <a className="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant hover:text-primary transition-all" href="#">
