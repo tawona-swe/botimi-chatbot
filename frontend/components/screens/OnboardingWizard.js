@@ -178,6 +178,15 @@ export default function OnboardingWizard() {
 
   const stepIcons = ["smart_toy", "palette", "rocket_launch"];
 
+  // Render nothing before the redirect effect above actually fires --
+  // without this, an unauthenticated visitor briefly sees the real
+  // onboarding wizard before being sent to /login. api.isAuthenticated()
+  // is a synchronous localStorage check (see lib/api.js), safe to call
+  // directly during render and SSR-safe (returns false on the server).
+  if (!api.isAuthenticated()) {
+    return <div className="min-h-screen bg-background" />;
+  }
+
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col selection:bg-primary/20">
       <style>{`

@@ -255,6 +255,13 @@ export default function SupportInbox() {
     return new Date(ts).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
   };
 
+  // Render nothing while auth state resolves or before the redirect effect
+  // above actually fires -- without this, an unauthenticated visitor briefly
+  // sees real customer conversation content before being sent to /login.
+  if (authLoading || !isAuthenticated) {
+    return <div className="min-h-screen bg-background" />;
+  }
+
   return (
     <>
       <style>{`

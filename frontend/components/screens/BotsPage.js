@@ -263,6 +263,13 @@ export default function BotsPage() {
 
   const toneColors = { professional: "bg-primary/10 text-primary border-primary/20", friendly: "bg-secondary/10 text-secondary border-secondary/20", concise: "bg-tertiary/10 text-tertiary border-tertiary/20" };
 
+  // Render nothing while auth state resolves or before the redirect effect
+  // above actually fires -- without this, an unauthenticated visitor briefly
+  // sees the real bot management UI before being sent to /login.
+  if (authLoading || !isAuthenticated) {
+    return <div className="min-h-screen bg-background" />;
+  }
+
   return (
     <>
       <style>{`

@@ -261,6 +261,14 @@ export default function AdminPage() {
   const formatNumber = (n) => (n ?? 0).toLocaleString();
   const formatDate = (ts) => ts ? new Date(ts).toLocaleDateString() : "—";
 
+  // Render nothing while auth state resolves, before the redirect effect
+  // above actually fires, or for an authenticated-but-non-superadmin vendor
+  // -- without this, real cross-vendor business metrics (MRR, churn, every
+  // vendor's data) briefly render before the redirect sends them away.
+  if (authLoading || !isAuthenticated || (vendor && !vendor.isSuperadmin)) {
+    return <div className="min-h-screen bg-background" />;
+  }
+
   if (loading && !overview) {
     return (
       <>

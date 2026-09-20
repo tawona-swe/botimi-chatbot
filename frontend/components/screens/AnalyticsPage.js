@@ -86,6 +86,16 @@ export default function AnalyticsPage() {
     return n.toLocaleString();
   };
 
+  // Render nothing while auth state resolves or before the redirect effect
+  // above actually fires -- without this, an unauthenticated visitor briefly
+  // sees real analytics data before being sent to /login. Checked before the
+  // data-loading guard below, which is unrelated to auth and previously only
+  // masked this by accident (loadAnalytics never even runs when logged out,
+  // so `loading` never resolves out of its initial `true` state).
+  if (authLoading || !isAuthenticated) {
+    return <div className="min-h-screen bg-background" />;
+  }
+
   if (loading) {
     return (
       <>

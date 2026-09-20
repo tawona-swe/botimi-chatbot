@@ -86,7 +86,11 @@ export default function OnboardingPlan() {
     }
   };
 
-  if (authLoading || loading) {
+  // !isAuthenticated is checked here too, not just authLoading -- otherwise
+  // once the auth check resolves for a logged-out visitor, this guard stops
+  // blocking and the real plan-selection content flashes before the
+  // redirect effect above actually fires.
+  if (authLoading || !isAuthenticated || loading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-background">
         <span className="material-symbols-outlined text-on-surface-variant animate-spin mr-2">sync</span>

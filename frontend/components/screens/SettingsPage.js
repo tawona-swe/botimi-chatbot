@@ -345,6 +345,16 @@ export default function SettingsPage() {
       supportLabel: SUPPORT_LABELS[p.support] || p.support,
     }));
 
+  // Render nothing while auth state resolves or before the redirect effect
+  // above actually fires -- without this, an unauthenticated visitor briefly
+  // sees real account/billing settings before being sent to /login. Checked
+  // before the data-loading guard below, which is unrelated to auth and
+  // previously only masked this by accident (the profile fetch never even
+  // runs when logged out, so `loading` never resolves out of `true`).
+  if (authLoading || !isAuthenticated) {
+    return <div className="min-h-screen bg-background" />;
+  }
+
   if (loading) {
     return (
       <>

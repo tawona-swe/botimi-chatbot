@@ -122,6 +122,13 @@ export default function Dashboard() {
     return n.toLocaleString();
   };
 
+  // Render nothing while auth state resolves or before the redirect effect
+  // above actually fires -- without this, an unauthenticated visitor briefly
+  // sees the real dashboard shell before being sent to /login.
+  if (authLoading || !isAuthenticated) {
+    return <div className="min-h-screen bg-background" />;
+  }
+
   return (
     <>
       <Sidebar activeLabel="Overview" isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} mobileOpen={mobileNavOpen} onMobileClose={() => setMobileNavOpen(false)} />
