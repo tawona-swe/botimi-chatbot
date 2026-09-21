@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import toast from "react-hot-toast";
 import Sidebar from "../ui/Sidebar";
 import WhatsAppIcon from "../ui/WhatsAppIcon";
 import api from "../../lib/api";
@@ -277,7 +278,7 @@ export default function BotsPage() {
       await loadBots();
     } catch (err) {
       console.error("Failed to create bot:", err);
-      alert(err.message);
+      toast.error(err.message || "Failed to create bot.");
     } finally {
       setCreateLoading(false);
     }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import { useAssistant } from "../../context/AssistantContext";
+import api from "../../lib/api";
 import { useState, useEffect } from "react";
 
 const navItems = [
@@ -18,6 +19,14 @@ export default function Sidebar({ activeLabel, isCollapsed, onToggle, mobileOpen
   const router = useRouter();
   const { vendor, logout } = useAuth();
   const { open: openAssistant } = useAssistant();
+  const [hasBot, setHasBot] = useState(false);
+
+  useEffect(() => {
+    if (!vendor) return;
+    api.getBots()
+      .then((data) => setHasBot((data?.bots || []).length > 0))
+      .catch(() => setHasBot(false));
+  }, [vendor]);
 
   const handleSignOut = async (e) => {
     e.preventDefault();
@@ -109,12 +118,12 @@ export default function Sidebar({ activeLabel, isCollapsed, onToggle, mobileOpen
       </nav>
       <div className="mt-auto pt-4 space-y-4">
         <button
-          title={isCollapsed ? "Deploy New Bot" : undefined}
+          title={isCollapsed ? (hasBot ? "Bot Setup" : "Deploy New Bot") : undefined}
           className={`w-full ${isCollapsed ? 'p-3' : 'py-3'} bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 ai-glow flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all`}
           onClick={() => window.location.href = "/onboarding"}
         >
           <span className="material-symbols-outlined text-[20px] shrink-0">add</span>
-          {!isCollapsed && <span className="font-label-md text-label-md whitespace-nowrap">Deploy New Bot</span>}
+          {!isCollapsed && <span className="font-label-md text-label-md whitespace-nowrap">{hasBot ? "Bot Setup" : "Deploy New Bot"}</span>}
         </button>
         <button
           onClick={toggleTheme}

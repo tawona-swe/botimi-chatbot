@@ -255,11 +255,14 @@ router.post("/google", authLimiter, async (req, res) => {
       `).run(id, googleEmail.toLowerCase(), randomPassword, googleName, trialEndsAt);
 
       // Create default bot. brand_color is explicit -- see the same INSERT
-      // in the password-signup path above for why.
+      // in the password-signup path above for why. The apostrophe in "I've"
+      // is doubled ('') -- SQL's own escape for a literal quote inside a
+      // string, not JS's backslash escape, which only produces a bare
+      // unescaped quote in the actual SQL text and breaks the statement.
       const botId = uuidv4();
       db.prepare(`
         INSERT INTO bots (id, vendor_id, name, welcome_message, response_tone, model_provider, model_name, brand_color)
-        VALUES (?, ?, 'botimi AI', 'Hello! I\'ve analyzed your documentation. How can I help you today?', 'professional', 'groq', 'llama3-70b', '#4A1A8A')
+        VALUES (?, ?, 'botimi AI', 'Hello! I''ve analyzed your documentation. How can I help you today?', 'professional', 'groq', 'llama3-70b', '#4A1A8A')
       `).run(botId, id);
 
       vendor = db.prepare("SELECT * FROM vendors WHERE id = ?").get(id);

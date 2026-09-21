@@ -19,6 +19,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [chartLoading, setChartLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [hasBot, setHasBot] = useState(false);
 
   // Auth guard
   useEffect(() => {
@@ -33,6 +34,9 @@ export default function Dashboard() {
       loadAnalytics();
       loadRecentConversations();
       loadOpenTicketCount();
+      api.getBots()
+        .then((data) => setHasBot((data?.bots || []).length > 0))
+        .catch(() => setHasBot(false));
     }
   }, [isAuthenticated]);
 
@@ -444,7 +448,7 @@ export default function Dashboard() {
           <div className="flex gap-6">
             <Link className="font-body-sm text-xs text-on-surface-variant hover:text-primary transition-colors" href="/">Home</Link>
             <Link className="font-body-sm text-xs text-on-surface-variant hover:text-primary transition-colors" href="/support">Support</Link>
-            <Link className="font-body-sm text-xs text-on-surface-variant hover:text-primary transition-colors" href="/onboarding">Onboarding</Link>
+            <Link className="font-body-sm text-xs text-on-surface-variant hover:text-primary transition-colors" href="/onboarding">{hasBot ? "Bot Setup" : "Onboarding"}</Link>
             <Link className="font-body-sm text-xs text-on-surface-variant hover:text-primary transition-colors" href="/privacy">Privacy</Link>
             <Link className="font-body-sm text-xs text-on-surface-variant hover:text-primary transition-colors" href="/terms">Terms</Link>
           </div>

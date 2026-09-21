@@ -32,12 +32,22 @@ export default function OnboardingWizard() {
   const [crawlError, setCrawlError] = useState("");
   const [onboardingError, setOnboardingError] = useState("");
   const [loadingBots, setLoadingBots] = useState(true);
+  // Distinguishes "brand-new bot created on entry" from "existing bot loaded"
+  // so the header can say "Editing your bot" instead of implying a fresh start.
+  const [isEditing, setIsEditing] = useState(false);
 
   async function loadBots() {
     try {
       const data = await api.getBots();
-      if (data.bots && data.bots.length > 0) {
-        const bot = data.bots[0];
+      let bot = data.bots && data.bots.length > 0 ? data.bots[0] : null;
+      // No bot yet (first-time user) -- create one so onboarding has a bot ID to work with
+      if (!bot) {
+        const created = await api.createBot("botimi AI");
+        bot = created && created.bot ? created.bot : null;
+      } else {
+        setIsEditing(true);
+      }
+      if (bot) {
         setBotId(bot.id);
         setBotName(bot.name || "botimi AI");
         setWelcomeMessage(bot.welcome_message || "Hello! I'm your AI assistant. How can I help you today?");
@@ -327,8 +337,14 @@ export default function OnboardingWizard() {
                     <span className="material-symbols-outlined text-primary text-sm">auto_awesome</span>
                     <span className="text-xs font-semibold text-primary">Step 1 of 3</span>
                   </div>
-                  <h1 className="font-display text-2xl sm:text-3xl text-on-surface font-bold">Feed your bot knowledge</h1>
-                  <p className="text-on-surface-variant mt-2 max-w-lg mx-auto">Upload docs or connect a URL so your bot understands your business inside out.</p>
+                  <h1 className="font-display text-2xl sm:text-3xl text-on-surface font-bold">
+                    {isEditing ? "Update your bot's knowledge" : "Feed your bot knowledge"}
+                  </h1>
+                  <p className="text-on-surface-variant mt-2 max-w-lg mx-auto">
+                    {isEditing
+                      ? `You're editing "${botName}". Add more sources or adjust settings — changes apply to your live bot.`
+                      : "Upload docs or connect a URL so your bot understands your business inside out."}
+                  </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="group relative p-6 bg-surface-container-high border border-outline-variant rounded-xl hover:border-primary/50 transition-all duration-300 glow-card">

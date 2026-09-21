@@ -50,9 +50,16 @@ router.post("/", (req, res) => {
 
   const { name, websiteUrl } = req.body;
   const botId = uuidv4();
+  // The apostrophe in "I'm" is doubled ('') -- SQL's own escape for a
+  // literal quote inside a string, not JS's backslash escape, which only
+  // produces a bare unescaped quote in the actual SQL text sent to SQLite
+  // and breaks the statement (this made every "Create Bot" attempt in the
+  // whole app fail with a 500 -- "near \"m\": syntax error" -- until now).
+  // brand_color is explicit rather than relying on the column DEFAULT for
+  // the same reason as the signup-time INSERTs in auth.js.
   db.prepare(`
-    INSERT INTO bots (id, vendor_id, name, welcome_message, response_tone, model_provider, model_name)
-    VALUES (?, ?, ?, 'Hello! I\'m your AI assistant. How can I help you today?', 'professional', 'groq', 'llama3-70b')
+    INSERT INTO bots (id, vendor_id, name, welcome_message, response_tone, model_provider, model_name, brand_color)
+    VALUES (?, ?, ?, 'Hello! I''m your AI assistant. How can I help you today?', 'professional', 'groq', 'llama3-70b', '#4A1A8A')
   `).run(botId, req.vendor.id, name || "New Bot");
 
   // Optionally start a crawl if URL provided
