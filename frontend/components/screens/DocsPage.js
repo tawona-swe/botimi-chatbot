@@ -257,7 +257,7 @@ export default function DocsPage() {
               <p className="text-on-surface-variant mb-8">Add botimi to any website with a single code snippet.</p>
 
               <h2>1. Get your embed code</h2>
-              <p>From your bot dashboard, navigate to <strong>Settings → Embed</strong>. Copy the JavaScript snippet provided.</p>
+              <p>From your <strong>Bots</strong> page, select a bot and copy the snippet from its <strong>Embed Code</strong> panel.</p>
 
               <h2>2. Add to your website</h2>
               <p>Paste the snippet just before the closing <code>&lt;/body&gt;</code> tag on every page where you want the chatbot to appear.</p>
@@ -268,11 +268,12 @@ export default function DocsPage() {
     theme: "dark",          // "dark" | "light"
     position: "bottom-right", // "bottom-right" | "bottom-left"
     color: "#4A1A8A",       // accent color
+    icon: "smart_toy",      // Material Symbols icon name
     hideBranding: false     // hide "Powered by botimi"
   };
 </script>
 <script src="https://app.botimi.co.zw/api/widget/loader.js" async></script>`}</code></pre>
-              <p className="text-sm text-on-surface-variant">The script tag always points to botimi&apos;s own domain (shown above) — not your website&apos;s. Only <code>apiKey</code> changes per bot; find yours under Settings → Embed.</p>
+              <p className="text-sm text-on-surface-variant">The script tag always points to botimi&apos;s own domain (shown above) — not your website&apos;s. Only <code>apiKey</code> changes per bot; find yours under the Bots page.</p>
 
               <h2>3. Platform guides</h2>
               <ul>

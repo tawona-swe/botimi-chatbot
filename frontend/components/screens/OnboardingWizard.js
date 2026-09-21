@@ -126,7 +126,6 @@ export default function OnboardingWizard() {
     const code = embedCode || `<script>
   window.botimiConfig = {
     apiKey: "${botId || 'YOUR_BOT_ID'}",
-    botId: "${botId || 'YOUR_BOT_ID'}",
     theme: "dark"
   };
 </script>
@@ -571,7 +570,6 @@ export default function OnboardingWizard() {
                     <code>{embedLoading ? "Loading embed code..." : (embedCode || `<script>
   window.botimiConfig = {
     apiKey: "${botId || 'YOUR_BOT_ID'}",
-    botId: "${botId || 'YOUR_BOT_ID'}",
     theme: "dark"
   };
 </script>
