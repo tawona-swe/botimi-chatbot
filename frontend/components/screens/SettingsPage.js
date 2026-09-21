@@ -804,34 +804,6 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* API Keys Section */}
-          <div className="bg-surface-container border border-outline-variant rounded-2xl p-8 max-w-3xl">
-            <h2 className="font-display text-lg font-bold text-on-surface mb-2">API Access</h2>
-            <p className="text-xs text-on-surface-variant mb-6">Use your bot ID as the API key to authenticate chat requests from your widget.</p>
-            {profile?.email && (
-              <div className="space-y-4">
-                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
-                  <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider block mb-2">Bot ID (API Key)</label>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 text-on-surface text-sm font-mono px-4 py-2.5 rounded-lg border border-outline-variant select-all truncate" style={{backgroundColor: "var(--code-bg)"}}>
-                      {vendor?.id || profile?.id || "Loading..."}
-                    </code>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(vendor?.id || profile?.id || "");
-                        alert("Bot ID copied to clipboard!");
-                      }}
-                      className="px-3 py-2.5 bg-surface-container border border-outline-variant rounded-lg text-xs font-bold text-on-surface hover:bg-surface-container-high transition-all"
-                    >
-                      <span className="material-symbols-outlined text-sm">content_copy</span>
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-on-surface-variant/60 mt-2">Use this as the <code className="text-primary">apiKey</code> parameter in your widget script.</p>
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Danger Zone */}
           <div className="bg-rose-500/5 border border-rose-500/20 rounded-2xl p-8 max-w-3xl">
             <h2 className="font-display text-lg font-bold text-rose-400 mb-2">Danger Zone</h2>

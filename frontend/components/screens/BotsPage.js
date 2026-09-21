@@ -17,6 +17,12 @@ const RESPONSE_QUALITY = {
   fast: { label: "Fast", description: "Optimized for the quickest possible replies.", provider: "groq", model: "llama3-8b" },
 };
 
+// Same set offered during onboarding (OnboardingWizard.js) -- kept in sync
+// so a bot's icon can also be changed later, not just chosen once at
+// signup. Actually renders on the live widget (see widget.js), not just
+// this dashboard.
+const BOT_ICONS = ["smart_toy", "support_agent", "forum", "psychology", "auto_awesome", "bolt", "favorite", "rocket_launch", "headset_mic", "hub"];
+
 function qualityTierFor(provider, model) {
   const match = Object.entries(RESPONSE_QUALITY).find(([, q]) => q.provider === provider && q.model === model);
   return match ? match[0] : "balanced";
@@ -46,6 +52,9 @@ export default function BotsPage() {
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [embedCode, setEmbedCode] = useState("");
+  const [embedLoading, setEmbedLoading] = useState(false);
+  const [embedCopied, setEmbedCopied] = useState(false);
   const [filter, setFilter] = useState("all"); // all | active | inactive
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState({ name: "", websiteUrl: "" });
@@ -107,8 +116,6 @@ export default function BotsPage() {
     setTestQuestion("");
     setCrawlUrl("");
     setCrawlSuccess("");
-    setWhatsappPhoneId(bot.whatsapp_phone_number_id || "");
-    setWhatsappToken(bot.whatsapp_access_token || "");
     try {
       const data = await api.getBotSources(bot.id);
       setSources(data.sources || []);
@@ -116,6 +123,31 @@ export default function BotsPage() {
       setSources([]);
     }
     loadTrainingData(bot.id);
+    loadEmbedCode(bot.id);
+  };
+
+  async function loadEmbedCode(botId) {
+    setEmbedCode("");
+    setEmbedCopied(false);
+    setEmbedLoading(true);
+    try {
+      const data = await api.getBotEmbed(botId);
+      setEmbedCode(data.embedCode || "");
+    } catch (err) {
+      console.error("Failed to load embed code:", err);
+    } finally {
+      setEmbedLoading(false);
+    }
+  }
+
+  const copyEmbedCode = async () => {
+    try {
+      await navigator.clipboard.writeText(embedCode);
+      setEmbedCopied(true);
+      setTimeout(() => setEmbedCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy embed code:", err);
+    }
   };
 
   const startEdit = () => {
@@ -124,6 +156,7 @@ export default function BotsPage() {
       welcome_message: selectedBot.welcome_message,
       response_tone: selectedBot.response_tone,
       brand_color: selectedBot.brand_color || "#4A1A8A",
+      avatar_icon: selectedBot.avatar_icon || "smart_toy",
       is_active: selectedBot.is_active,
       quality_tier: qualityTierFor(selectedBot.model_provider || "groq", selectedBot.model_name || "llama3-70b"),
       confidence_threshold: selectedBot.confidence_threshold ?? 0.7,
@@ -477,6 +510,28 @@ export default function BotsPage() {
                           <span className="text-xs text-on-surface-variant font-mono">{editForm.brand_color}</span>
                         </div>
                       </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Widget Icon</label>
+                        <div className="flex gap-2 flex-wrap">
+                          {BOT_ICONS.map((icon) => {
+                            const active = icon === editForm.avatar_icon;
+                            return (
+                              <button
+                                key={icon}
+                                type="button"
+                                aria-label={`Use ${icon.replace(/_/g, " ")} icon`}
+                                aria-pressed={active}
+                                onClick={() => setEditForm(f => ({ ...f, avatar_icon: icon }))}
+                                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
+                                  active ? "ring-2 ring-primary bg-primary/10" : "ring-1 ring-outline-variant/40 hover:ring-2 hover:ring-outline-variant"
+                                }`}
+                              >
+                                <span className="material-symbols-outlined text-[18px] text-on-surface">{icon}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                       <div className="flex items-center gap-3 p-3 bg-surface-container-lowest border border-outline-variant rounded-xl">
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input type="checkbox" checked={!!editForm.is_active} onChange={e => setEditForm(f => ({ ...f, is_active: e.target.checked ? 1 : 0 }))} className="sr-only peer" />
@@ -498,6 +553,7 @@ export default function BotsPage() {
                         { label: "Tone", val: selectedBot.response_tone },
                         { label: "Welcome Message", val: selectedBot.welcome_message },
                         { label: "Color", val: selectedBot.brand_color || "#4A1A8A" },
+                        { label: "Icon", val: selectedBot.avatar_icon || "smart_toy" },
                         { label: "Widget Position", val: selectedBot.widget_position },
                         { label: "Widget Theme", val: selectedBot.widget_theme },
                         { label: "Created", val: formatDate(selectedBot.created_at) },
@@ -562,6 +618,21 @@ export default function BotsPage() {
                         )}
                       </div>
                     )}
+                  </div>
+
+                  {/* Embed Code */}
+                  <div className="bg-surface-container border border-outline-variant rounded-2xl p-6 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-display font-bold text-on-surface">Embed Code</h3>
+                      <button onClick={copyEmbedCode} disabled={!embedCode} className="px-3 py-1.5 bg-primary text-on-primary rounded-lg text-xs font-bold disabled:opacity-50 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm">{embedCopied ? "check" : "content_copy"}</span>
+                        {embedCopied ? "Copied" : "Copy"}
+                      </button>
+                    </div>
+                    <p className="text-xs text-on-surface-variant">Paste this before the closing <code className="bg-surface-container-lowest px-1 rounded font-mono">&lt;/body&gt;</code> tag on your website.</p>
+                    <pre className="bg-surface-container-lowest border border-outline-variant rounded-xl p-3 text-[11px] font-mono text-on-surface overflow-x-auto scrollbar-thin whitespace-pre-wrap break-all">
+                      {embedLoading ? "Loading embed code..." : (embedCode || "Failed to load embed code.")}
+                    </pre>
                   </div>
 
                   {/* WhatsApp Connection — not yet self-serve, see note below */}

@@ -371,6 +371,7 @@ router.get("/:id/embed", (req, res) => {
     theme: "${bot.widget_theme || 'dark'}",
     position: "${bot.widget_position || 'bottom-right'}",
     color: "${bot.brand_color || '#4A1A8A'}",
+    icon: "${bot.avatar_icon || 'smart_toy'}",
     hideBranding: ${hideBranding}
   };
 </script>

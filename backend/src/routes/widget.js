@@ -34,15 +34,23 @@ router.get("/loader.js", (req, res) => {
 
   const apiBase = `${req.protocol}://${req.get('host')}`;
   const widgetJS = `(function(){'use strict';
-var c=window.botimiConfig||{},k=c.apiKey||'',t=c.theme||'dark',p=c.position||'bottom-right',cl=c.color||'#4A1A8A',hb=c.hideBranding||false;
+var c=window.botimiConfig||{},k=c.apiKey||'',t=c.theme||'dark',p=c.position||'bottom-right',cl=c.color||'#4A1A8A',hb=c.hideBranding||false,ic=c.icon||'smart_toy';
 if(!k){console.warn('[botimi] No apiKey found.');return;}
 var B='${apiBase}';
+if(!document.getElementById('botimi-icon-font')){
+var fl=document.createElement('link');fl.id='botimi-icon-font';fl.rel='stylesheet';
+fl.href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap';
+document.head.appendChild(fl);
+}
 var s=document.createElement('style');
 s.textContent='#botimi-wc{all:initial;position:fixed;z-index:999999;'+(p==='bottom-left'?'left:20px;':'right:20px;')+'bottom:20px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}'+
 '#botimi-wc *{box-sizing:border-box}'+
 '.bb{width:60px;height:60px;border-radius:50%;background:'+cl+';cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s}'+
 '.bb:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(0,0,0,.35)}'+
 '.bb svg{width:28px;height:28px}'+
+'.bmi{font-family:"Material Symbols Outlined";font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;color:#fff;line-height:1}'+
+'.bb .bmi{font-size:28px}'+
+'.bha .bmi{font-size:18px}'+
 '.bcp{position:fixed;'+(p==='bottom-left'?'left:20px;':'right:20px;')+'bottom:90px;width:380px;max-width:calc(100vw-40px);height:560px;max-height:calc(100vh-120px);border-radius:16px;overflow:hidden;display:none;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3);'+(t==='light'?'background:#fff;color:#1a1a2e;':'background:#1a1a2e;color:#e0e0e0;')+'}'+
 '.bcp.open{display:flex}'+
 '.bh{padding:16px;background:'+cl+';color:#fff;display:flex;align-items:center;gap:12px}'+
@@ -82,9 +90,9 @@ s.textContent='#botimi-wc{all:initial;position:fixed;z-index:999999;'+(p==='bott
 document.head.appendChild(s);
 var d=document.createElement('div');d.id='botimi-wc';
 var pnl=document.createElement('div');pnl.className='bcp';
-pnl.innerHTML='<div class="bh"><div class="bha">B</div><div class="bht">botimi AI</div><div class="bhc" id="bcx">&times;</div></div><div class="bm" id="bms"><div class="bmsg bot">Hello! I\\'m your AI assistant. How can I help you today?</div></div><div class="bi"><input type="text" id="bip" placeholder="Type your message..."/><button class="bsb" id="bsnd"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button></div>'+(hb?'':'<div class="bpw">Powered by botimi</div>');
+pnl.innerHTML='<div class="bh"><div class="bha"><span class="bmi">'+esc(ic)+'</span></div><div class="bht">botimi AI</div><div class="bhc" id="bcx">&times;</div></div><div class="bm" id="bms"><div class="bmsg bot">Hello! I\\'m your AI assistant. How can I help you today?</div></div><div class="bi"><input type="text" id="bip" placeholder="Type your message..."/><button class="bsb" id="bsnd"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button></div>'+(hb?'':'<div class="bpw">Powered by botimi</div>');
 var bbl=document.createElement('div');bbl.className='bb';
-bbl.innerHTML='<svg viewBox="0 0 24 24" fill="white"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/></svg>';
+bbl.innerHTML='<span class="bmi">'+esc(ic)+'</span>';
 d.appendChild(pnl);d.appendChild(bbl);document.body.appendChild(d);
 var op=0,me=document.getElementById('bms'),ip=document.getElementById('bip'),sb=document.getElementById('bsnd'),cx=document.getElementById('bcx');
 function tg(){op=!op;pnl.classList.toggle('open',op);bbl.style.display=op?'none':'flex';hidePx();}
