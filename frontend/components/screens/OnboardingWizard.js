@@ -15,6 +15,7 @@ export default function OnboardingWizard() {
   const [currentStep, setCurrentStep] = useState(1);
   const [transitioning, setTransitioning] = useState(true);
   const [selectedFileName, setSelectedFileName] = useState(null);
+  const [uploadStatus, setUploadStatus] = useState("idle"); // idle | uploading | done | error
   const [verifyState, setVerifyState] = useState("idle");
   const [copied, setCopied] = useState(false);
   const initialized = useRef(false);
@@ -165,19 +166,45 @@ export default function OnboardingWizard() {
     }
   };
 
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFileName(e.target.files[0].name);
+  // This used to only set a filename and animate a fake progress bar --
+  // nothing was ever actually sent to the server, so a vendor could pick a
+  // real document, see a convincing "100%" success state, and believe their
+  // bot had learned from it when nothing happened at all. Now calls the
+  // same upload endpoint BotsPage.js's (working) upload button uses.
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !botId) return;
+    setSelectedFileName(file.name);
+    setUploadStatus("uploading");
+    setOnboardingError("");
+    try {
+      await api.uploadBotDocument(botId, file);
+      setUploadStatus("done");
+    } catch (err) {
+      console.error("Upload failed:", err);
+      setUploadStatus("error");
+      setOnboardingError(err.message || "Upload failed. Please try again.");
+    } finally {
+      e.target.value = "";
     }
   };
 
   const realVerify = async () => {
     if (!botId) return;
+    // No stored source of truth for "the vendor's website" exists anywhere
+    // (bots don't persist one) -- this only ever has a real value if the
+    // vendor typed one on Step 1, which is optional there. Previously this
+    // silently fell back to window.location.origin (botimi's OWN domain),
+    // meaning anyone who skipped that field had their widget "verified"
+    // against the wrong site entirely and could never get a real answer.
+    if (!websiteUrl.trim()) {
+      setOnboardingError("Enter your website URL below first, then verify.");
+      return;
+    }
     setVerifyState("checking");
     setOnboardingError("");
     try {
-      const siteUrl = websiteUrl || (await import("../../lib/api")).default.getBotEmbed(botId).websiteUrl || window.location.origin;
-      const result = await api.verifyBotInstall(botId, siteUrl);
+      const result = await api.verifyBotInstall(botId, websiteUrl.trim());
       if (result.installed) {
         setVerifyState("verified");
       } else {
@@ -413,14 +440,30 @@ export default function OnboardingWizard() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-on-surface font-medium truncate">{selectedFileName || ""}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="flex-1 h-1.5 bg-surface-variant rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-1000" style={{ width: "100%" }} />
+                      {uploadStatus === "uploading" && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="flex-1 h-1.5 bg-surface-variant rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-primary to-secondary rounded-full animate-pulse" style={{ width: "60%" }} />
+                          </div>
+                          <span className="text-xs text-primary font-semibold">Uploading...</span>
                         </div>
-                        <span className="text-xs text-primary font-semibold">100%</span>
-                      </div>
+                      )}
+                      {uploadStatus === "error" && (
+                        <p className="text-xs text-rose-400 mt-1">Upload failed. Try again.</p>
+                      )}
+                      {uploadStatus === "done" && (
+                        <p className="text-xs text-green-400 mt-1">Uploaded and indexed</p>
+                      )}
                     </div>
-                    <span className="material-symbols-outlined text-green-400 text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                    {uploadStatus === "uploading" && (
+                      <span className="material-symbols-outlined text-secondary text-sm animate-spin">sync</span>
+                    )}
+                    {uploadStatus === "done" && (
+                      <span className="material-symbols-outlined text-green-400 text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                    )}
+                    {uploadStatus === "error" && (
+                      <span className="material-symbols-outlined text-rose-400 text-sm">error</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -624,6 +667,22 @@ export default function OnboardingWizard() {
                     <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">No waiting — your bot becomes available as soon as the snippet loads.</p>
                   </div>
                 </div>
+                {!websiteUrl.trim() && verifyState !== "verified" && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Your Website URL</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-sm text-on-surface-variant">link</span>
+                      <input
+                        className="w-full bg-surface-container-lowest border border-outline-variant pl-9 pr-3 py-2.5 rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/50"
+                        placeholder="https://yourcompany.com"
+                        type="url"
+                        value={websiteUrl}
+                        onChange={(e) => setWebsiteUrl(e.target.value)}
+                      />
+                    </div>
+                    <p className="text-xs text-on-surface-variant">We check this page for the embed snippet to confirm it&apos;s live.</p>
+                  </div>
+                )}
                 <button
                   type="button"
                   className={`w-full h-12 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm ${

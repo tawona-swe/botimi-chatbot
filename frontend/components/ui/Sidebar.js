@@ -118,12 +118,12 @@ export default function Sidebar({ activeLabel, isCollapsed, onToggle, mobileOpen
       </nav>
       <div className="mt-auto pt-4 space-y-4">
         <button
-          title={isCollapsed ? (hasBot ? "Bot Setup" : "Deploy New Bot") : undefined}
+          title={isCollapsed ? "Deploy New Bot" : undefined}
           className={`w-full ${isCollapsed ? 'p-3' : 'py-3'} bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 ai-glow flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all`}
-          onClick={() => window.location.href = "/onboarding"}
+          onClick={() => window.location.href = hasBot ? "/bots?action=create-bot" : "/onboarding"}
         >
           <span className="material-symbols-outlined text-[20px] shrink-0">add</span>
-          {!isCollapsed && <span className="font-label-md text-label-md whitespace-nowrap">{hasBot ? "Bot Setup" : "Deploy New Bot"}</span>}
+          {!isCollapsed && <span className="font-label-md text-label-md whitespace-nowrap">Deploy New Bot</span>}
         </button>
         <button
           onClick={toggleTheme}
