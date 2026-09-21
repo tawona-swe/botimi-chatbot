@@ -3,8 +3,18 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import api from "../../lib/api";
+import { EMBED_PLATFORMS, generateSnippet } from "../../lib/embedSnippets";
 
 const DEMO_BOT_ID = "demo-bot-001";
+const DOCS_EMBED_CONFIG = {
+  botId: "YOUR_BOT_ID",
+  theme: "dark",
+  position: "bottom-right",
+  color: "#4A1A8A",
+  icon: "smart_toy",
+  hideBranding: false,
+  backendUrl: "https://app.botimi.co.zw",
+};
 
 const sidebarSections = [
   { id: "getting-started", label: "Getting Started", icon: "rocket_launch" },
@@ -21,6 +31,7 @@ export default function DocsPage() {
   const [isDark, setIsDark] = useState(false);
   const [activeSection, setActiveSection] = useState("getting-started");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [docsEmbedPlatform, setDocsEmbedPlatform] = useState("html");
 
   // Playground state
   const [inputValue, setInputValue] = useState("");
@@ -259,29 +270,31 @@ export default function DocsPage() {
               <h2>1. Get your embed code</h2>
               <p>From your <strong>Bots</strong> page, select a bot and copy the snippet from its <strong>Embed Code</strong> panel.</p>
 
-              <h2>2. Add to your website</h2>
-              <p>Paste the snippet just before the closing <code>&lt;/body&gt;</code> tag on every page where you want the chatbot to appear.</p>
+              <h2>2. Pick your platform</h2>
+              <p>A raw <code>&lt;script&gt;</code> tag works as-is on plain HTML sites, but component frameworks compile markup rather than serving it literally — React/Next.js parses it as JSX and fails to build, while Vue/Svelte/Angular silently strip <code>&lt;script&gt;</code> tags found inside templates (no error, the widget just never loads). Pick your platform below for a snippet that actually works there.</p>
 
-              <pre><code>{`<script>
-  window.botimiConfig = {
-    apiKey: "YOUR_BOT_ID",
-    theme: "dark",          // "dark" | "light"
-    position: "bottom-right", // "bottom-right" | "bottom-left"
-    color: "#4A1A8A",       // accent color
-    icon: "smart_toy",      // Material Symbols icon name
-    hideBranding: false     // hide "Powered by botimi"
-  };
-</script>
-<script src="https://app.botimi.co.zw/api/widget/loader.js" async></script>`}</code></pre>
-              <p className="text-sm text-on-surface-variant">The script tag always points to botimi&apos;s own domain (shown above) — not your website&apos;s. Only <code>apiKey</code> changes per bot; find yours under the Bots page.</p>
+              <select
+                value={docsEmbedPlatform}
+                onChange={(e) => setDocsEmbedPlatform(e.target.value)}
+                className="w-full max-w-sm bg-surface-container border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface mb-3"
+              >
+                {EMBED_PLATFORMS.map((p) => (
+                  <option key={p.id} value={p.id}>{p.label}</option>
+                ))}
+              </select>
 
-              <h2>3. Platform guides</h2>
+              <pre><code>{generateSnippet(docsEmbedPlatform, DOCS_EMBED_CONFIG)}</code></pre>
+              <p className="text-sm text-on-surface-variant">The script always points to botimi&apos;s own domain (shown above) — not your website&apos;s. Only <code>apiKey</code> changes per bot; find yours (and this same snippet, pre-filled) under the Bots page&apos;s Embed Code panel.</p>
+
+              <h2>3. Platform-specific paste locations</h2>
               <ul>
                 <li><strong>WordPress:</strong> Add the snippet via <em>Appearance → Customize → Additional JS</em> or use a plugin.</li>
                 <li><strong>Shopify:</strong> Paste in <em>Online Store → Themes → Edit Code → theme.liquid</em> before <code>&lt;/body&gt;</code>.</li>
                 <li><strong>Webflow:</strong> Add via <em>Site Settings → Custom Code → Footer Code</em>.</li>
-                <li><strong>React / Next.js:</strong> Load the script tag from a <code>useEffect</code> (e.g. via <code>next/script</code> in Next.js).</li>
-                <li><strong>Any other site:</strong> Paste directly into the HTML template or use Google Tag Manager.</li>
+                <li><strong>Next.js:</strong> At the end of <code>&lt;body&gt;</code> in <code>app/layout.js</code> (or <code>_document.js</code> for the Pages Router).</li>
+                <li><strong>React / Vue / Svelte:</strong> Once, in your root component — see the snippet above for the exact lifecycle hook.</li>
+                <li><strong>Angular:</strong> In your root component&apos;s <code>ngOnInit</code>, via <code>Renderer2</code> (shown above) — not a raw DOM call, to stay SSR-safe.</li>
+                <li><strong>Any other site:</strong> Paste the HTML snippet directly into the template, or use Google Tag Manager.</li>
               </ul>
             </div>
           )}

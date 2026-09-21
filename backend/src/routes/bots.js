@@ -126,6 +126,27 @@ router.patch("/:id", (req, res) => {
 });
 
 /**
+ * DELETE /api/bots/:id
+ * Permanently delete a bot and everything trained on it. knowledge_sources,
+ * knowledge_chunks, and conversations (and messages, transitively) all
+ * declare ON DELETE CASCADE on bot_id and are enforced (PRAGMA foreign_keys
+ * = ON in db/index.js), so a single DELETE here cleans up all of them --
+ * except knowledge_chunks_fts, an FTS5 virtual table that can't carry a
+ * real foreign key and isn't touched by SQLite's cascade at all, so it's
+ * cleared explicitly first (same pattern as the existing delete-source
+ * route above).
+ */
+router.delete("/:id", (req, res) => {
+  const bot = db.prepare("SELECT id FROM bots WHERE id = ? AND vendor_id = ?").get(req.params.id, req.vendor.id);
+  if (!bot) return res.status(404).json({ error: "Bot not found" });
+
+  db.prepare("DELETE FROM knowledge_chunks_fts WHERE chunk_id IN (SELECT id FROM knowledge_chunks WHERE bot_id = ?)").run(req.params.id);
+  db.prepare("DELETE FROM bots WHERE id = ?").run(req.params.id);
+
+  res.json({ success: true });
+});
+
+/**
  * POST /api/bots/:id/crawl
  * Start a website crawl for training.
  */
@@ -390,6 +411,10 @@ router.get("/:id/embed", (req, res) => {
     botId: bot.id,
     theme: bot.widget_theme || "dark",
     position: bot.widget_position || "bottom-right",
+    color: bot.brand_color || "#4A1A8A",
+    icon: bot.avatar_icon || "smart_toy",
+    hideBranding,
+    backendUrl: config.backendUrl,
   });
 });
 

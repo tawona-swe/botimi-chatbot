@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import Sidebar from "../ui/Sidebar";
 import WhatsAppIcon from "../ui/WhatsAppIcon";
 import api from "../../lib/api";
+import { EMBED_PLATFORMS, generateSnippet } from "../../lib/embedSnippets";
 import { useAuth } from "../../context/AuthContext";
 
 // Vendors pick a response quality, never a provider or model name — which
@@ -54,12 +55,17 @@ export default function BotsPage() {
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
   const [embedCode, setEmbedCode] = useState("");
+  const [embedData, setEmbedData] = useState(null);
   const [embedLoading, setEmbedLoading] = useState(false);
   const [embedCopied, setEmbedCopied] = useState(false);
+  const [embedPlatform, setEmbedPlatform] = useState("html");
   const [filter, setFilter] = useState("all"); // all | active | inactive
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState({ name: "", websiteUrl: "" });
   const [createLoading, setCreateLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("botimiSidebarCollapsed");
@@ -129,11 +135,13 @@ export default function BotsPage() {
 
   async function loadEmbedCode(botId) {
     setEmbedCode("");
+    setEmbedData(null);
     setEmbedCopied(false);
     setEmbedLoading(true);
     try {
       const data = await api.getBotEmbed(botId);
       setEmbedCode(data.embedCode || "");
+      setEmbedData(data);
     } catch (err) {
       console.error("Failed to load embed code:", err);
     } finally {
@@ -141,9 +149,21 @@ export default function BotsPage() {
     }
   }
 
+  const displayedEmbedCode = embedPlatform === "html" || !embedData
+    ? embedCode
+    : generateSnippet(embedPlatform, {
+        botId: embedData.botId,
+        theme: embedData.theme,
+        position: embedData.position,
+        color: embedData.color,
+        icon: embedData.icon,
+        hideBranding: embedData.hideBranding,
+        backendUrl: embedData.backendUrl,
+      });
+
   const copyEmbedCode = async () => {
     try {
-      await navigator.clipboard.writeText(embedCode);
+      await navigator.clipboard.writeText(displayedEmbedCode);
       setEmbedCopied(true);
       setTimeout(() => setEmbedCopied(false), 2000);
     } catch (err) {
@@ -158,6 +178,7 @@ export default function BotsPage() {
       response_tone: selectedBot.response_tone,
       brand_color: selectedBot.brand_color || "#4A1A8A",
       avatar_icon: selectedBot.avatar_icon || "smart_toy",
+      widget_theme: selectedBot.widget_theme || "dark",
       is_active: selectedBot.is_active,
       quality_tier: qualityTierFor(selectedBot.model_provider || "groq", selectedBot.model_name || "llama3-70b"),
       confidence_threshold: selectedBot.confidence_threshold ?? 0.7,
@@ -181,6 +202,24 @@ export default function BotsPage() {
       console.error("Failed to save bot:", err);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteBot = async () => {
+    if (deleteConfirmName !== selectedBot.name) return;
+    setDeleteLoading(true);
+    try {
+      await api.deleteBot(selectedBot.id);
+      setBots(prev => prev.filter(b => b.id !== selectedBot.id));
+      setSelectedBot(null);
+      setShowDeleteConfirm(false);
+      setDeleteConfirmName("");
+      toast.success("Bot deleted.");
+    } catch (err) {
+      console.error("Failed to delete bot:", err);
+      toast.error(err.message || "Failed to delete bot.");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -410,6 +449,45 @@ export default function BotsPage() {
           </div>
         )}
 
+        {/* Delete Bot Confirmation Modal */}
+        {showDeleteConfirm && selectedBot && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="bg-surface-container border border-outline-variant rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-display text-lg font-bold text-rose-400">Delete &quot;{selectedBot.name}&quot;?</h3>
+                <button onClick={() => setShowDeleteConfirm(false)} className="text-on-surface-variant hover:text-on-surface">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+              <p className="text-sm text-on-surface-variant mb-4">
+                This permanently deletes the bot, all its trained content, and its conversation history. Any embed code
+                already live on your site will stop working. This can&apos;t be undone.
+              </p>
+              <div className="space-y-1.5 mb-4">
+                <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">
+                  Type <span className="font-mono text-on-surface">{selectedBot.name}</span> to confirm
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmName}
+                  onChange={e => setDeleteConfirmName(e.target.value)}
+                  className="w-full bg-surface-container-lowest border border-outline-variant p-3 rounded-xl text-sm text-on-surface"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleDeleteBot}
+                  disabled={deleteLoading || deleteConfirmName !== selectedBot.name}
+                  className="flex-1 px-5 py-2.5 bg-rose-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-rose-500/20 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+                >
+                  {deleteLoading ? <><span className="material-symbols-outlined text-sm animate-spin">sync</span> Deleting...</> : "Delete Permanently"}
+                </button>
+                <button onClick={() => setShowDeleteConfirm(false)} className="px-5 py-2.5 bg-surface-container-high text-on-surface-variant rounded-xl text-sm font-bold hover:bg-surface-container-highest active:scale-[0.98] transition-all">Cancel</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Bot Detail Panel */}
         <div className="flex-1 min-w-0 flex flex-col overflow-y-auto scrollbar-thin">
           {!selectedBot ? (
@@ -437,6 +515,12 @@ export default function BotsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={startEdit} className="px-4 py-2 border border-outline-variant bg-surface-container text-on-surface rounded-xl text-xs font-bold hover:bg-surface-container-high active:scale-[0.98] transition-all">Edit Bot</button>
+                  <button
+                    onClick={() => { setDeleteConfirmName(""); setShowDeleteConfirm(true); }}
+                    className="px-4 py-2 border border-rose-500/30 bg-rose-500/5 text-rose-400 rounded-xl text-xs font-bold hover:bg-rose-500/10 active:scale-[0.98] transition-all"
+                  >
+                    Delete Bot
+                  </button>
                   <button onClick={loadBots} className="p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors">
                     <span className="material-symbols-outlined text-[20px]">refresh</span>
                   </button>
@@ -509,6 +593,25 @@ export default function BotsPage() {
                         <div className="flex items-center gap-3">
                           <input type="color" value={editForm.brand_color} onChange={e => setEditForm(f => ({ ...f, brand_color: e.target.value }))} className="w-10 h-10 rounded-xl border border-outline-variant cursor-pointer bg-transparent" />
                           <span className="text-xs text-on-surface-variant font-mono">{editForm.brand_color}</span>
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Widget Theme</label>
+                        <div className="flex gap-2">
+                          {["dark", "light"].map((themeOpt) => (
+                            <button
+                              key={themeOpt}
+                              type="button"
+                              onClick={() => setEditForm(f => ({ ...f, widget_theme: themeOpt }))}
+                              className={`flex-1 px-3 py-2 rounded-xl text-xs font-bold capitalize transition-all ${
+                                editForm.widget_theme === themeOpt
+                                  ? "ring-2 ring-primary bg-primary/10 text-on-surface"
+                                  : "ring-1 ring-outline-variant/40 text-on-surface-variant hover:ring-2 hover:ring-outline-variant"
+                              }`}
+                            >
+                              {themeOpt}
+                            </button>
+                          ))}
                         </div>
                       </div>
                       <div className="space-y-1.5">
@@ -631,8 +734,20 @@ export default function BotsPage() {
                       </button>
                     </div>
                     <p className="text-xs text-on-surface-variant">Paste this before the closing <code className="bg-surface-container-lowest px-1 rounded font-mono">&lt;/body&gt;</code> tag on your website.</p>
+                    <select
+                      value={embedPlatform}
+                      onChange={(e) => setEmbedPlatform(e.target.value)}
+                      className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-2 text-xs text-on-surface"
+                    >
+                      {EMBED_PLATFORMS.map((p) => (
+                        <option key={p.id} value={p.id}>{p.label}</option>
+                      ))}
+                    </select>
+                    {embedPlatform !== "html" && (
+                      <p className="text-xs text-on-surface-variant">A raw <code className="bg-surface-container-lowest px-1 rounded font-mono">&lt;script&gt;</code> tag doesn&apos;t work dropped into {EMBED_PLATFORMS.find(p => p.id === embedPlatform)?.label.split(" ")[0]} code — it gets parsed as component code, not literal HTML. Use this instead:</p>
+                    )}
                     <pre className="bg-surface-container-lowest border border-outline-variant rounded-xl p-3 text-[11px] font-mono text-on-surface overflow-x-auto scrollbar-thin whitespace-pre-wrap break-all">
-                      {embedLoading ? "Loading embed code..." : (embedCode || "Failed to load embed code.")}
+                      {embedLoading ? "Loading embed code..." : (displayedEmbedCode || "Failed to load embed code.")}
                     </pre>
                   </div>
 
