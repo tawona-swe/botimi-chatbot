@@ -34,9 +34,10 @@ router.get("/loader.js", (req, res) => {
 
   const apiBase = `${req.protocol}://${req.get('host')}`;
   const widgetJS = `(function(){'use strict';
-var c=window.botimiConfig||{},k=c.apiKey||'',t=c.theme||'dark',p=c.position||'bottom-right',cl=c.color||'#4A1A8A',hb=c.hideBranding||false,ic=c.icon||'smart_toy';
+var c=window.botimiConfig||{},k=c.apiKey||'';
 if(!k){console.warn('[botimi] No apiKey found.');return;}
 var B='${apiBase}';
+function render(t,p,cl,hb,ic){
 if(!document.getElementById('botimi-icon-font')){
 var fl=document.createElement('link');fl.id='botimi-icon-font';fl.rel='stylesheet';
 fl.href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap';
@@ -51,7 +52,7 @@ s.textContent='#botimi-wc{all:initial;position:fixed;z-index:999999;'+(p==='bott
 '.bmi{font-family:"Material Symbols Outlined";font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;color:#fff;line-height:1}'+
 '.bb .bmi{font-size:28px}'+
 '.bha .bmi{font-size:18px}'+
-'.bcp{position:fixed;'+(p==='bottom-left'?'left:20px;':'right:20px;')+'bottom:90px;width:380px;max-width:calc(100vw-40px);height:560px;max-height:calc(100vh-120px);border-radius:16px;overflow:hidden;display:none;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3);'+(t==='light'?'background:#fff;color:#1a1a2e;':'background:#1a1a2e;color:#e0e0e0;')+'}'+
+'.bcp{position:fixed;'+(p==='bottom-left'?'left:20px;':'right:20px;')+'bottom:90px;width:380px;max-width:calc(100vw-40px);height:min(560px,calc(100vh - 114px));border-radius:16px;overflow:hidden;display:none;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3);'+(t==='light'?'background:#fff;color:#1a1a2e;':'background:#1a1a2e;color:#e0e0e0;')+'}'+
 '.bcp.open{display:flex}'+
 '.bh{padding:16px;background:'+cl+';color:#fff;display:flex;align-items:center;gap:12px}'+
 '.bha{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}'+
@@ -127,9 +128,14 @@ sb.addEventListener('click',sm);ip.addEventListener('keydown',function(e){if(e.k
 var px=null;
 function hidePx(){if(px){px.remove();px=null;}}
 function showPx(msg){if(op||px)return;px=document.createElement('div');px.className='bpx';px.innerHTML='<span>'+msg.replace(/</g,'&lt;')+'</span><span class="bpxc">&times;</span>';px.addEventListener('click',function(e){if(e.target.classList.contains('bpxc')){hidePx();}else{hidePx();tg();}});document.body.appendChild(px);}
+return {showPx:showPx};
+}
+var dt=c.theme||'dark',dp=c.position||'bottom-right',dcl=c.color||'#4A1A8A',dhb=c.hideBranding||false,dic=c.icon||'smart_toy';
 fetch(B+'/api/widget/'+k+'/config').then(function(r){return r.ok?r.json():null;}).then(function(cfg){
-if(cfg&&cfg.proactiveMessage){setTimeout(function(){showPx(cfg.proactiveMessage);},Math.max((cfg.proactiveDelaySeconds||15),3)*1000);}
-}).catch(function(){});
+var t=(cfg&&cfg.theme)||dt,p=(cfg&&cfg.position)||dp,cl=(cfg&&cfg.color)||dcl,ic=(cfg&&cfg.icon)||dic,hb=cfg&&typeof cfg.hideBranding==='boolean'?cfg.hideBranding:dhb;
+var api=render(t,p,cl,hb,ic);
+if(cfg&&cfg.proactiveMessage){setTimeout(function(){api.showPx(cfg.proactiveMessage);},Math.max((cfg.proactiveDelaySeconds||15),3)*1000);}
+}).catch(function(){render(dt,dp,dcl,dhb,dic);});
 })();`;
 
   res.send(widgetJS);
@@ -137,18 +143,31 @@ if(cfg&&cfg.proactiveMessage){setTimeout(function(){showPx(cfg.proactiveMessage)
 
 /**
  * GET /api/widget/:apiKey/config
- * Public, lightweight config the loader script fetches on load — currently
- * just the proactive-message settings. Kept separate from the embed
- * snippet's window.botimiConfig so existing installs don't need to change
- * their snippet every time a new bot setting needs to reach the widget.
+ * Public, lightweight config the loader script fetches on load, live from
+ * the database -- theme/color/icon/position/hideBranding included, not just
+ * proactive-message settings. Kept separate from the embed snippet's
+ * window.botimiConfig (which the loader only falls back to if this fetch
+ * fails) specifically so a vendor changing a bot's appearance in the
+ * dashboard takes effect immediately, without needing to re-copy and
+ * re-paste the embed snippet on their live site.
  */
 router.get("/:apiKey/config", (req, res) => {
-  const bot = db.prepare("SELECT proactive_message, proactive_delay_seconds FROM bots WHERE id = ? AND is_active = 1").get(req.params.apiKey);
+  const bot = db.prepare(`
+    SELECT b.proactive_message, b.proactive_delay_seconds, b.widget_theme, b.widget_position,
+           b.brand_color, b.avatar_icon, v.subscription_plan
+    FROM bots b JOIN vendors v ON v.id = b.vendor_id
+    WHERE b.id = ? AND b.is_active = 1
+  `).get(req.params.apiKey);
   if (!bot) return res.status(404).json({ error: "Bot not found" });
 
   res.json({
     proactiveMessage: bot.proactive_message || "",
     proactiveDelaySeconds: bot.proactive_delay_seconds ?? 15,
+    theme: bot.widget_theme || "dark",
+    position: bot.widget_position || "bottom-right",
+    color: bot.brand_color || "#4A1A8A",
+    icon: bot.avatar_icon || "smart_toy",
+    hideBranding: bot.subscription_plan === "scale",
   });
 });
 
