@@ -342,6 +342,10 @@ class ApiClient {
     return this.request("PATCH", `/admin/vendors/${id}`, data);
   }
 
+  getAdminVendorCharges(id) {
+    return this.request("GET", `/admin/vendors/${id}/charges`);
+  }
+
   getAdminFlaggedMessages(params = {}) {
     const qs = new URLSearchParams(params).toString();
     return this.request("GET", `/admin/flagged-messages${qs ? "?" + qs : ""}`);

@@ -331,6 +331,23 @@ router.patch("/vendors/:id", (req, res) => {
 });
 
 /**
+ * GET /api/admin/vendors/:id/charges
+ * Real payment/top-up history for one vendor, for the superadmin detail
+ * view -- nothing surfaced this before, even though every charge attempt
+ * (paid, failed, pending) has been recorded in pesepay_charges all along.
+ */
+router.get("/vendors/:id/charges", (req, res) => {
+  const vendor = db.prepare("SELECT id FROM vendors WHERE id = ?").get(req.params.id);
+  if (!vendor) return res.status(404).json({ error: "Vendor not found" });
+
+  const charges = db.prepare(
+    "SELECT id, charge_type, plan_id, method, amount, currency_code, status, attempt_number, created_at FROM pesepay_charges WHERE vendor_id = ? ORDER BY created_at DESC LIMIT 100"
+  ).all(req.params.id);
+
+  res.json({ charges });
+});
+
+/**
  * GET /api/admin/flagged-messages
  * Content moderation — view flagged messages.
  */

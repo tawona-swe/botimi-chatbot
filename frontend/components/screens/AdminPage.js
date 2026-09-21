@@ -147,6 +147,11 @@ export default function AdminPage() {
   const [trendDays, setTrendDays] = useState(30);
   const [cohorts, setCohorts] = useState(null);
   const [cohortsLoading, setCohortsLoading] = useState(false);
+  const [manageVendor, setManageVendor] = useState(null);
+  const [manageForm, setManageForm] = useState(null);
+  const [manageSaving, setManageSaving] = useState(false);
+  const [vendorCharges, setVendorCharges] = useState([]);
+  const [chargesLoading, setChargesLoading] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("botimiSidebarCollapsed");
@@ -246,6 +251,56 @@ export default function AdminPage() {
       setVendors(prev => prev.map(v => v.id === vendorId ? { ...v, is_suspended: currentlySuspended ? 0 : 1 } : v));
     } catch (err) {
       console.error("Failed to toggle suspension:", err);
+    }
+  };
+
+  // conversation_credits (the live running balance) is deliberately not
+  // part of this form -- it's shown read-only below. Hand-editing it could
+  // silently desync real billing state in a way that's hard to notice
+  // later; plan/status/limit/ticket_addon are safe to edit directly.
+  const openManageVendor = async (v) => {
+    setManageVendor(v);
+    setManageForm({
+      subscription_plan: v.subscription_plan,
+      subscription_status: v.subscription_status,
+      conversations_limit: v.conversations_limit,
+      ticket_addon: !!v.ticketAddon,
+    });
+    setVendorCharges([]);
+    setChargesLoading(true);
+    try {
+      const data = await api.getAdminVendorCharges(v.id);
+      setVendorCharges(data.charges || []);
+    } catch (err) {
+      console.error("Failed to load vendor charges:", err);
+    } finally {
+      setChargesLoading(false);
+    }
+  };
+
+  const closeManageVendor = () => {
+    setManageVendor(null);
+    setManageForm(null);
+  };
+
+  const saveManageVendor = async () => {
+    if (!manageVendor || !manageForm) return;
+    setManageSaving(true);
+    try {
+      const payload = {
+        subscription_plan: manageForm.subscription_plan,
+        subscription_status: manageForm.subscription_status,
+        conversations_limit: parseInt(manageForm.conversations_limit, 10) || 0,
+        ticket_addon: manageForm.ticket_addon ? 1 : 0,
+      };
+      await api.updateAdminVendor(manageVendor.id, payload);
+      setVendors(prev => prev.map(v => v.id === manageVendor.id ? { ...v, ...payload, ticketAddon: !!payload.ticket_addon } : v));
+      closeManageVendor();
+    } catch (err) {
+      console.error("Failed to save vendor changes:", err);
+      alert(err.message || "Failed to save changes.");
+    } finally {
+      setManageSaving(false);
     }
   };
 
@@ -582,6 +637,10 @@ export default function AdminPage() {
                           <td className="p-4 text-on-surface-variant">{formatDate(v.created_at)}</td>
                           <td className="p-4">
                             <div className="flex gap-2">
+                              <button onClick={() => openManageVendor(v)}
+                                className="px-3 py-1 rounded-lg text-[11px] font-bold border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                                Manage
+                              </button>
                               <button onClick={() => toggleSuspend(v.id, v.is_suspended)}
                                 className={`px-3 py-1 rounded-lg text-[11px] font-bold border transition-colors ${
                                   v.is_suspended
@@ -642,6 +701,102 @@ export default function AdminPage() {
           )}
         </div>
       </main>
+
+      {manageVendor && manageForm && (
+        <div className="fixed inset-0 z-[1000] bg-black/50 flex items-center justify-center p-4" onClick={closeManageVendor}>
+          <div className="bg-surface-container border border-outline-variant rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto scrollbar-thin" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-outline-variant flex items-center justify-between">
+              <div>
+                <h3 className="font-display text-lg font-bold text-on-surface">{manageVendor.company_name || manageVendor.name || "Vendor"}</h3>
+                <p className="text-xs text-on-surface-variant">{manageVendor.email}</p>
+              </div>
+              <button onClick={closeManageVendor} className="text-on-surface-variant hover:text-on-surface">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Plan</label>
+                  <select value={manageForm.subscription_plan} onChange={e => setManageForm(f => ({ ...f, subscription_plan: e.target.value }))}
+                    className="w-full bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface">
+                    <option value="trial">Trial</option>
+                    <option value="starter">Starter</option>
+                    <option value="growth">Growth</option>
+                    <option value="scale">Business</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Status</label>
+                  <select value={manageForm.subscription_status} onChange={e => setManageForm(f => ({ ...f, subscription_status: e.target.value }))}
+                    className="w-full bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface">
+                    <option value="trialing">Trialing</option>
+                    <option value="active">Active</option>
+                    <option value="past_due">Past due</option>
+                    <option value="canceled">Canceled</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Conversations Limit</label>
+                  <input type="number" min="0" value={manageForm.conversations_limit}
+                    onChange={e => setManageForm(f => ({ ...f, conversations_limit: e.target.value }))}
+                    className="w-full bg-surface-container-lowest border border-outline-variant p-2.5 rounded-xl text-sm text-on-surface" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Credits (used / balance)</label>
+                  <p className="text-sm text-on-surface p-2.5">
+                    {manageVendor.conversations_used} used <span className="text-on-surface-variant/50">— view only</span>
+                  </p>
+                </div>
+              </div>
+
+              <label className="flex items-center gap-3 p-3 bg-surface-container-lowest border border-outline-variant rounded-xl cursor-pointer">
+                <input type="checkbox" checked={manageForm.ticket_addon} onChange={e => setManageForm(f => ({ ...f, ticket_addon: e.target.checked }))} className="w-4 h-4 accent-primary" />
+                <span className="text-sm text-on-surface font-medium">Ticket add-on enabled</span>
+              </label>
+
+              <div className="flex gap-3">
+                <button onClick={saveManageVendor} disabled={manageSaving}
+                  className="px-5 py-2.5 bg-primary text-on-primary rounded-xl text-sm font-bold shadow-lg shadow-primary/20 disabled:opacity-50">
+                  {manageSaving ? "Saving..." : "Save Changes"}
+                </button>
+                <button onClick={closeManageVendor} className="px-5 py-2.5 bg-surface-container-high text-on-surface-variant rounded-xl text-sm font-bold">
+                  Cancel
+                </button>
+              </div>
+
+              <div className="pt-2 border-t border-outline-variant">
+                <h4 className="font-display text-sm font-bold text-on-surface mb-3">Payment History</h4>
+                {chargesLoading ? (
+                  <p className="text-xs text-on-surface-variant">Loading...</p>
+                ) : vendorCharges.length === 0 ? (
+                  <p className="text-xs text-on-surface-variant">No payment attempts recorded yet.</p>
+                ) : (
+                  <div className="space-y-2 max-h-56 overflow-y-auto scrollbar-thin">
+                    {vendorCharges.map(c => (
+                      <div key={c.id} className="flex items-center justify-between p-3 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs">
+                        <div>
+                          <p className="text-on-surface font-medium capitalize">{c.charge_type} — {c.plan_id}</p>
+                          <p className="text-on-surface-variant">{c.method} · {formatDate(c.created_at)}{c.attempt_number > 1 ? ` · attempt ${c.attempt_number}` : ""}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-on-surface font-medium">{c.amount} {c.currency_code}</p>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${
+                            c.status === "paid" ? "bg-green-500/10 text-green-400"
+                            : c.status === "failed" ? "bg-rose-500/10 text-rose-400"
+                            : "bg-amber-500/10 text-amber-400"
+                          }`}>{c.status}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
