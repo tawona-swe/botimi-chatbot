@@ -323,8 +323,36 @@ Never name or speculate about which AI provider, model, or underlying technology
     temperature: 0.7,
   });
 
+  // Deterministic "related pages" footer, not LLM-generated -- so it's
+  // never wrong about which page it's citing, unlike asking the model to
+  // write its own [text](url) links from the same context it might also
+  // paraphrase or hallucinate against. Only added when the bot is actually
+  // confident (an uncertain/escalating reply pointing at a page it wasn't
+  // sure about would be misleading) and only for chunks carrying a real
+  // crawled-page url (document uploads/manual text have no navigable link).
+  // WhatsApp's client never renders markdown link syntax -- confirmed with
+  // markdown tables earlier -- so it gets bare URLs instead of [text](url).
+  let content = response.content;
+  if (isConfident) {
+    const seen = new Set();
+    const pages = [];
+    for (const chunk of relevantChunks) {
+      const { url, title } = chunk.metadata || {};
+      if (url && !seen.has(url)) {
+        seen.add(url);
+        pages.push({ url, title: title || url });
+        if (pages.length === 2) break;
+      }
+    }
+    if (pages.length > 0) {
+      content += source === "whatsapp"
+        ? "\n\nMore info:\n" + pages.map((p) => p.url).join("\n")
+        : "\n\n" + pages.map((p) => `[${p.title}](${p.url})`).join(" · ");
+    }
+  }
+
   return {
-    content: response.content,
+    content,
     sources: relevantChunks.map((c) => c.metadata),
     tokensUsed: response.tokensUsed,
     latencyMs: response.latencyMs,
