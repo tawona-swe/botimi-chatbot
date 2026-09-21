@@ -37,7 +37,7 @@ router.get("/loader.js", (req, res) => {
 var c=window.botimiConfig||{},k=c.apiKey||'';
 if(!k){console.warn('[botimi] No apiKey found.');return;}
 var B='${apiBase}';
-function render(t,p,cl,hb,ic){
+function render(t,p,cl,hb,ic,nm,wm){
 if(!document.getElementById('botimi-icon-font')){
 var fl=document.createElement('link');fl.id='botimi-icon-font';fl.rel='stylesheet';
 fl.href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap';
@@ -91,11 +91,13 @@ s.textContent='#botimi-wc{all:initial;position:fixed;z-index:999999;'+(p==='bott
 document.head.appendChild(s);
 var d=document.createElement('div');d.id='botimi-wc';
 var pnl=document.createElement('div');pnl.className='bcp';
-pnl.innerHTML='<div class="bh"><div class="bha"><span class="bmi">'+esc(ic)+'</span></div><div class="bht">botimi AI</div><div class="bhc" id="bcx">&times;</div></div><div class="bm" id="bms"><div class="bmsg bot">Hello! I\\'m your AI assistant. How can I help you today?</div></div><div class="bi"><input type="text" id="bip" placeholder="Type your message..."/><button class="bsb" id="bsnd"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button></div>'+(hb?'':'<div class="bpw">Powered by botimi</div>');
+pnl.innerHTML='<div class="bh"><div class="bha"><span class="bmi">'+esc(ic)+'</span></div><div class="bht" id="bht"></div><div class="bhc" id="bcx">&times;</div></div><div class="bm" id="bms"></div><div class="bi"><input type="text" id="bip" placeholder="Type your message..."/><button class="bsb" id="bsnd"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button></div>'+(hb?'':'<div class="bpw">Powered by botimi</div>');
 var bbl=document.createElement('div');bbl.className='bb';
 bbl.innerHTML='<span class="bmi">'+esc(ic)+'</span>';
 d.appendChild(pnl);d.appendChild(bbl);document.body.appendChild(d);
 var op=0,me=document.getElementById('bms'),ip=document.getElementById('bip'),sb=document.getElementById('bsnd'),cx=document.getElementById('bcx');
+document.getElementById('bht').textContent=nm||'botimi AI';
+am(wm||'Hello! I\\'m your AI assistant. How can I help you today?','bot');
 function tg(){op=!op;pnl.classList.toggle('open',op);bbl.style.display=op?'none':'flex';hidePx();}
 bbl.addEventListener('click',tg);cx.addEventListener('click',tg);
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -132,8 +134,8 @@ return {showPx:showPx};
 }
 var dt=c.theme||'dark',dp=c.position||'bottom-right',dcl=c.color||'#4A1A8A',dhb=c.hideBranding||false,dic=c.icon||'smart_toy';
 fetch(B+'/api/widget/'+k+'/config').then(function(r){return r.ok?r.json():null;}).then(function(cfg){
-var t=(cfg&&cfg.theme)||dt,p=(cfg&&cfg.position)||dp,cl=(cfg&&cfg.color)||dcl,ic=(cfg&&cfg.icon)||dic,hb=cfg&&typeof cfg.hideBranding==='boolean'?cfg.hideBranding:dhb;
-var api=render(t,p,cl,hb,ic);
+var t=(cfg&&cfg.theme)||dt,p=(cfg&&cfg.position)||dp,cl=(cfg&&cfg.color)||dcl,ic=(cfg&&cfg.icon)||dic,hb=cfg&&typeof cfg.hideBranding==='boolean'?cfg.hideBranding:dhb,nm=cfg&&cfg.name,wm=cfg&&cfg.welcomeMessage;
+var api=render(t,p,cl,hb,ic,nm,wm);
 if(cfg&&cfg.proactiveMessage){setTimeout(function(){api.showPx(cfg.proactiveMessage);},Math.max((cfg.proactiveDelaySeconds||15),3)*1000);}
 }).catch(function(){render(dt,dp,dcl,dhb,dic);});
 })();`;
@@ -153,14 +155,16 @@ if(cfg&&cfg.proactiveMessage){setTimeout(function(){api.showPx(cfg.proactiveMess
  */
 router.get("/:apiKey/config", (req, res) => {
   const bot = db.prepare(`
-    SELECT b.proactive_message, b.proactive_delay_seconds, b.widget_theme, b.widget_position,
-           b.brand_color, b.avatar_icon, v.subscription_plan
+    SELECT b.name, b.welcome_message, b.proactive_message, b.proactive_delay_seconds, b.widget_theme,
+           b.widget_position, b.brand_color, b.avatar_icon, v.subscription_plan
     FROM bots b JOIN vendors v ON v.id = b.vendor_id
     WHERE b.id = ? AND b.is_active = 1
   `).get(req.params.apiKey);
   if (!bot) return res.status(404).json({ error: "Bot not found" });
 
   res.json({
+    name: bot.name || "botimi AI",
+    welcomeMessage: bot.welcome_message || "",
     proactiveMessage: bot.proactive_message || "",
     proactiveDelaySeconds: bot.proactive_delay_seconds ?? 15,
     theme: bot.widget_theme || "dark",
