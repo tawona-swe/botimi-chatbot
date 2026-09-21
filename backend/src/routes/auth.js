@@ -59,15 +59,20 @@ router.post("/signup", authLimiter, async (req, res) => {
     const trialEndsAt = new Date(Date.now() + config.limits.trialDays * 24 * 60 * 60 * 1000).toISOString();
 
     db.prepare(`
-      INSERT INTO vendors (id, email, password_hash, name, company_name, industry, subscription_plan, subscription_status, conversations_limit, conversation_credits, trial_ends_at)
-      VALUES (?, ?, ?, ?, ?, ?, 'trial', 'trialing', 500, 500, ?)
+      INSERT INTO vendors (id, email, password_hash, name, company_name, industry, subscription_plan, subscription_status, conversations_limit, conversation_credits, trial_ends_at, brand_color)
+      VALUES (?, ?, ?, ?, ?, ?, 'trial', 'trialing', 500, 500, ?, '#4A1A8A')
     `).run(id, email.toLowerCase(), passwordHash, name || "", companyName || "", industry || "", trialEndsAt);
 
-    // Create default bot
+    // Create default bot. brand_color is explicit rather than relying on the
+    // column DEFAULT -- schema.sql's default was fixed to the real brand
+    // color, but SQLite's CREATE TABLE IF NOT EXISTS never retroactively
+    // updates a table that already exists, so the old '#c0c1ff' default was
+    // still silently baked into the live bots table regardless of what
+    // schema.sql's text said.
     const botId = uuidv4();
     db.prepare(`
-      INSERT INTO bots (id, vendor_id, name, welcome_message, response_tone, model_provider, model_name)
-      VALUES (?, ?, 'botimi AI', 'Hello! I''ve analyzed your documentation. How can I help you today?', 'professional', 'groq', 'llama3-70b')
+      INSERT INTO bots (id, vendor_id, name, welcome_message, response_tone, model_provider, model_name, brand_color)
+      VALUES (?, ?, 'botimi AI', 'Hello! I''ve analyzed your documentation. How can I help you today?', 'professional', 'groq', 'llama3-70b', '#4A1A8A')
     `).run(botId, id);
 
     // Generate JWT
@@ -245,15 +250,16 @@ router.post("/google", authLimiter, async (req, res) => {
       const randomPassword = await bcrypt.hash(uuidv4() + Date.now(), 12);
 
       db.prepare(`
-        INSERT INTO vendors (id, email, password_hash, name, subscription_plan, subscription_status, conversations_limit, conversation_credits, trial_ends_at)
-        VALUES (?, ?, ?, ?, 'trial', 'trialing', 500, 500, ?)
+        INSERT INTO vendors (id, email, password_hash, name, subscription_plan, subscription_status, conversations_limit, conversation_credits, trial_ends_at, brand_color)
+        VALUES (?, ?, ?, ?, 'trial', 'trialing', 500, 500, ?, '#4A1A8A')
       `).run(id, googleEmail.toLowerCase(), randomPassword, googleName, trialEndsAt);
 
-      // Create default bot
+      // Create default bot. brand_color is explicit -- see the same INSERT
+      // in the password-signup path above for why.
       const botId = uuidv4();
       db.prepare(`
-        INSERT INTO bots (id, vendor_id, name, welcome_message, response_tone, model_provider, model_name)
-        VALUES (?, ?, 'botimi AI', 'Hello! I\'ve analyzed your documentation. How can I help you today?', 'professional', 'groq', 'llama3-70b')
+        INSERT INTO bots (id, vendor_id, name, welcome_message, response_tone, model_provider, model_name, brand_color)
+        VALUES (?, ?, 'botimi AI', 'Hello! I\'ve analyzed your documentation. How can I help you today?', 'professional', 'groq', 'llama3-70b', '#4A1A8A')
       `).run(botId, id);
 
       vendor = db.prepare("SELECT * FROM vendors WHERE id = ?").get(id);

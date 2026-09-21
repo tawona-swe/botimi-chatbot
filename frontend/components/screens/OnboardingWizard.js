@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import api from "../../lib/api";
 import { getContrastColor } from "../../lib/color";
+import { useAuth } from "../../context/AuthContext";
 
 const BOT_ICONS = ["smart_toy", "support_agent", "forum", "psychology", "auto_awesome", "bolt", "favorite", "rocket_launch", "headset_mic", "hub"];
 
 export default function OnboardingWizard() {
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [transitioning, setTransitioning] = useState(true);
@@ -70,14 +72,28 @@ export default function OnboardingWizard() {
     return () => clearTimeout(timer);
   }, [currentStep]);
 
-  // Load existing bots on mount
+  // Auth guard -- matches every other protected screen's pattern (checked
+  // via the shared AuthContext, not api.isAuthenticated() directly). Calling
+  // api.isAuthenticated() synchronously in render/effects gave a different
+  // answer on the server (always false -- no localStorage during SSR) than
+  // on the client's very first render (already true, since the api
+  // singleton reads localStorage at module-load time, before this component
+  // even mounts) -- a real hydration mismatch, confirmed via React's own
+  // error message, that made React discard and regenerate the whole tree.
+  // AuthContext's isAuthenticated/loading both start identical on server
+  // and client (false/true), so there's nothing to mismatch.
   useEffect(() => {
-    if (!api.isAuthenticated()) {
+    if (!authLoading && !isAuthenticated) {
       router.replace("/login");
-      return;
     }
-    loadBots();
-  }, [router]);
+  }, [authLoading, isAuthenticated, router]);
+
+  // Load existing bots once auth is confirmed
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadBots();
+    }
+  }, [isAuthenticated]);
 
   const nextStep = async () => {
     if (currentStep === 1) {
@@ -177,12 +193,10 @@ export default function OnboardingWizard() {
 
   const stepIcons = ["smart_toy", "palette", "rocket_launch"];
 
-  // Render nothing before the redirect effect above actually fires --
-  // without this, an unauthenticated visitor briefly sees the real
-  // onboarding wizard before being sent to /login. api.isAuthenticated()
-  // is a synchronous localStorage check (see lib/api.js), safe to call
-  // directly during render and SSR-safe (returns false on the server).
-  if (!api.isAuthenticated()) {
+  // Render nothing while auth state resolves or before the redirect effect
+  // above actually fires -- without this, an unauthenticated visitor briefly
+  // sees the real onboarding wizard before being sent to /login.
+  if (authLoading || !isAuthenticated) {
     return <div className="min-h-screen bg-background" />;
   }
 
