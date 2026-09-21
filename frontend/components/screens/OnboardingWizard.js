@@ -554,11 +554,6 @@ export default function OnboardingWizard() {
                               onClick={() => setBotIcon(icon)}
                             >
                               <span className="material-symbols-outlined text-[18px]" style={{ color: getContrastColor(accentColor) }}>{icon}</span>
-                              {active && (
-                                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-primary flex items-center justify-center">
-                                  <span className="material-symbols-outlined text-[10px] text-on-primary">check</span>
-                                </span>
-                              )}
                             </button>
                           );
                         })}
