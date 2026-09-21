@@ -65,7 +65,7 @@ export default function Sidebar({ activeLabel, isCollapsed, onToggle, mobileOpen
             <h1 className="text-headline-md font-bold text-on-surface whitespace-nowrap" style={{ fontFamily: '"Outfit", sans-serif' }}>
               <span className="relative inline-block">
                 botimi
-                <span className="absolute rounded-full bg-tertiary" style={{ width: "5px", height: "5px", top: "-2px", right: "-7px" }} />
+                <span className="absolute rounded-full bg-tertiary" style={{ width: "5px", height: "5px", top: "0px", right: "-7px" }} />
               </span>
               {" Pro"}
             </h1>
