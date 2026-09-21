@@ -89,25 +89,6 @@ export async function streamChat(messages, options = {}) {
 }
 
 /**
- * Embedding via Groq. Groq does not actually serve an embeddings endpoint
- * as of this writing, so this will fail — callers should fall back to a
- * real embedding provider (see modelRouter.js) rather than treat a null
- * return here as "no embedding available anywhere."
- */
-export async function getEmbedding(text) {
-  try {
-    const client = getClient();
-    const response = await client.embeddings.create({
-      model: "text-embedding-ada-002",
-      input: text,
-    });
-    return response.data[0]?.embedding || null;
-  } catch {
-    return null;
-  }
-}
-
-/**
  * Deterministic hash-derived pseudo-embedding. NOT semantically meaningful —
  * this is a last-resort fallback for when no real embedding provider is
  * configured/reachable, so RAG search degrades to "no matches" instead of

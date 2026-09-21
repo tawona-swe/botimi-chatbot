@@ -79,11 +79,11 @@ async function seed() {
     // Seeded without a real embedding, these chunks would never surface in
     // RAG search (searchRelevantChunks filters WHERE embedding IS NOT NULL),
     // leaving the demo bot with no actual knowledge despite looking trained.
-    const embedding = await getEmbedding(chunk.content);
+    const { vector } = await getEmbedding(chunk.content);
     const chunkId = uuidv4();
     insertChunk.run(
       chunkId, sourceId, demoBotId, demoVendorId,
-      chunk.content, embedding ? JSON.stringify(embedding) : null, chunk.index,
+      chunk.content, vector ? JSON.stringify(vector) : null, chunk.index,
       JSON.stringify({ url: "https://botimi.ai/docs", title: "botimi Documentation" })
     );
     insertFts.run(chunkId, demoBotId, chunk.content);

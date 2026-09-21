@@ -130,27 +130,32 @@ export async function chatCompletion(messages, options = {}) {
 }
 
 /**
- * Get embeddings using the best available provider.
+ * Get embeddings using the best available provider. Groq is deliberately
+ * not tried here — it has no embeddings endpoint at all (confirmed live:
+ * any model name 404s with "model_not_found"), so attempting it was a
+ * guaranteed-fail network round trip on every single chat message, and
+ * previously masked a real bug: since the caller only ever saw a plain
+ * vector back, there was no way to tell a genuine Gemini embedding apart
+ * from the meaningless hash-based fallback below, so on any request where
+ * Gemini also failed, confidence scoring silently ran on random noise and
+ * came back "not confident" almost every time even when the answer itself
+ * (built from keyword-search-matched context, unaffected by this) was
+ * good — every message escalating as a false low-confidence handoff.
+ * Returning { vector, isReal } lets rag.js tell the difference and skip
+ * confidence scoring entirely (same as "no knowledge base yet") instead
+ * of trusting a fake similarity score.
  */
-export async function getEmbedding(text) {
-  // Try Groq first, fall back to Gemini, then to hash-based
-  if (config.groq.apiKey) {
-    try {
-      const embedding = await groq.getEmbedding(text);
-      if (embedding) return embedding;
-    } catch { /* fall through */ }
-  }
-
+export async function getEmbedding(text, taskType = "RETRIEVAL_DOCUMENT") {
   if (config.gemini.apiKey) {
     try {
-      const embedding = await gemini.getEmbedding(text);
-      if (embedding) return embedding;
+      const vector = await gemini.getEmbedding(text, taskType);
+      if (vector) return { vector, isReal: true };
     } catch { /* fall through */ }
   }
 
   // Final fallback: deterministic hash-based pseudo-embedding (not semantically
   // meaningful — only reached when no real embedding provider is available).
-  return groq.hashEmbedding(text);
+  return { vector: groq.hashEmbedding(text), isReal: false };
 }
 
 export { GROQ_PROVIDER, GEMINI_PROVIDER, OPENROUTER_PROVIDER, OPENCODE_ZEN_PROVIDER, DEFAULT_MODEL_BY_PROVIDER };

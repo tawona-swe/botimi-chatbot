@@ -168,9 +168,17 @@ export async function streamChat(messages, options = {}) {
 }
 
 /**
- * Generate embeddings using Gemini.
+ * Generate embeddings using Gemini. taskType matters a lot here -- Gemini's
+ * embedding model is asymmetric: a question and its answer land much closer
+ * together in vector space when the question is embedded as
+ * RETRIEVAL_QUERY and the answer/passage as RETRIEVAL_DOCUMENT than when
+ * both use the same (or no) task type. Confirmed live: a near-verbatim
+ * question/answer pair embedded with no taskType at all scored only ~0.66
+ * cosine similarity -- below the default 0.7 confidence threshold, causing
+ * every reply to look "unconfident" and escalate even when the answer was
+ * clearly right there in the knowledge base.
  */
-export async function getEmbedding(text) {
+export async function getEmbedding(text, taskType = "RETRIEVAL_DOCUMENT") {
   const client = getClient();
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${client.apiKey}`;
 
@@ -180,6 +188,7 @@ export async function getEmbedding(text) {
     body: JSON.stringify({
       model: "models/gemini-embedding-001",
       content: { parts: [{ text }] },
+      taskType,
     }),
     signal: AbortSignal.timeout(20000),
   });

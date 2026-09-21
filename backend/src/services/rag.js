@@ -63,14 +63,14 @@ export async function indexPages(sourceId, botId, vendorId, pages) {
 
     for (let i = 0; i < chunks.length; i++) {
       const chunkId = uuidv4();
-      const embedding = await getEmbedding(chunks[i]);
+      const { vector } = await getEmbedding(chunks[i]);
       insertChunk.run(
         chunkId,
         sourceId,
         botId,
         vendorId,
         chunks[i],
-        embedding ? JSON.stringify(embedding) : null,
+        vector ? JSON.stringify(vector) : null,
         totalChunks++,
         metadata
       );
@@ -105,14 +105,14 @@ export async function indexText(sourceId, botId, vendorId, text, title = "") {
   let totalChunks = 0;
   for (let i = 0; i < chunks.length; i++) {
     const chunkId = uuidv4();
-    const embedding = await getEmbedding(chunks[i]);
+    const { vector } = await getEmbedding(chunks[i]);
     insertChunk.run(
       chunkId,
       sourceId,
       botId,
       vendorId,
       chunks[i],
-      embedding ? JSON.stringify(embedding) : null,
+      vector ? JSON.stringify(vector) : null,
       totalChunks++,
       metadata
     );
@@ -174,15 +174,15 @@ function searchKeywordChunkIds(botId, query, limit) {
  * @returns {Promise<{chunks: Array<{content: string, similarity: number, metadata: Object}>, topSimilarity: number}>}
  */
 export async function searchRelevantChunks(botId, query, topK = 5) {
-  const queryEmbedding = await getEmbedding(query);
+  const { vector: queryVector, isReal: queryEmbeddingReal } = await getEmbedding(query, "RETRIEVAL_QUERY");
 
   const embeddedChunks = db.prepare(
     "SELECT id, embedding FROM knowledge_chunks WHERE bot_id = ? AND embedding IS NOT NULL"
   ).all(botId);
 
-  const semanticRanked = queryEmbedding
+  const semanticRanked = queryVector
     ? embeddedChunks
-        .map((chunk) => ({ id: chunk.id, similarity: cosineSimilarity(queryEmbedding, JSON.parse(chunk.embedding)) }))
+        .map((chunk) => ({ id: chunk.id, similarity: cosineSimilarity(queryVector, JSON.parse(chunk.embedding)) }))
         .sort((a, b) => b.similarity - a.similarity)
     : [];
 
@@ -194,7 +194,16 @@ export async function searchRelevantChunks(botId, query, topK = 5) {
   keywordRankedIds.forEach((id, i) => fused.set(id, (fused.get(id) || 0) + 1 / (RRF_K + i + 1)));
 
   const topIds = [...fused.entries()].sort((a, b) => b[1] - a[1]).slice(0, topK).map(([id]) => id);
-  const topSimilarity = semanticRanked[0]?.similarity ?? 0;
+  // Only trust this for confidence-gating when the query itself got a real
+  // semantic embedding -- if the embedding provider failed and this fell
+  // back to the meaningless hash-based pseudo-embedding, any cosine
+  // similarity computed against it is just noise. Treating that noise as a
+  // real "low confidence" score was the actual cause of replies escalating
+  // as unconfident even when the answer itself (built from keyword-matched
+  // context, unaffected by this) was perfectly good. null here is handled
+  // identically to "no knowledge base yet" by the caller -- no false
+  // confidence claimed, but no false escalation either.
+  const topSimilarity = queryEmbeddingReal ? (semanticRanked[0]?.similarity ?? 0) : null;
   if (topIds.length === 0) return { chunks: [], topSimilarity };
 
   const rows = db.prepare(
@@ -265,10 +274,13 @@ export async function generateRagResponse(botId, userMessage, conversationHistor
 
   // Confidence = how well the best pure semantic match actually matches the
   // question — independent of hybrid re-ranking, see searchRelevantChunks.
-  // Not applicable when there's no knowledge base at all (nothing to be confident about yet).
+  // Not applicable when there's no knowledge base at all (nothing to be
+  // confident about yet), or when topSimilarity itself is null (the query's
+  // embedding wasn't real -- see searchRelevantChunks -- so there's no
+  // trustworthy signal to gate on either way).
   const hasKnowledgeBase = relevantChunks.length > 0;
   const threshold = bot.confidence_threshold ?? 0.7;
-  const isConfident = hasKnowledgeBase ? topSimilarity >= threshold : null;
+  const isConfident = (hasKnowledgeBase && topSimilarity !== null) ? topSimilarity >= threshold : null;
 
   // Build system prompt
   const toneInstruction = {
