@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import { useAssistant } from "../../context/AssistantContext";
 import api from "../../lib/api";
+import ProfileDropdown from "./ProfileDropdown";
 import { useState, useEffect } from "react";
 
 const navItems = [
@@ -16,7 +17,6 @@ const navItems = [
 
 export default function Sidebar({ activeLabel, isCollapsed, onToggle, mobileOpen, onMobileClose }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { vendor, logout } = useAuth();
   const { open: openAssistant } = useAssistant();
   const [hasBot, setHasBot] = useState(false);
@@ -27,18 +27,6 @@ export default function Sidebar({ activeLabel, isCollapsed, onToggle, mobileOpen
       .then((data) => setHasBot((data?.bots || []).length > 0))
       .catch(() => setHasBot(false));
   }, [vendor]);
-
-  const handleSignOut = async (e) => {
-    e.preventDefault();
-    try {
-      await logout();
-    } catch {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("botimi_token");
-      }
-    }
-    router.push("/login");
-  };
 
   const allNavItems = vendor?.isSuperadmin
     ? [...navItems, { label: "Admin", icon: "admin_panel_settings", href: "/admin" }]
@@ -144,10 +132,7 @@ export default function Sidebar({ activeLabel, isCollapsed, onToggle, mobileOpen
             <span className="material-symbols-outlined shrink-0">help</span>
             {!isCollapsed && <span className="font-label-md text-label-md whitespace-nowrap">Help</span>}
           </button>
-          <a href="#" title={isCollapsed ? "Sign Out" : undefined} onClick={handleSignOut} className={`flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-3 px-3 py-2'} text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all duration-200`}>
-            <span className="material-symbols-outlined shrink-0">logout</span>
-            {!isCollapsed && <span className="font-label-md text-label-md whitespace-nowrap">Sign Out</span>}
-          </a>
+          <ProfileDropdown vendor={vendor} logout={logout} variant="full" collapsed={isCollapsed} align="left" />
         </div>
       </div>
     </aside>

@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "../../context/AuthContext";
 import WhatsAppIcon from "../ui/WhatsAppIcon";
+import ProfileDropdown from "../ui/ProfileDropdown";
 
 export default function LandingPage() {
-  const { vendor } = useAuth();
+  const { vendor, logout } = useAuth();
   const [isDark, setIsDark] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   // Defaults to international pricing (matches the server-rendered HTML,
@@ -185,6 +186,7 @@ export default function LandingPage() {
                   Get Started
                 </button>
               )}
+              {vendor && <ProfileDropdown vendor={vendor} logout={logout} />}
             </div>
             <button
               onClick={() => setMobileMenuOpen((open) => !open)}
@@ -241,6 +243,22 @@ export default function LandingPage() {
               >
                 Dashboard
               </Link>
+            )}
+            {vendor && (
+              <button
+                className="w-full text-left font-body-md text-body-md text-rose-400 font-medium hover:bg-rose-500/10 rounded-lg px-3 py-3 transition-colors duration-200"
+                onClick={async () => {
+                  setMobileMenuOpen(false);
+                  try {
+                    await logout();
+                  } catch {
+                    if (typeof window !== "undefined") localStorage.removeItem("botimi_token");
+                  }
+                  window.location.href = "/login";
+                }}
+              >
+                Sign Out
+              </button>
             )}
             {!vendor && (
               <div className="flex flex-col gap-2 mt-2 pt-3 border-t border-outline-variant">
