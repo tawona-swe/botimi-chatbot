@@ -42,7 +42,7 @@ export default function LoginPage() {
   const handleGoogleCredential = async (credential) => {
     try {
       const data = await loginWithGoogleCredential(credential);
-      router.push(data.isNewUser ? '/onboarding-plan' : '/dashboard');
+      router.push(data.isNewUser ? '/onboarding' : '/dashboard');
       toast.success('Signed in with Google!');
     } catch (err) {
       toast.error(err.message || 'Google sign-in failed');

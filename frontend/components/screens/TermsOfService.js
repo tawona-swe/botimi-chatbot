@@ -49,7 +49,7 @@ export default function TermsOfService() {
                 <li>New accounts get a 14-day free trial with no payment required upfront.</li>
                 <li>Paid plans (Starter, Growth, Business) include a set number of conversation credits per month. Every conversation your bot has counts as one credit from a single running balance — renewals and optional top-up purchases both add to that balance, and unused credits don't expire mid-cycle.</li>
                 <li>If your balance runs out before your next renewal, your bot hands new conversations to your support inbox instead of answering them automatically, until you top up or your plan renews.</li>
-                <li>Zimbabwe-based accounts are billed at a discounted local rate via Ecocash or Omari mobile money (in USD or ZiG); international accounts are billed in USD via card or other redirect payment methods. Both rates are shown clearly before you pay.</li>
+                <li>Zimbabwe-based accounts are billed at a discounted local rate via Ecocash or Omari mobile money; international accounts are billed in USD via card or other redirect payment methods. All payments, local or international, are processed in USD — we do not accept ZiG/ZWG or any other local currency. Both rates are shown clearly before you pay.</li>
                 <li>Accounts paying by Ecocash or Omari are renewed automatically each billing cycle. Accounts paying by card have no stored payment method, so you'll be emailed a reminder to renew manually — your subscription may be paused if it isn't renewed.</li>
                 <li>All payments are processed by Pesepay. Refund requests are handled case by case — contact us at the email below.</li>
               </ul>

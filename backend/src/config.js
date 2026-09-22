@@ -60,8 +60,8 @@ const config = {
   pesepay: {
     integrationKey: process.env.PESEPAY_INTEGRATION_KEY || "",
     encryptionKey: process.env.PESEPAY_ENCRYPTION_KEY || "",
-    // "sandbox" uses currency "ZWL"; "production" uses "ZiG" — see project memory,
-    // these are genuinely different environments with different hosts.
+    // "sandbox" and "production" are genuinely different Pesepay hosts/keys —
+    // see project memory. All charges are billed in USD regardless of env.
     env: process.env.PESEPAY_ENV || "sandbox",
   },
 

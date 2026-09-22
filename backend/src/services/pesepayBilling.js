@@ -17,44 +17,22 @@ function toSqliteDatetime(date) {
   return date.toISOString().slice(0, 19).replace("T", " ");
 }
 
-// Zimbabwe is a dual-currency economy — USD and ZiG both circulate, so
-// Ecocash customers can pay in either, independent of which PRICE SHEET
-// applies to them (see isLocalVendor — that's about the vendor's billing
-// country, a completely separate axis from payCurrency below). Card is
-// always USD, whoever the cardholder is. "payCurrency" here is 'usd' | 'zig'
-// — 'zig' resolves to ZWL in sandbox / ZiG in production (sandbox has no
-// Ecocash-branded ZWL method — only OneMoney — so the real Ecocash+ZiG combo
-// can only be tested with a small real transaction once live; see project
-// memory for the full matrix).
-const ZIG_CURRENCY_CODE = { sandbox: "ZWL", production: "ZiG" }[config.pesepay.env] || "ZWL";
-const ZIG_ECOCASH_METHOD_CODE = { sandbox: "PZW202", production: "PZW201" }[config.pesepay.env] || "PZW202";
+// Every charge in the system is billed in USD — ZWG (Zimbabwe Gold, formerly
+// ZiG/ZWL) is not accepted anywhere, regardless of payment method. This is
+// independent of which PRICE SHEET applies to a vendor (see isLocalVendor —
+// that's about the vendor's billing country/discount tier, a completely
+// separate axis; local vendors still pay their discounted price, just always
+// in USD).
 const USD_ECOCASH_METHOD_CODE = "PZW211"; // same code in both sandbox and production
-const OMARI_METHOD_CODE = "PZW216"; // USD only — no ZiG/local Omari option exists
+const OMARI_METHOD_CODE = "PZW216";
 
-// Phone-based ("seamless") methods available per pay-currency. Omari is
-// USD-only (confirmed live — no ZiG listing for it); Ecocash covers both.
-const PHONE_METHOD_CODES = {
-  usd: { ecocash: USD_ECOCASH_METHOD_CODE, omari: OMARI_METHOD_CODE },
-  zig: { ecocash: ZIG_ECOCASH_METHOD_CODE },
-};
+const PHONE_METHOD_CODES = { ecocash: USD_ECOCASH_METHOD_CODE, omari: OMARI_METHOD_CODE };
 
-async function resolveUsdToZig(usdAmount) {
-  const currencies = await pesepay.getActiveCurrencies();
-  const zig = currencies.find((c) => c.code === ZIG_CURRENCY_CODE);
-  const rate = zig?.rateToDefault || 1;
-  return Math.round(usdAmount * rate * 100) / 100;
-}
-
-/** Resolve a USD sheet price into the actual amount/currency/method to charge. */
-async function computeChargeAmount(usdAmount, payCurrency, method) {
-  const paymentMethodCode = PHONE_METHOD_CODES[payCurrency]?.[method];
-  if (!paymentMethodCode) throw new Error(`Unsupported currency/method combination: ${payCurrency}/${method}`);
-
-  if (payCurrency === "usd") {
-    return { amount: usdAmount, currencyCode: "USD", paymentMethodCode };
-  }
-  const amount = await resolveUsdToZig(usdAmount);
-  return { amount, currencyCode: ZIG_CURRENCY_CODE, paymentMethodCode };
+/** Resolve a USD sheet price into the actual amount/currency/method to charge — always USD. */
+function computeChargeAmount(usdAmount, method) {
+  const paymentMethodCode = PHONE_METHOD_CODES[method];
+  if (!paymentMethodCode) throw new Error(`Unsupported payment method: ${method}`);
+  return { amount: usdAmount, currencyCode: "USD", paymentMethodCode };
 }
 
 function recordCharge({ vendor, chargeType, planId, method, customerReference, referenceNumber, amount, currencyCode, paymentMethodCode }) {
@@ -66,8 +44,8 @@ function recordCharge({ vendor, chargeType, planId, method, customerReference, r
   return chargeId;
 }
 
-async function makeEcocashPayment({ vendor, usdAmount, payCurrency, method, phoneNumber, reasonForPayment }) {
-  const { amount, currencyCode, paymentMethodCode } = await computeChargeAmount(usdAmount, payCurrency, method);
+async function makeEcocashPayment({ vendor, usdAmount, method, phoneNumber, reasonForPayment }) {
+  const { amount, currencyCode, paymentMethodCode } = computeChargeAmount(usdAmount, method);
   const merchantReference = `botimi-${vendor.id}-${Date.now()}`;
 
   const transaction = await pesepay.makePayment({
@@ -113,13 +91,13 @@ async function initiateRedirectPayment({ usdAmount, reasonForPayment }) {
  * the customer on our site, so this can be called unattended by the
  * scheduler too, not just from a checkout button.
  */
-export async function chargeVendor(vendor, planId, phoneNumber, payCurrency = "zig", method = "ecocash") {
+export async function chargeVendor(vendor, planId, phoneNumber, method = "ecocash") {
   const plan = config.plans[planId];
   if (!plan) throw new Error(`Unknown plan: ${planId}`);
   const usdAmount = planPrice(planId, isLocalVendor(vendor));
 
   const result = await makeEcocashPayment({
-    vendor, usdAmount, payCurrency, method, phoneNumber,
+    vendor, usdAmount, method, phoneNumber,
     reasonForPayment: `botimi ${plan.name} plan`,
   });
 
@@ -172,13 +150,13 @@ export async function initiateCardCheckout(vendor, planId) {
  * Buy a one-off block of conversation credits via Ecocash/Omari — used when
  * a vendor's running balance (conversation_credits) runs out mid-cycle.
  */
-export async function chargeTopUp(vendor, packId, phoneNumber, payCurrency = "zig", method = "ecocash") {
+export async function chargeTopUp(vendor, packId, phoneNumber, method = "ecocash") {
   const pack = config.topUps[packId];
   if (!pack) throw new Error(`Unknown top-up pack: ${packId}`);
   const usdAmount = topUpPrice(packId, isLocalVendor(vendor));
 
   const result = await makeEcocashPayment({
-    vendor, usdAmount, payCurrency, method, phoneNumber,
+    vendor, usdAmount, method, phoneNumber,
     reasonForPayment: `botimi top-up: ${pack.conversations} conversations`,
   });
 
@@ -220,7 +198,7 @@ export async function initiateTopUpCardCheckout(vendor, packId) {
 function markVendorPaid(vendor, planId, method, customerReference, currencyCode, amount) {
   const plan = config.plans[planId];
   const nextChargeAt = toSqliteDatetime(new Date(Date.now() + BILLING_CYCLE_DAYS * 24 * 60 * 60 * 1000));
-  const currency = currencyCode === "USD" ? "usd" : "zig";
+  const currency = "usd"; // every charge is USD now — see the note above PHONE_METHOD_CODES
   db.prepare(`
     UPDATE vendors SET
       subscription_plan = ?,
@@ -377,7 +355,7 @@ export async function runBillingCycle() {
     }
 
     try {
-      await chargeVendor(vendor, vendor.subscription_plan, vendor.pesepay_phone_number, vendor.pesepay_currency || "zig", vendor.pesepay_payment_method);
+      await chargeVendor(vendor, vendor.subscription_plan, vendor.pesepay_phone_number, vendor.pesepay_payment_method);
       console.log(`[PesepayBilling] Charge triggered for vendor ${vendor.id} — check their phone for the ${vendor.pesepay_payment_method} PIN prompt.`);
     } catch (err) {
       console.error(`[PesepayBilling] Failed to charge vendor ${vendor.id}:`, err.message);

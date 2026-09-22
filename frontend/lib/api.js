@@ -296,8 +296,8 @@ class ApiClient {
     return this.request("DELETE", `/team/${id}`);
   }
 
-  pesepayCheckout(planId, phoneNumber, currency, method) {
-    return this.request("POST", "/pesepay/checkout", { planId, phoneNumber, currency, method });
+  pesepayCheckout(planId, phoneNumber, method) {
+    return this.request("POST", "/pesepay/checkout", { planId, phoneNumber, method });
   }
 
   pesepayCheckoutCard(planId) {
@@ -308,8 +308,8 @@ class ApiClient {
     return this.request("GET", "/pesepay/plans");
   }
 
-  pesepayTopUpCheckout(packId, phoneNumber, currency, method) {
-    return this.request("POST", "/pesepay/topup/checkout", { packId, phoneNumber, currency, method });
+  pesepayTopUpCheckout(packId, phoneNumber, method) {
+    return this.request("POST", "/pesepay/topup/checkout", { packId, phoneNumber, method });
   }
 
   pesepayTopUpCheckoutCard(packId) {

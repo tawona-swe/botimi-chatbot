@@ -34,12 +34,7 @@ const VALID_PLANS = ["starter", "growth", "scale"];
 const VALID_TOPUPS = ["small", "large"];
 
 function resolvePhoneMethod(body) {
-  const currency = body.currency === "usd" ? "usd" : "zig";
-  const method = body.method === "omari" ? "omari" : "ecocash";
-  if (method === "omari" && currency !== "usd") {
-    throw Object.assign(new Error("Omari is only available for USD payments"), { status: 400 });
-  }
-  return { currency, method };
+  return body.method === "omari" ? "omari" : "ecocash";
 }
 
 /**
@@ -47,8 +42,7 @@ function resolvePhoneMethod(body) {
  * Start a Pesepay Ecocash/Omari charge for a plan. Unlike Stripe checkout,
  * this doesn't redirect anywhere — Pesepay pushes a PIN prompt straight to
  * the given phone number. The frontend should poll GET /status/:referenceNumber
- * until the transaction resolves. `currency` is 'usd' or 'zig' — Zimbabwe is
- * a dual-currency economy, Ecocash works in either.
+ * until the transaction resolves. Always billed in USD — ZWG is not accepted.
  */
 router.post("/checkout", async (req, res) => {
   const { planId, phoneNumber } = req.body;
@@ -59,17 +53,11 @@ router.post("/checkout", async (req, res) => {
     return res.status(400).json({ error: "A valid Zimbabwean phone number (e.g. 0771234567) is required" });
   }
 
-  let currency, method;
-  try {
-    ({ currency, method } = resolvePhoneMethod(req.body));
-  } catch (err) {
-    return res.status(err.status || 400).json({ error: err.message });
-  }
-
+  const method = resolvePhoneMethod(req.body);
   const vendor = db.prepare("SELECT id, email, name, company_name, country, dunning_attempts FROM vendors WHERE id = ?").get(req.vendor.id);
 
   try {
-    const result = await chargeVendor(vendor, planId, phoneNumber, currency, method);
+    const result = await chargeVendor(vendor, planId, phoneNumber, method);
     res.json(result);
   } catch (err) {
     console.error("[Pesepay] Checkout error:", err);
@@ -136,17 +124,11 @@ router.post("/topup/checkout", async (req, res) => {
     return res.status(400).json({ error: "A valid Zimbabwean phone number (e.g. 0771234567) is required" });
   }
 
-  let currency, method;
-  try {
-    ({ currency, method } = resolvePhoneMethod(req.body));
-  } catch (err) {
-    return res.status(err.status || 400).json({ error: err.message });
-  }
-
+  const method = resolvePhoneMethod(req.body);
   const vendor = db.prepare("SELECT id, email, name, company_name, country, dunning_attempts FROM vendors WHERE id = ?").get(req.vendor.id);
 
   try {
-    const result = await chargeTopUp(vendor, packId, phoneNumber, currency, method);
+    const result = await chargeTopUp(vendor, packId, phoneNumber, method);
     res.json(result);
   } catch (err) {
     console.error("[Pesepay] Top-up checkout error:", err);

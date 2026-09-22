@@ -22,15 +22,13 @@ export default function SettingsPage() {
   const [savedMessage, setSavedMessage] = useState("");
   const [pesepayPlanId, setPesepayPlanId] = useState(null);
   const [pesepayPhone, setPesepayPhone] = useState("");
-  const [pesepayCurrency, setPesepayCurrency] = useState("usd"); // Zimbabwe is dual-currency — let the customer pick
-  const [pesepayMethod, setPesepayMethod] = useState("ecocash"); // Omari is USD-only
+  const [pesepayMethod, setPesepayMethod] = useState("ecocash");
   const [pesepayStatus, setPesepayStatus] = useState(""); // "", "prompting", "success", "failed", "error"
   const [pesepayError, setPesepayError] = useState("");
   const [cardCheckoutLoading, setCardCheckoutLoading] = useState(false);
   const [pricing, setPricing] = useState({ local: true, plans: {}, topUps: {} });
   const [topUpPackId, setTopUpPackId] = useState(null);
   const [topUpPhone, setTopUpPhone] = useState("");
-  const [topUpCurrency, setTopUpCurrency] = useState("usd");
   const [topUpMethod, setTopUpMethod] = useState("ecocash");
   const [topUpStatus, setTopUpStatus] = useState("");
   const [topUpError, setTopUpError] = useState("");
@@ -252,7 +250,7 @@ export default function SettingsPage() {
     setPesepayError("");
     setPesepayStatus("prompting");
     try {
-      const { referenceNumber } = await api.pesepayCheckout(planId, pesepayPhone, pesepayCurrency, pesepayMethod);
+      const { referenceNumber } = await api.pesepayCheckout(planId, pesepayPhone, pesepayMethod);
 
       for (let attempt = 0; attempt < 20; attempt++) {
         await new Promise((r) => setTimeout(r, 3000));
@@ -296,7 +294,7 @@ export default function SettingsPage() {
     setTopUpError("");
     setTopUpStatus("prompting");
     try {
-      const { referenceNumber } = await api.pesepayTopUpCheckout(packId, topUpPhone, topUpCurrency, topUpMethod);
+      const { referenceNumber } = await api.pesepayTopUpCheckout(packId, topUpPhone, topUpMethod);
       for (let attempt = 0; attempt < 20; attempt++) {
         await new Promise((r) => setTimeout(r, 3000));
         const { transactionStatus } = await api.pesepayStatus(referenceNumber);
@@ -651,29 +649,16 @@ export default function SettingsPage() {
                             ) : (
                               <>
                                 <div className="flex gap-1 p-0.5 bg-surface-container-lowest border border-outline-variant rounded-lg">
-                                  {["usd", "zig"].map((c) => (
+                                  {["ecocash", "omari"].map((m) => (
                                     <button
-                                      key={c}
-                                      onClick={() => { setPesepayCurrency(c); if (c !== "usd") setPesepayMethod("ecocash"); }}
-                                      className={`flex-1 py-1.5 rounded-md text-[11px] font-bold transition-all ${pesepayCurrency === c ? "bg-primary text-on-primary" : "text-on-surface-variant hover:text-on-surface"}`}
+                                      key={m}
+                                      onClick={() => setPesepayMethod(m)}
+                                      className={`flex-1 py-1.5 rounded-md text-[11px] font-bold capitalize transition-all ${pesepayMethod === m ? "bg-primary text-on-primary" : "text-on-surface-variant hover:text-on-surface"}`}
                                     >
-                                      {c === "usd" ? `USD $${plan.price}` : "ZiG"}
+                                      {m}
                                     </button>
                                   ))}
                                 </div>
-                                {pesepayCurrency === "usd" && (
-                                  <div className="flex gap-1 p-0.5 bg-surface-container-lowest border border-outline-variant rounded-lg">
-                                    {["ecocash", "omari"].map((m) => (
-                                      <button
-                                        key={m}
-                                        onClick={() => setPesepayMethod(m)}
-                                        className={`flex-1 py-1.5 rounded-md text-[11px] font-bold capitalize transition-all ${pesepayMethod === m ? "bg-primary text-on-primary" : "text-on-surface-variant hover:text-on-surface"}`}
-                                      >
-                                        {m}
-                                      </button>
-                                    ))}
-                                  </div>
-                                )}
                                 <input
                                   type="tel"
                                   value={pesepayPhone}
@@ -753,29 +738,16 @@ export default function SettingsPage() {
                           ) : (
                             <>
                               <div className="flex gap-1 p-0.5 bg-surface-container-lowest border border-outline-variant rounded-lg">
-                                {["usd", "zig"].map((c) => (
+                                {["ecocash", "omari"].map((m) => (
                                   <button
-                                    key={c}
-                                    onClick={() => { setTopUpCurrency(c); if (c !== "usd") setTopUpMethod("ecocash"); }}
-                                    className={`flex-1 py-1.5 rounded-md text-[11px] font-bold transition-all ${topUpCurrency === c ? "bg-primary text-on-primary" : "text-on-surface-variant hover:text-on-surface"}`}
+                                    key={m}
+                                    onClick={() => setTopUpMethod(m)}
+                                    className={`flex-1 py-1.5 rounded-md text-[11px] font-bold capitalize transition-all ${topUpMethod === m ? "bg-primary text-on-primary" : "text-on-surface-variant hover:text-on-surface"}`}
                                   >
-                                    {c === "usd" ? `USD $${pack.price}` : "ZiG"}
+                                    {m}
                                   </button>
                                 ))}
                               </div>
-                              {topUpCurrency === "usd" && (
-                                <div className="flex gap-1 p-0.5 bg-surface-container-lowest border border-outline-variant rounded-lg">
-                                  {["ecocash", "omari"].map((m) => (
-                                    <button
-                                      key={m}
-                                      onClick={() => setTopUpMethod(m)}
-                                      className={`flex-1 py-1.5 rounded-md text-[11px] font-bold capitalize transition-all ${topUpMethod === m ? "bg-primary text-on-primary" : "text-on-surface-variant hover:text-on-surface"}`}
-                                    >
-                                      {m}
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
                               <input
                                 type="tel"
                                 value={topUpPhone}

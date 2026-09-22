@@ -16,7 +16,6 @@ export default function OnboardingPlan() {
   const [loading, setLoading] = useState(true);
 
   const [selectedPlanId, setSelectedPlanId] = useState(null);
-  const [currency, setCurrency] = useState("usd");
   const [method, setMethod] = useState("ecocash");
   const [phone, setPhone] = useState("");
   const [status, setStatus] = useState(""); // "", "prompting", "success", "failed", "error"
@@ -41,7 +40,7 @@ export default function OnboardingPlan() {
     .map((id) => (pricing.plans[id] ? { id, ...pricing.plans[id] } : null))
     .filter(Boolean);
 
-  const skipForNow = () => router.push("/onboarding");
+  const skipForNow = () => router.push("/dashboard");
 
   const handleCheckout = async (planId) => {
     if (!/^0\d{9}$/.test(phone)) {
@@ -51,7 +50,7 @@ export default function OnboardingPlan() {
     setError("");
     setStatus("prompting");
     try {
-      const { referenceNumber } = await api.pesepayCheckout(planId, phone, currency, method);
+      const { referenceNumber } = await api.pesepayCheckout(planId, phone, method);
       for (let attempt = 0; attempt < 20; attempt++) {
         await new Promise((r) => setTimeout(r, 3000));
         const { transactionStatus } = await api.pesepayStatus(referenceNumber);
@@ -103,10 +102,9 @@ export default function OnboardingPlan() {
     <main className="min-h-screen bg-background px-margin-mobile md:px-margin-desktop py-16">
       <div className="max-w-container-max mx-auto">
         <div className="text-center mb-12">
-          <p className="font-label-md text-label-md text-primary mb-2">Step 1 of 2</p>
-          <h1 className="font-display text-headline-lg text-on-surface mb-3">Choose a plan, or start on your free trial</h1>
+          <h1 className="font-display text-headline-lg text-on-surface mb-3">Choose a plan</h1>
           <p className="text-on-surface-variant max-w-xl mx-auto">
-            You already have a 14-day free trial active — no payment required. Activate a plan now if you're ready, or skip and decide later from Settings.
+            You already have a 14-day free trial active — no payment required. Activate a plan now if you're ready, or decide later from Settings.
           </p>
         </div>
 
@@ -116,10 +114,10 @@ export default function OnboardingPlan() {
             <h2 className="font-display text-lg font-bold text-on-surface mb-2">Plan activated</h2>
             <p className="text-sm text-on-surface-variant mb-6">Your payment was confirmed and your plan is live.</p>
             <button
-              onClick={() => router.push("/onboarding")}
+              onClick={() => router.push("/dashboard")}
               className="w-full bg-primary text-on-primary rounded-xl text-sm font-bold py-3 hover:brightness-110 active:scale-[0.98] transition-all"
             >
-              Set up your bot
+              Go to dashboard
             </button>
           </div>
         ) : (
@@ -175,29 +173,16 @@ export default function OnboardingPlan() {
                       ) : (
                         <>
                           <div className="flex gap-1 p-0.5 bg-surface-container-lowest border border-outline-variant rounded-lg">
-                            {["usd", "zig"].map((c) => (
+                            {["ecocash", "omari"].map((m) => (
                               <button
-                                key={c}
-                                onClick={() => { setCurrency(c); if (c !== "usd") setMethod("ecocash"); }}
-                                className={`flex-1 py-1.5 rounded-md text-[11px] font-bold transition-all ${currency === c ? "bg-primary text-on-primary" : "text-on-surface-variant hover:text-on-surface"}`}
+                                key={m}
+                                onClick={() => setMethod(m)}
+                                className={`flex-1 py-1.5 rounded-md text-[11px] font-bold capitalize transition-all ${method === m ? "bg-primary text-on-primary" : "text-on-surface-variant hover:text-on-surface"}`}
                               >
-                                {c === "usd" ? `USD $${plan.price}` : "ZiG"}
+                                {m}
                               </button>
                             ))}
                           </div>
-                          {currency === "usd" && (
-                            <div className="flex gap-1 p-0.5 bg-surface-container-lowest border border-outline-variant rounded-lg">
-                              {["ecocash", "omari"].map((m) => (
-                                <button
-                                  key={m}
-                                  onClick={() => setMethod(m)}
-                                  className={`flex-1 py-1.5 rounded-md text-[11px] font-bold capitalize transition-all ${method === m ? "bg-primary text-on-primary" : "text-on-surface-variant hover:text-on-surface"}`}
-                                >
-                                  {m}
-                                </button>
-                              ))}
-                            </div>
-                          )}
                           <input
                             type="tel"
                             value={phone}

@@ -15,15 +15,10 @@ const registerSchema = yup.object({
   name: yup.string().min(2, 'Name too short').required('Name is required'),
   email: yup.string().email('Invalid email').required('Email is required'),
   password: yup.string().min(6, 'At least 6 characters').required('Password is required'),
-  confirmPassword: yup
-    .string()
-    .oneOf([yup.ref('password')], 'Passwords must match')
-    .required('Confirm your password'),
 });
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();
   const { signup, loginWithGoogleCredential } = useAuth();
 
@@ -39,7 +34,7 @@ export default function RegisterPage() {
     try {
       await signup(data.email, data.password, '', data.name, '');
       toast.success('Welcome to botimi!');
-      router.push('/onboarding-plan');
+      router.push('/onboarding');
     } catch (err) {
       toast.error(err.message || 'Registration failed');
     }
@@ -48,7 +43,7 @@ export default function RegisterPage() {
   const handleGoogleCredential = async (credential) => {
     try {
       const data = await loginWithGoogleCredential(credential);
-      router.push(data.isNewUser ? '/onboarding-plan' : '/dashboard');
+      router.push(data.isNewUser ? '/onboarding' : '/dashboard');
       toast.success('Signed in with Google!');
     } catch (err) {
       toast.error(err.message || 'Google sign-in failed');
@@ -76,47 +71,51 @@ export default function RegisterPage() {
             </Link>
             <h1 className="text-2xl font-bold text-on-surface">Create your account</h1>
             <p className="mt-2 text-sm text-on-surface-variant">
-              Get started with botimi in just a few minutes
+              Already have an account?{' '}
+              <Link href="/login" className="font-semibold text-primary hover:text-primary/80 transition-colors">
+                Sign in
+              </Link>
             </p>
           </div>
 
           <form className="space-y-2" onSubmit={handleSubmit(onSubmit)}>
-            {/* Name */}
-            <div>
-              <label className="block text-sm font-semibold text-on-surface-variant mb-1.5">Full name</label>
-              <div className="relative">
-                <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50" />
-                <input
-                  type="text"
-                  {...register('name')}
-                  placeholder="John Doe"
-                  className="w-full border border-outline-variant rounded-xl py-2.5 pr-4 pl-11 text-sm text-on-surface bg-surface-container-lowest placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                />
+            {/* Name + Email */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs font-semibold text-on-surface-variant mb-1">Full name</label>
+                <div className="relative">
+                  <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50" />
+                  <input
+                    type="text"
+                    {...register('name')}
+                    placeholder="John Doe"
+                    className="w-full border border-outline-variant rounded-xl py-2 pr-4 pl-11 text-sm text-on-surface bg-surface-container-lowest placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  />
+                </div>
+                {errors.name && (
+                  <p className="mt-1 text-xs text-error flex items-center gap-1">
+                    <span>•</span> {errors.name.message}
+                  </p>
+                )}
               </div>
-              {errors.name && (
-                <p className="mt-1 text-xs text-error flex items-center gap-1">
-                  <span>•</span> {errors.name.message}
-                </p>
-              )}
-            </div>
 
-            {/* Email */}
-            <div>
-              <label className="block text-xs font-semibold text-on-surface-variant mb-1">Email</label>
-              <div className="relative">
-                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50" />
-                <input
-                  type="email"
-                  {...register('email')}
-                  placeholder="you@example.com"
-                  className="w-full border border-outline-variant rounded-xl py-2.5 pr-4 pl-11 text-sm text-on-surface bg-surface-container-lowest placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                />
+              <div>
+                <label className="block text-xs font-semibold text-on-surface-variant mb-1">Email</label>
+                <div className="relative">
+                  <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50" />
+                  <input
+                    type="email"
+                    {...register('email')}
+                    placeholder="you@example.com"
+                    className="w-full border border-outline-variant rounded-xl py-2 pr-4 pl-11 text-sm text-on-surface bg-surface-container-lowest placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  />
+                </div>
+                {errors.email && (
+                  <p className="mt-1 text-xs text-error flex items-center gap-1">
+                    <span>•</span> {errors.email.message}
+                  </p>
+                )}
               </div>
-              {errors.email && (
-                <p className="mt-1 text-xs text-error flex items-center gap-1">
-                  <span>•</span> {errors.email.message}
-                </p>
-              )}
             </div>
 
             {/* Password */}
@@ -128,7 +127,7 @@ export default function RegisterPage() {
                   type={showPassword ? 'text' : 'password'}
                   {...register('password')}
                   placeholder="Create a strong password"
-                  className="w-full border border-outline-variant rounded-xl py-2.5 pr-12 pl-11 text-sm text-on-surface bg-surface-container-lowest placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  className="w-full border border-outline-variant rounded-xl py-2 pr-12 pl-11 text-sm text-on-surface bg-surface-container-lowest placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 />
                 <button
                   type="button"
@@ -142,33 +141,6 @@ export default function RegisterPage() {
               {errors.password && (
                 <p className="mt-1 text-xs text-error flex items-center gap-1">
                   <span>•</span> {errors.password.message}
-                </p>
-              )}
-            </div>
-
-            {/* Confirm Password */}
-            <div>
-              <label className="block text-xs font-semibold text-on-surface-variant mb-1">Confirm password</label>
-              <div className="relative">
-                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50" />
-                <input
-                  type={showConfirm ? 'text' : 'password'}
-                  {...register('confirmPassword')}
-                  placeholder="Repeat your password"
-                  className="w-full border border-outline-variant rounded-xl py-2.5 pr-12 pl-11 text-sm text-on-surface bg-surface-container-lowest placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 hover:text-on-surface-variant transition-colors"
-                  tabIndex={-1}
-                >
-                  {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-              {errors.confirmPassword && (
-                <p className="mt-1 text-xs text-error flex items-center gap-1">
-                  <span>•</span> {errors.confirmPassword.message}
                 </p>
               )}
             </div>
@@ -198,13 +170,6 @@ export default function RegisterPage() {
               text="signup_with"
               onCredential={handleGoogleCredential}
             />
-
-            <p className="text-center text-sm text-on-surface-variant">
-              Already have an account?{' '}
-              <Link href="/login" className="font-semibold text-primary hover:text-primary/80 transition-colors">
-                Sign in
-              </Link>
-            </p>
           </form>
         </div>
       </div>
@@ -237,19 +202,19 @@ export default function RegisterPage() {
           </p>
           <div className="mt-8 space-y-4">
             <div className="flex items-center gap-3 delay-1 animate-fade-in-up">
-              <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-primary">
+              <div className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center text-xs font-bold text-white">
                 1
               </div>
               <span className="text-sm text-gray-300">Train on your data</span>
             </div>
             <div className="flex items-center gap-3 delay-2 animate-fade-in-up">
-              <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-primary">
+              <div className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center text-xs font-bold text-white">
                 2
               </div>
               <span className="text-sm text-gray-300">Embed on your site</span>
             </div>
             <div className="flex items-center gap-3 delay-3 animate-fade-in-up">
-              <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-primary">
+              <div className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center text-xs font-bold text-white">
                 3
               </div>
               <span className="text-sm text-gray-300">Let AI handle conversations</span>
