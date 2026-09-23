@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import toast from 'react-hot-toast';
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton';
@@ -49,6 +49,14 @@ export default function LoginPage() {
     }
   };
 
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/');
+    }
+  };
+
   return (
     <div className="min-h-screen lg:h-screen grid grid-cols-1 lg:grid-cols-20 bg-background">
       {/* LEFT — LOGIN FORM */}
@@ -62,6 +70,14 @@ export default function LoginPage() {
         <div className="relative z-10 w-full max-w-md space-y-6 bg-surface-container/70 backdrop-blur-sm border border-outline-variant/50 rounded-3xl p-8 shadow-[0_8px_32px_rgba(74,26,138,0.12)]">
           {/* Brand + Heading */}
           <div>
+            <button
+              type="button"
+              onClick={handleBack}
+              className="flex items-center gap-1.5 text-xs font-semibold text-on-surface-variant hover:text-primary transition-colors mb-4"
+            >
+              <ArrowLeft size={14} />
+              Back
+            </button>
             <Link href="/" className="inline-flex items-center gap-2 mb-6">
               <span className="relative inline-block text-lg font-bold text-primary" style={{ fontFamily: '"Outfit", sans-serif' }}>
                 botimi
