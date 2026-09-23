@@ -53,7 +53,7 @@ export default function GoogleAuthButton({ text = "signin_with", onCredential, c
 
         window.google.accounts.id.renderButton(btnRef.current, {
           type: "standard",
-          shape: "rectangular",
+          shape: "pill",
           theme: "outline",
           text: text,
           size: "large",

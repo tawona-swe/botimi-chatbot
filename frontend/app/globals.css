@@ -549,18 +549,6 @@ a {
   background: #4A1A8A;
 }
 
-/* Pairs with CurveScrollThumb -- the real scrollbar is hidden because the
-   curved SVG indicator replaces it visually, not because scrolling itself
-   should be invisible. Wheel/trackpad/keyboard scrolling still works. */
-.curve-scroll-container {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.curve-scroll-container::-webkit-scrollbar {
-  display: none;
-}
-
 /* Chrome/Edge/Safari paint autofilled inputs with their own blue or yellow
    background no matter what CSS you set on the input itself -- the only
    reliable override is an absurdly large inset box-shadow in the input's
