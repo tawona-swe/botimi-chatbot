@@ -3,15 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * A decorative scroll indicator shaped to match the brand panel's rounded
- * corner next door (a straight run down to the corner, then a quarter-circle
- * arc of the same radius) instead of a straight bar that visually clashes
- * with the curve. Purely cosmetic -- the container's real overflow-y:auto
- * still does the actual scrolling; this just tracks it.
+ * A decorative scroll indicator that reads as belonging to the dark brand
+ * panel, not the light form panel: a small glowing white bead (matching the
+ * brand panel's own floating accent dots) that rides along a path shaped to
+ * match the panel's rounded corner -- straight down the seam, then the same
+ * quarter-circle radius as the curve itself. The path itself has no visible
+ * stroke, so on the light side the bead is invisible; it only reads as
+ * motion once it's traveling over the dark purple curve, which is the point.
+ * Purely cosmetic -- the container's real overflow-y:auto still does the
+ * actual scrolling, this just tracks it.
  */
 export default function CurveScrollThumb({ containerRef, radius = 100 }) {
   const pathRef = useRef(null);
   const thumbRef = useRef(null);
+  const glowRef = useRef(null);
   const [height, setHeight] = useState(0);
 
   useEffect(() => {
@@ -20,9 +25,8 @@ export default function CurveScrollThumb({ containerRef, radius = 100 }) {
 
     // Read clientHeight directly rather than trusting the ResizeObserver
     // entry's contentRect -- contentRect excludes padding, but this SVG is
-    // positioned absolute within the panel's padding-box (clientHeight),
-    // so using contentRect made the arc land short by exactly the panel's
-    // vertical padding.
+    // positioned in the panel's padding-box (clientHeight), so trusting
+    // contentRect made the arc land short by the panel's vertical padding.
     const ro = new ResizeObserver(() => {
       setHeight(container.clientHeight);
     });
@@ -34,7 +38,8 @@ export default function CurveScrollThumb({ containerRef, radius = 100 }) {
     const container = containerRef.current;
     const path = pathRef.current;
     const thumb = thumbRef.current;
-    if (!container || !path || !thumb || !height) return;
+    const glow = glowRef.current;
+    if (!container || !path || !thumb || !glow || !height) return;
 
     const total = path.getTotalLength();
 
@@ -44,6 +49,8 @@ export default function CurveScrollThumb({ containerRef, radius = 100 }) {
       const point = path.getPointAtLength(progress * total);
       thumb.setAttribute("cx", point.x);
       thumb.setAttribute("cy", point.y);
+      glow.setAttribute("cx", point.x);
+      glow.setAttribute("cy", point.y);
     }
 
     update();
@@ -58,9 +65,9 @@ export default function CurveScrollThumb({ containerRef, radius = 100 }) {
 
   return (
     <svg
-      width={r + 6}
+      width={r + 10}
       height={height}
-      viewBox={`0 0 ${r + 6} ${height}`}
+      viewBox={`0 0 ${r + 10} ${height}`}
       className="pointer-events-none absolute top-0 right-0 z-20 hidden lg:block"
       style={{ overflow: "visible" }}
       aria-hidden="true"
@@ -69,12 +76,10 @@ export default function CurveScrollThumb({ containerRef, radius = 100 }) {
         ref={pathRef}
         d={`M 2,0 L 2,${straightEnd} A ${r},${r} 0 0 1 ${2 + r},${height}`}
         fill="none"
-        stroke="var(--color-primary)"
-        strokeOpacity="0.15"
-        strokeWidth="2.5"
-        strokeLinecap="round"
+        stroke="none"
       />
-      <circle ref={thumbRef} r="4" fill="var(--color-primary)" />
+      <circle ref={glowRef} r="9" fill="white" opacity="0.5" style={{ filter: "blur(6px)" }} />
+      <circle ref={thumbRef} r="3.5" fill="white" />
     </svg>
   );
 }
