@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -10,6 +10,7 @@ import { Eye, EyeOff, User, Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import toast from 'react-hot-toast';
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton';
+import CurveScrollThumb from '@/components/auth/CurveScrollThumb';
 
 const registerSchema = yup.object({
   name: yup.string().min(2, 'Name too short').required('Name is required'),
@@ -24,6 +25,7 @@ const registerSchema = yup.object({
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const panelRef = useRef(null);
   const router = useRouter();
   const { signup, loginWithGoogleCredential } = useAuth();
 
@@ -58,14 +60,19 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen lg:h-screen grid grid-cols-1 lg:grid-cols-20 bg-background">
       {/* LEFT — REGISTER FORM */}
-      <div className="lg:col-span-9 relative grid place-items-center px-8 lg:px-16 xl:px-24 py-12 lg:py-10 bg-background overflow-x-hidden lg:overflow-y-auto custom-scrollbar">
+      <div
+        ref={panelRef}
+        className="lg:col-span-9 relative grid place-items-center px-8 lg:px-16 xl:px-24 py-12 lg:py-10 bg-background overflow-x-hidden lg:overflow-y-auto curve-scroll-container"
+      >
         {/* Left-side decoration */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary opacity-[0.08] blur-[100px]" />
           <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-secondary opacity-[0.08] blur-[100px]" />
         </div>
 
-        <div className="relative z-10 w-full max-w-md space-y-6">
+        <CurveScrollThumb containerRef={panelRef} radius={100} />
+
+        <div className="relative z-10 w-full max-w-md space-y-6 bg-surface-container/70 backdrop-blur-sm border border-outline-variant/50 rounded-3xl p-8 shadow-[0_8px_32px_rgba(74,26,138,0.12)]">
           {/* Brand + Heading */}
           <div className="animate-fade-in-up delay-0">
             <Link href="/" className="inline-flex items-center gap-2 mb-3">
@@ -179,7 +186,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-primary text-on-primary py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50"
+              className="w-full bg-primary text-on-primary py-2.5 rounded-xl text-sm font-bold shadow-[0_8px_24px_rgba(74,26,138,0.25)] hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50"
             >
               {isSubmitting ? 'Creating account...' : 'Create account'}
             </button>
@@ -206,7 +213,7 @@ export default function RegisterPage() {
       </div>
 
       {/* RIGHT — BRAND PANEL */}
-      <div className="lg:col-span-11 hidden lg:flex relative overflow-hidden items-center justify-center bg-[#210724] text-white rounded-bl-[32px] shadow-[-4px_0_24px_rgba(74,26,138,0.3)]">
+      <div className="lg:col-span-11 hidden lg:flex relative overflow-hidden items-center justify-center bg-[#210724] text-white rounded-bl-[100px] shadow-[-4px_0_24px_rgba(74,26,138,0.3)]">
         {/* Vector decorations — purple brand blobs */}
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -top-24 -left-20 w-96 h-96 rounded-full bg-primary opacity-25 blur-[100px] animate-float" />

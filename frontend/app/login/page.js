@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -10,6 +10,7 @@ import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import toast from 'react-hot-toast';
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton';
+import CurveScrollThumb from '@/components/auth/CurveScrollThumb';
 
 const loginSchema = yup.object({
   email: yup.string().email('Invalid email').required('Email is required'),
@@ -18,6 +19,7 @@ const loginSchema = yup.object({
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const panelRef = useRef(null);
   const router = useRouter();
   const { login, loginWithGoogleCredential } = useAuth();
 
@@ -50,16 +52,21 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-screen overflow-hidden grid grid-cols-1 lg:grid-cols-20 bg-background">
+    <div className="min-h-screen lg:h-screen grid grid-cols-1 lg:grid-cols-20 bg-background">
       {/* LEFT — LOGIN FORM */}
-      <div className="lg:col-span-9 relative flex items-center justify-center px-8 lg:px-16 xl:px-24 py-8 bg-background overflow-hidden">
+      <div
+        ref={panelRef}
+        className="lg:col-span-9 relative grid place-items-center px-8 lg:px-16 xl:px-24 py-12 lg:py-10 bg-background overflow-x-hidden lg:overflow-y-auto curve-scroll-container"
+      >
         {/* Left-side decoration */}
-        <div className="pointer-events-none absolute inset-0">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary opacity-[0.08] blur-[100px]" />
           <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-secondary opacity-[0.08] blur-[100px]" />
         </div>
 
-        <div className="relative z-10 w-full max-w-md space-y-6">
+        <CurveScrollThumb containerRef={panelRef} radius={100} />
+
+        <div className="relative z-10 w-full max-w-md space-y-6 bg-surface-container/70 backdrop-blur-sm border border-outline-variant/50 rounded-3xl p-8 shadow-[0_8px_32px_rgba(74,26,138,0.12)]">
           {/* Brand + Heading */}
           <div>
             <Link href="/" className="inline-flex items-center gap-2 mb-6">
@@ -130,7 +137,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-primary text-on-primary py-3 rounded-xl text-sm font-bold shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50"
+              className="w-full bg-primary text-on-primary py-3 rounded-xl text-sm font-bold shadow-[0_8px_24px_rgba(74,26,138,0.25)] hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50"
             >
               {isSubmitting ? 'Signing in...' : 'Sign in'}
             </button>
