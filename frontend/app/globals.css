@@ -549,18 +549,6 @@ a {
   background: #4A1A8A;
 }
 
-/* Keeps a container scrollable (wheel/trackpad/keyboard still work) without
-   showing the scrollbar track/thumb at all -- for panels where a visible
-   scrollbar reads as visual clutter rather than a useful affordance. */
-.no-scrollbar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
 .material-symbols-outlined {
   font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
   display: inline-block;
