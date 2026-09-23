@@ -549,6 +549,18 @@ a {
   background: #4A1A8A;
 }
 
+/* Keeps a container scrollable (wheel/trackpad/keyboard still work) without
+   showing a visible track/thumb at all -- for panels where scrolling should
+   only ever be a fallback for short viewports, not a visible UI element. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Chrome/Edge/Safari paint autofilled inputs with their own blue or yellow
    background no matter what CSS you set on the input itself -- the only
    reliable override is an absurdly large inset box-shadow in the input's
