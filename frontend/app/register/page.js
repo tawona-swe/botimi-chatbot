@@ -58,7 +58,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen lg:h-screen grid grid-cols-1 lg:grid-cols-20 bg-background">
       {/* LEFT — REGISTER FORM */}
-      <div className="lg:col-span-9 relative flex items-center justify-center px-8 lg:px-16 xl:px-24 py-12 lg:py-10 bg-background lg:overflow-y-auto">
+      <div className="lg:col-span-9 relative flex items-center justify-center px-8 lg:px-16 xl:px-24 py-12 lg:py-10 bg-background overflow-x-hidden lg:overflow-y-auto">
         {/* Left-side decoration */}
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary opacity-[0.08] blur-[100px]" />
