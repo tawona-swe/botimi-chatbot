@@ -63,8 +63,8 @@ export default function LoginPage() {
       <div className="lg:col-span-9 relative grid place-items-center px-8 lg:px-16 xl:px-24 py-12 lg:py-10 bg-background overflow-hidden lg:overflow-y-auto no-scrollbar">
         {/* Left-side decoration */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary opacity-[0.08] blur-[100px]" />
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-secondary opacity-[0.08] blur-[100px]" />
+          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary opacity-[0.08] blur-[100px] glow-blob" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-secondary opacity-[0.08] blur-[100px] glow-blob" />
         </div>
 
         <div className="relative z-10 w-full max-w-md space-y-6 bg-surface-container/70 backdrop-blur-sm border border-outline-variant/50 rounded-3xl p-8 shadow-[0_8px_32px_rgba(74,26,138,0.12)]">
@@ -176,9 +176,9 @@ export default function LoginPage() {
       <div className="lg:col-span-11 hidden lg:flex relative overflow-hidden items-center justify-center bg-[#210724] text-white rounded-bl-[100px] shadow-[-4px_0_24px_rgba(74,26,138,0.3)]">
         {/* Vector decorations — purple brand blobs */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-24 -left-20 w-96 h-96 rounded-full bg-primary opacity-25 blur-[100px] animate-float" />
-          <div className="absolute -top-10 left-32 w-80 h-80 rounded-full bg-secondary opacity-20 blur-[80px] animate-float-reverse" />
-          <div className="absolute bottom-0 -right-10 w-[30rem] h-[30rem] rounded-full bg-primary opacity-20 blur-[120px] animate-float-slow" />
+          <div className="absolute -top-24 -left-20 w-96 h-96 rounded-full bg-primary opacity-25 blur-[100px] animate-float glow-blob" />
+          <div className="absolute -top-10 left-32 w-80 h-80 rounded-full bg-secondary opacity-20 blur-[80px] animate-float-reverse glow-blob" />
+          <div className="absolute bottom-0 -right-10 w-[30rem] h-[30rem] rounded-full bg-primary opacity-20 blur-[120px] animate-float-slow glow-blob" />
           <div className="absolute top-[15%] left-[12%] w-3 h-3 rounded-full bg-white/10 animate-float-slow" />
           <div className="absolute bottom-[20%] right-[15%] w-2.5 h-2.5 rounded-full bg-tertiary/25 animate-float-reverse" />
         </div>
