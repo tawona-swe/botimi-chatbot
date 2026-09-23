@@ -64,7 +64,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen lg:h-screen grid grid-cols-1 lg:grid-cols-20 bg-background">
+    <div className="min-h-dvh lg:h-dvh grid grid-cols-1 lg:grid-cols-20 bg-background">
       {/* LEFT — REGISTER FORM */}
       <div className="lg:col-span-9 relative grid place-items-center px-8 lg:px-16 xl:px-24 py-12 lg:py-10 bg-background overflow-hidden lg:overflow-y-auto no-scrollbar">
         {/* Left-side decoration */}
