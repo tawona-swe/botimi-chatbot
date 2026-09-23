@@ -15,10 +15,15 @@ const registerSchema = yup.object({
   name: yup.string().min(2, 'Name too short').required('Name is required'),
   email: yup.string().email('Invalid email').required('Email is required'),
   password: yup.string().min(6, 'At least 6 characters').required('Password is required'),
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref('password')], 'Passwords must match')
+    .required('Confirm your password'),
 });
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();
   const { signup, loginWithGoogleCredential } = useAuth();
 
@@ -51,19 +56,19 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="h-screen overflow-hidden grid grid-cols-1 lg:grid-cols-20 bg-background">
+    <div className="min-h-screen lg:h-screen grid grid-cols-1 lg:grid-cols-20 bg-background">
       {/* LEFT — REGISTER FORM */}
-      <div className="lg:col-span-9 relative flex items-center justify-center px-8 lg:px-16 xl:px-24 py-6 bg-background overflow-hidden">
+      <div className="lg:col-span-9 relative flex items-center justify-center px-8 lg:px-16 xl:px-24 py-12 lg:py-10 bg-background lg:overflow-y-auto">
         {/* Left-side decoration */}
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary opacity-[0.08] blur-[100px]" />
           <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-secondary opacity-[0.08] blur-[100px]" />
         </div>
 
-        <div className="relative z-10 w-full max-w-md space-y-3">
+        <div className="relative z-10 w-full max-w-md space-y-6 my-auto">
           {/* Brand + Heading */}
-          <div>
-            <Link href="/" className="inline-flex items-center gap-2 mb-2">
+          <div className="animate-fade-in-up delay-0">
+            <Link href="/" className="inline-flex items-center gap-2 mb-3">
               <span className="relative inline-block text-base font-bold text-primary" style={{ fontFamily: '"Outfit", sans-serif' }}>
                 botimi
                 <span className="absolute rounded-full bg-tertiary" style={{ width: "4px", height: "4px", top: "-1px", right: "-6px" }} />
@@ -78,44 +83,43 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          <form className="space-y-2" onSubmit={handleSubmit(onSubmit)}>
-            {/* Name + Email */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div>
-                <label className="block text-xs font-semibold text-on-surface-variant mb-1">Full name</label>
-                <div className="relative">
-                  <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50" />
-                  <input
-                    type="text"
-                    {...register('name')}
-                    placeholder="John Doe"
-                    className="w-full border border-outline-variant rounded-xl py-2 pr-4 pl-11 text-sm text-on-surface bg-surface-container-lowest placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                  />
-                </div>
-                {errors.name && (
-                  <p className="mt-1 text-xs text-error flex items-center gap-1">
-                    <span>•</span> {errors.name.message}
-                  </p>
-                )}
+          <form className="space-y-4 animate-fade-in-up delay-1" onSubmit={handleSubmit(onSubmit)}>
+            {/* Name */}
+            <div>
+              <label className="block text-xs font-semibold text-on-surface-variant mb-1">Full name</label>
+              <div className="relative">
+                <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50" />
+                <input
+                  type="text"
+                  {...register('name')}
+                  placeholder="John Doe"
+                  className="w-full border border-outline-variant rounded-xl py-2.5 pr-4 pl-11 text-sm text-on-surface bg-surface-container-lowest placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
               </div>
+              {errors.name && (
+                <p className="mt-1 text-xs text-error flex items-center gap-1">
+                  <span>•</span> {errors.name.message}
+                </p>
+              )}
+            </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-on-surface-variant mb-1">Email</label>
-                <div className="relative">
-                  <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50" />
-                  <input
-                    type="email"
-                    {...register('email')}
-                    placeholder="you@example.com"
-                    className="w-full border border-outline-variant rounded-xl py-2 pr-4 pl-11 text-sm text-on-surface bg-surface-container-lowest placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                  />
-                </div>
-                {errors.email && (
-                  <p className="mt-1 text-xs text-error flex items-center gap-1">
-                    <span>•</span> {errors.email.message}
-                  </p>
-                )}
+            {/* Email */}
+            <div>
+              <label className="block text-xs font-semibold text-on-surface-variant mb-1">Email</label>
+              <div className="relative">
+                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50" />
+                <input
+                  type="email"
+                  {...register('email')}
+                  placeholder="you@example.com"
+                  className="w-full border border-outline-variant rounded-xl py-2.5 pr-4 pl-11 text-sm text-on-surface bg-surface-container-lowest placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
               </div>
+              {errors.email && (
+                <p className="mt-1 text-xs text-error flex items-center gap-1">
+                  <span>•</span> {errors.email.message}
+                </p>
+              )}
             </div>
 
             {/* Password */}
@@ -127,7 +131,7 @@ export default function RegisterPage() {
                   type={showPassword ? 'text' : 'password'}
                   {...register('password')}
                   placeholder="Create a strong password"
-                  className="w-full border border-outline-variant rounded-xl py-2 pr-12 pl-11 text-sm text-on-surface bg-surface-container-lowest placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  className="w-full border border-outline-variant rounded-xl py-2.5 pr-12 pl-11 text-sm text-on-surface bg-surface-container-lowest placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 />
                 <button
                   type="button"
@@ -141,6 +145,33 @@ export default function RegisterPage() {
               {errors.password && (
                 <p className="mt-1 text-xs text-error flex items-center gap-1">
                   <span>•</span> {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label className="block text-xs font-semibold text-on-surface-variant mb-1">Confirm password</label>
+              <div className="relative">
+                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50" />
+                <input
+                  type={showConfirm ? 'text' : 'password'}
+                  {...register('confirmPassword')}
+                  placeholder="Repeat your password"
+                  className="w-full border border-outline-variant rounded-xl py-2.5 pr-12 pl-11 text-sm text-on-surface bg-surface-container-lowest placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 hover:text-on-surface-variant transition-colors"
+                  tabIndex={-1}
+                >
+                  {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="mt-1 text-xs text-error flex items-center gap-1">
+                  <span>•</span> {errors.confirmPassword.message}
                 </p>
               )}
             </div>
