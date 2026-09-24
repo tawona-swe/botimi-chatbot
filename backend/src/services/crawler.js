@@ -14,6 +14,70 @@ function normalizeUrl(url) {
 }
 
 /**
+ * A page's "section" for round-robin crawl ordering — its parent directory
+ * (every path segment except the last, which is the individual page's own
+ * slug). Using the parent directory rather than just the first path segment
+ * matters for sites hosted under a path prefix (e.g. everything nested under
+ * /zra/) — segments[0] would collapse the entire site into one section and
+ * defeat the whole point. Query strings (pagination like ?page=2) don't
+ * affect pathname, so paginated listing pages naturally group with each
+ * other under the same section too.
+ */
+function sectionOf(pageUrl) {
+  try {
+    const segments = new URL(pageUrl).pathname.split("/").filter(Boolean);
+    segments.pop();
+    return segments.join("/");
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * A crawl queue ordered round-robin across sections instead of plain FIFO.
+ * A flat FIFO queue lets whichever section is discovered first (or simply
+ * has the most internal links — a tenders listing with 30 individual tender
+ * pages, say) consume the entire maxPages budget before any other section
+ * gets a single page crawled, no matter how high maxPages is set. Cycling
+ * through sections in turn guarantees every discovered section gets at
+ * least some coverage, and a large section's remaining depth still gets
+ * filled in as budget allows.
+ */
+function createRoundRobinQueue() {
+  const bySection = new Map(); // section -> FIFO array of urls
+  const order = []; // sections in first-discovered order
+  const queued = new Set(); // dedupe across all sections
+  let cursor = 0;
+
+  return {
+    enqueue(pageUrl) {
+      if (queued.has(pageUrl)) return;
+      queued.add(pageUrl);
+      const section = sectionOf(pageUrl);
+      if (!bySection.has(section)) {
+        bySection.set(section, []);
+        order.push(section);
+      }
+      bySection.get(section).push(pageUrl);
+    },
+    dequeue() {
+      const active = order.filter((s) => bySection.get(s).length > 0);
+      if (active.length === 0) return undefined;
+      const section = active[cursor % active.length];
+      cursor++;
+      const next = bySection.get(section).shift();
+      queued.delete(next);
+      return next;
+    },
+    get size() {
+      let total = 0;
+      for (const q of bySection.values()) total += q.length;
+      return total;
+    },
+  };
+}
+
+/**
  * Fetch and parse a site's robots.txt. Fails open (returns a parser backed
  * by an empty ruleset, i.e. everything allowed) if robots.txt doesn't exist
  * or can't be reached — its absence isn't a restriction, and a network blip
@@ -128,17 +192,19 @@ export async function crawlWebsite(url, options = {}) {
   const crawlDelayMs = Math.min(declaredDelaySec ? declaredDelaySec * 1000 : DEFAULT_CRAWL_DELAY_MS, MAX_CRAWL_DELAY_MS);
 
   const sitemapUrls = await discoverSitemapUrls(origin, robots);
-  const queue = [url, ...sitemapUrls.filter((u) => {
-    try { return new URL(u).hostname === baseHostname; } catch { return false; }
-  })];
+  const queue = createRoundRobinQueue();
+  queue.enqueue(url);
+  sitemapUrls
+    .filter((u) => { try { return new URL(u).hostname === baseHostname; } catch { return false; } })
+    .forEach((u) => queue.enqueue(u));
 
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ userAgent: CRAWLER_USER_AGENT });
 
   try {
     let isFirstRequest = true;
-    while (queue.length > 0 && results.length < maxPages) {
-      const currentUrl = queue.shift();
+    while (queue.size > 0 && results.length < maxPages) {
+      const currentUrl = queue.dequeue();
 
       if (visited.has(currentUrl)) continue;
       visited.add(currentUrl);
@@ -173,7 +239,43 @@ export async function crawlWebsite(url, options = {}) {
         const html = await page.content();
         const $ = cheerio.load(html);
 
-        // Remove non-content elements
+        // Collect internal links BEFORE stripping nav/header/footer below —
+        // a real, confirmed bug: a site's main navigation menu (where major
+        // sections like a press-release archive are often linked from, and
+        // ONLY from — nowhere in the body content) lives inside exactly the
+        // elements this crawler strips for content-cleanliness. Stripping
+        // first meant those links were destroyed before they could ever be
+        // discovered, on every single page, for the whole crawl — not a
+        // budget/ordering problem, an actual inability to ever find them.
+        $("a[href]").each((_, el) => {
+          let href = $(el).attr("href");
+          if (!href) return;
+
+          try {
+            const parsed = new URL(href, currentUrl);
+            // Fragments ("#", "#section") don't address a different page —
+            // without stripping this, "/page/" and "/page/#" (a common
+            // pattern for JS-hooked links, e.g. modal triggers or "back to
+            // top") get treated as two separate pages and waste budget
+            // re-crawling content already visited under the bare URL.
+            parsed.hash = "";
+            const absolute = parsed.href;
+            if (parsed.hostname === baseHostname && !visited.has(absolute)) {
+              // Binaries we have no extractor for — PDF/DOCX are handled
+              // above instead of being skipped like the rest.
+              if (!parsed.pathname.match(/\.(zip|doc|xls|xlsx|png|jpg|jpeg|gif|svg|mp4|mp3)$/i)) {
+                queue.enqueue(absolute);
+              }
+            }
+          } catch {
+            // Invalid URL, skip
+          }
+        });
+
+        // Remove non-content elements — only now, for extracting clean
+        // indexable text. Nav/header/footer boilerplate genuinely shouldn't
+        // pollute what gets embedded as knowledge, just not before links
+        // inside them have already been collected above.
         $("script, style, nav, footer, header, iframe, noscript, svg, [role=navigation]").remove();
 
         const title = $("title").text().trim() || $("h1").first().text().trim() || new URL(currentUrl).pathname;
@@ -183,26 +285,6 @@ export async function crawlWebsite(url, options = {}) {
           results.push({ url: currentUrl, title, content });
           onProgress(results.length, maxPages, currentUrl);
         }
-
-        // Collect internal links
-        $("a[href]").each((_, el) => {
-          let href = $(el).attr("href");
-          if (!href) return;
-
-          try {
-            const absolute = new URL(href, currentUrl).href;
-            const parsed = new URL(absolute);
-            if (parsed.hostname === baseHostname && !visited.has(absolute) && !queue.includes(absolute)) {
-              // Binaries we have no extractor for — PDF/DOCX are handled
-              // above instead of being skipped like the rest.
-              if (!parsed.pathname.match(/\.(zip|doc|xls|xlsx|png|jpg|jpeg|gif|svg|mp4|mp3)$/i)) {
-                queue.push(absolute);
-              }
-            }
-          } catch {
-            // Invalid URL, skip
-          }
-        });
 
         await page.close();
       } catch (err) {
