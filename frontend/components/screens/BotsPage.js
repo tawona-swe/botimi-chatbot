@@ -10,6 +10,7 @@ import WhatsAppIcon from "../ui/WhatsAppIcon";
 import api from "../../lib/api";
 import { EMBED_PLATFORMS, generateSnippet } from "../../lib/embedSnippets";
 import { useAuth } from "../../context/AuthContext";
+import { getContrastColor } from "../../lib/color";
 
 // Vendors pick a response quality, never a provider or model name — which
 // underlying AI actually answers (and any automatic failover between them)
@@ -635,6 +636,23 @@ export default function BotsPage() {
                             );
                           })}
                         </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Live Preview</label>
+                        <div className="rounded-xl overflow-hidden border border-outline-variant">
+                          <div className="p-3 flex items-center gap-2.5" style={{ background: editForm.brand_color }}>
+                            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                              <span className="material-symbols-outlined text-[16px]" style={{ color: getContrastColor(editForm.brand_color) }}>{editForm.avatar_icon}</span>
+                            </div>
+                            <span className="text-sm font-semibold truncate" style={{ color: getContrastColor(editForm.brand_color) }}>{editForm.name || "Bot name"}</span>
+                          </div>
+                          <div className="p-3 bg-surface-container-lowest flex justify-end">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: editForm.brand_color }}>
+                              <span className="material-symbols-outlined text-[16px]" style={{ color: getContrastColor(editForm.brand_color) }}>send</span>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-[11px] text-on-surface-variant/70">Icon, name, and send-button colors auto-adjust for contrast against your brand color.</p>
                       </div>
                       <div className="flex items-center gap-3 p-3 bg-surface-container-lowest border border-outline-variant rounded-xl">
                         <label className="relative inline-flex items-center cursor-pointer">
