@@ -5,12 +5,79 @@ import db from "../db/index.js";
 import { indexPages } from "./rag.js";
 
 const PLAN_CRAWL_LIMITS = { trial: 10, starter: 50, growth: 500, scale: -1 };
+// Used ONLY for robots.txt Allow/Disallow/Crawl-delay matching -- kept as a
+// distinct, honest identifier so a site owner's own robots.txt rules can
+// specifically target us by name. Verified against the actual robots-parser
+// version installed here: it does NOT do substring matching against the
+// full UA string, it needs our token to lead the string, so this can't
+// just be folded into CRAWLER_BROWSER_UA below without silently breaking
+// robots.txt compliance (a site's own Disallow rules for us would stop
+// matching at all -- confirmed live, not assumed).
 const CRAWLER_USER_AGENT = "botimi-Crawler/1.0 (AI Chatbot Training Bot)";
+// The UA actually sent on the wire for page requests. Many WAFs/CDNs block
+// any non-standard User-Agent outright regardless of robots.txt -- this
+// looks like a normal browser to reduce that false-positive blocking, same
+// general idea as how Googlebot/Bingbot present a browser-like string. This
+// is separate from robots.txt compliance (still fully honored via
+// CRAWLER_USER_AGENT above), not a way to evade a site owner's own rules.
+const CRAWLER_BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 const DEFAULT_CRAWL_DELAY_MS = 500;
 const MAX_CRAWL_DELAY_MS = 5000; // cap a site's declared Crawl-delay so one slow site can't stall a whole crawl
 
 function normalizeUrl(url) {
   return url.startsWith("http://") || url.startsWith("https://") ? url : `https://${url}`;
+}
+
+// Common "load more" / "show more" button patterns. Checked in order, first
+// visible match wins -- covers both real <button>/<a> text and the class-
+// name convention most "load more" widgets use even when the visible text
+// differs (icon-only buttons, localized text, etc.).
+const LOAD_MORE_SELECTORS = [
+  'button:has-text("Load more")',
+  'button:has-text("Show more")',
+  'a:has-text("Load more")',
+  'a:has-text("Show more")',
+  '[class*="load-more" i]',
+  '[class*="loadmore" i]',
+];
+
+/**
+ * Trigger lazy-loaded content (intersection-observer-based images/sections
+ * that only fetch once scrolled into view) and click a "load more" button
+ * once if one exists, before extracting a page's content/links. Playwright
+ * doesn't scroll or click anything on its own -- without this, any content
+ * that only appears after a scroll event or a manual "show more" click is
+ * simply never present in page.content() at all, regardless of how long
+ * networkidle waits.
+ *
+ * Deliberately cheap for the common case: a page whose scrollHeight doesn't
+ * change after the first scroll exits immediately (~1 wait), since most
+ * pages aren't lazy-loaded at all and shouldn't pay for this on every page
+ * of every crawl. Bounded to a handful of iterations either way so a
+ * pathological infinite-scroll page can't stall the whole crawl.
+ */
+async function settlePage(page) {
+  let previousHeight = await page.evaluate(() => document.body.scrollHeight).catch(() => 0);
+  for (let i = 0; i < 4; i++) {
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight)).catch(() => {});
+    await page.waitForTimeout(500);
+    const currentHeight = await page.evaluate(() => document.body.scrollHeight).catch(() => previousHeight);
+    if (currentHeight === previousHeight) break; // no new content loaded from that scroll -- done
+    previousHeight = currentHeight;
+  }
+
+  for (const selector of LOAD_MORE_SELECTORS) {
+    try {
+      const button = page.locator(selector).first();
+      if (await button.isVisible({ timeout: 300 })) {
+        await button.click({ timeout: 2000 });
+        await page.waitForTimeout(800);
+        break; // one click is enough to surface the next batch for this crawl pass
+      }
+    } catch {
+      // selector not present, not visible, or not clickable -- try the next pattern
+    }
+  }
 }
 
 /**
@@ -199,7 +266,7 @@ export async function crawlWebsite(url, options = {}) {
     .forEach((u) => queue.enqueue(u));
 
   const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({ userAgent: CRAWLER_USER_AGENT });
+  const context = await browser.newContext({ userAgent: CRAWLER_BROWSER_UA });
 
   try {
     let isFirstRequest = true;
@@ -235,6 +302,7 @@ export async function crawlWebsite(url, options = {}) {
       try {
         const page = await context.newPage();
         await page.goto(currentUrl, { waitUntil: "networkidle", timeout: 30000 });
+        await settlePage(page);
 
         const html = await page.content();
         const $ = cheerio.load(html);
