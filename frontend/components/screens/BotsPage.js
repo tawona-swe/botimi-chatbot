@@ -646,13 +646,24 @@ export default function BotsPage() {
                             </div>
                             <span className="text-sm font-semibold truncate" style={{ color: getContrastColor(editForm.brand_color) }}>{editForm.name || "Bot name"}</span>
                           </div>
-                          <div className="p-3 bg-surface-container-lowest flex justify-end">
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: editForm.brand_color }}>
-                              <span className="material-symbols-outlined text-[16px]" style={{ color: getContrastColor(editForm.brand_color) }}>send</span>
+                          <div
+                            className="p-3 space-y-2"
+                            style={{ background: editForm.widget_theme === "light" ? "#ffffff" : "#1a1a2e" }}
+                          >
+                            <div
+                              className="inline-block px-3 py-2 rounded-xl rounded-bl-none text-xs max-w-[75%]"
+                              style={editForm.widget_theme === "light" ? { background: "#f0f0f5", color: "#1a1a2e" } : { background: "#2a2a3e", color: "#e0e0e0" }}
+                            >
+                              {editForm.welcome_message || "Hello! How can I help?"}
+                            </div>
+                            <div className="flex justify-end">
+                              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: editForm.brand_color }}>
+                                <span className="material-symbols-outlined text-[16px]" style={{ color: getContrastColor(editForm.brand_color) }}>send</span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                        <p className="text-[11px] text-on-surface-variant/70">Icon, name, and send-button colors auto-adjust for contrast against your brand color.</p>
+                        <p className="text-[11px] text-on-surface-variant/70">Icon, name, and send-button colors auto-adjust for contrast against your brand color. Chat panel matches your widget theme.</p>
                       </div>
                       <div className="flex items-center gap-3 p-3 bg-surface-container-lowest border border-outline-variant rounded-xl">
                         <label className="relative inline-flex items-center cursor-pointer">
