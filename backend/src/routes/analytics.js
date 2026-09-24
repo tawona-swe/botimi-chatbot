@@ -133,6 +133,7 @@ router.get("/unanswered-questions", (req, res) => {
       m.content as answer,
       m.created_at as answeredAt,
       c.id as conversationId,
+      c.bot_id as botId,
       c.visitor_name as visitorName,
       (
         SELECT content FROM messages um
@@ -142,6 +143,11 @@ router.get("/unanswered-questions", (req, res) => {
     FROM messages m
     JOIN conversations c ON c.id = m.conversation_id
     WHERE c.vendor_id = ? AND m.role = 'bot' AND m.confident = 0
+      AND NOT EXISTS (
+        SELECT 1 FROM usage_events ue
+        WHERE ue.vendor_id = c.vendor_id AND ue.event_type = 'knowledge_gap_answered'
+          AND json_extract(ue.metadata, '$.messageId') = m.id
+      )
     ORDER BY m.created_at DESC
     LIMIT ?
   `).all(vendorId, limit);
@@ -153,6 +159,12 @@ router.get("/unanswered-questions", (req, res) => {
   // including NULL here would surface old, correctly-answered messages as
   // false "unanswered questions." Only confident=0 is unambiguous (it never
   // existed before this feature), so that's the only thing queried.
+  //
+  // Gaps a vendor has already answered (see POST /api/bots/:id/knowledge-gaps)
+  // are excluded via a usage_events row rather than mutating m.confident --
+  // that column is a historical record of what actually happened at reply
+  // time and other analytics (confidence trend charts) depend on it staying
+  // accurate, so "answered" state lives in its own event instead.
 
   res.json({ questions: rows.filter((r) => r.question) });
 });

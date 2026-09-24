@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import Sidebar from "../ui/Sidebar";
 import api from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
@@ -256,11 +258,11 @@ export default function AnalyticsPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-4 pt-2">
                     <div className="bg-surface-container-lowest rounded-xl p-4 text-center border border-outline/5">
-                      <p className="font-display text-2xl font-bold text-on-surface">{formatNumber(analytics.botResolution?.resolved || 0)}</p>
+                      <p className="font-display text-2xl font-bold text-on-surface">{formatNumber(analytics.botResolution?.resolvedByBot || 0)}</p>
                       <p className="text-xs text-on-surface-variant mt-1">Bot Resolved</p>
                     </div>
                     <div className="bg-surface-container-lowest rounded-xl p-4 text-center border border-outline/5">
-                      <p className="font-display text-2xl font-bold text-on-surface">{formatNumber((analytics.botResolution?.total || 0) - (analytics.botResolution?.resolved || 0))}</p>
+                      <p className="font-display text-2xl font-bold text-on-surface">{formatNumber(analytics.botResolution?.escalated || 0)}</p>
                       <p className="text-xs text-on-surface-variant mt-1">Needed Handoff</p>
                     </div>
                   </div>
@@ -335,7 +337,26 @@ export default function AnalyticsPage() {
                 {unanswered.questions.map((q) => (
                   <div key={q.messageId} className="bg-surface-container-lowest rounded-xl p-4 border border-outline/5">
                     <p className="text-sm text-on-surface font-medium">{q.question}</p>
-                    <p className="text-xs text-on-surface-variant mt-1.5 line-clamp-2">{q.answer}</p>
+                    <div className="text-xs text-on-surface-variant mt-1.5 max-h-28 overflow-hidden [&_p]:my-1 [&_p]:first:mt-0 [&_p]:last:mb-0 [&_ul]:my-1 [&_ul]:pl-4 [&_ul]:list-disc [&_ol]:my-1 [&_ol]:pl-4 [&_ol]:list-decimal [&_li]:my-0.5 [&_strong]:font-semibold [&_strong]:text-on-surface [&_a]:text-primary [&_a]:underline [&_table]:my-1">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          table: ({ children }) => (
+                            <div className="overflow-x-auto scrollbar-thin">
+                              <table className="w-full text-[10px] border-collapse">{children}</table>
+                            </div>
+                          ),
+                          th: ({ children }) => (
+                            <th className="border border-outline-variant bg-surface-container px-1.5 py-1 text-left font-semibold whitespace-nowrap">{children}</th>
+                          ),
+                          td: ({ children }) => (
+                            <td className="border border-outline-variant px-1.5 py-1 align-top">{children}</td>
+                          ),
+                        }}
+                      >
+                        {q.answer}
+                      </ReactMarkdown>
+                    </div>
                     <p className="text-[10px] text-on-surface-variant/60 mt-2">{new Date(q.answeredAt).toLocaleDateString()}</p>
                   </div>
                 ))}
