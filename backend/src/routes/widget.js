@@ -37,6 +37,34 @@ router.get("/loader.js", (req, res) => {
 var c=window.botimiConfig||{},k=c.apiKey||'';
 if(!k){console.warn('[botimi] No apiKey found.');return;}
 var B='${apiBase}';
+// Requested immediately, in parallel with the config fetch below, instead
+// of from inside render() (which only runs AFTER that fetch resolves) --
+// that serialization meant the icon font didn't even start loading until a
+// full network round-trip had already elapsed, for no reason (the font
+// doesn't depend on the config at all). Every bit of head start here
+// shrinks the window in which the icon might render as literal text.
+if(!window.__botimiFontLoad){
+var fl0=document.createElement('link');fl0.id='botimi-icon-font';fl0.rel='stylesheet';
+fl0.href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block';
+// A plain document.fonts.ready check resolves as soon as nothing is
+// CURRENTLY pending from the browser's perspective -- confirmed live with
+// throttled-network screenshots that it fires almost immediately here,
+// well before the font is actually ready, because at this exact point the
+// browser hasn't parsed the stylesheet yet and so doesn't know this font
+// exists at all, let alone that it's loading. Waiting for the link's own
+// load event first (stylesheet fetched, @font-face now registered), then
+// explicitly requesting the specific font via fonts.load (which attaches
+// to its real loading state rather than the ambient list of "whatever the
+// browser happens to already know about"), is what actually tracks it.
+window.__botimiFontLoad=new Promise(function(resolve){
+fl0.onload=function(){
+if(document.fonts&&document.fonts.load){document.fonts.load('24px "Material Symbols Outlined"').then(resolve).catch(resolve);}
+else{resolve();}
+};
+fl0.onerror=resolve;
+});
+document.head.appendChild(fl0);
+}
 // Same WCAG relative-luminance formula as frontend/lib/color.js's
 // getContrastColor, so the dashboard preview and the live widget always
 // agree on whether a given brand color needs light or dark text/icons.
@@ -46,18 +74,21 @@ function tl(c){return c<=0.03928?c/12.92:Math.pow((c+0.055)/1.055,2.4);}
 var l=0.2126*tl(r)+0.7152*tl(g)+0.0722*tl(b);return l>0.5?'#1a1a2e':'#fff';}
 function render(t,p,cl,hb,ic,nm,wm){
 var cc=ct(cl);
-if(!document.getElementById('botimi-icon-font')){
-var fl=document.createElement('link');fl.id='botimi-icon-font';fl.rel='stylesheet';
-fl.href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap';
-document.head.appendChild(fl);
-}
 var s=document.createElement('style');
 s.textContent='#botimi-wc{all:initial;position:fixed;z-index:999999;'+(p==='bottom-left'?'left:20px;':'right:20px;')+'bottom:20px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}'+
 '#botimi-wc *{box-sizing:border-box}'+
 '.bb{width:60px;height:60px;border-radius:50%;background:'+cl+';cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s}'+
 '.bb:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(0,0,0,.35)}'+
 '.bb svg{width:28px;height:28px}'+
-'.bmi{font-family:"Material Symbols Outlined";font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;color:'+cc+';line-height:1}'+
+'.bmi{font-family:"Material Symbols Outlined";font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24;color:'+cc+';line-height:1;opacity:0;transition:opacity .15s ease-out}'+
+// Belt-and-suspenders alongside display=block above: that alone only stops
+// the flash for the window AFTER the font stylesheet itself has loaded and
+// registered the @font-face rule -- confirmed live with throttled-network
+// screenshots that the literal ligature name ("smart_toy" etc.) is still
+// clearly readable well before that point, since font-display has nothing
+// to act on yet. Hiding until fonts are confirmed ready (JS below) covers
+// that earlier window too, so the icon is never visible as raw text at all.
+'#botimi-wc.ffr .bmi{opacity:1}'+
 '.bb .bmi{font-size:28px}'+
 '.bha .bmi{font-size:18px}'+
 '.bcp{position:fixed;'+(p==='bottom-left'?'left:20px;':'right:20px;')+'bottom:90px;width:380px;max-width:calc(100vw-40px);height:min(560px,calc(100vh - 114px));border-radius:16px;overflow:hidden;display:none;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3);'+(t==='light'?'background:#fff;color:#1a1a2e;':'background:#1a1a2e;color:#e0e0e0;')+'}'+
@@ -106,6 +137,14 @@ pnl.innerHTML='<div class="bh"><div class="bha"><span class="bmi">'+esc(ic)+'</s
 var bbl=document.createElement('div');bbl.className='bb';
 bbl.innerHTML='<span class="bmi">'+esc(ic)+'</span>';
 d.appendChild(pnl);d.appendChild(bbl);document.body.appendChild(d);
+// Reveal the icons once the font is actually confirmed loaded (see
+// window.__botimiFontLoad above), capped by a timeout so a font that fails
+// to load (blocked request, offline, etc.) doesn't leave the icons
+// invisible forever -- fall back to whatever the browser otherwise renders
+// rather than staying blank.
+var frv=function(){d.className='ffr';};
+var frt=setTimeout(frv,1200);
+(window.__botimiFontLoad||Promise.resolve()).then(function(){clearTimeout(frt);frv();}).catch(function(){clearTimeout(frt);frv();});
 var op=0,me=document.getElementById('bms'),ip=document.getElementById('bip'),sb=document.getElementById('bsnd'),cx=document.getElementById('bcx');
 document.getElementById('bht').textContent=nm||'botimi AI';
 am(wm||'Hello! I\\'m your AI assistant. How can I help you today?','bot');

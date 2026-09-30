@@ -57,7 +57,19 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${dmSans.variable} ${jetbrainsMono.variable} ${caveat.variable}`}>
       <head>
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+        {/* Split from Material Symbols on purpose: a single combined request only
+            accepts one &display= value for both, but they need opposite
+            strategies. Outfit is real text -- swap (show a fallback font
+            immediately, don't make headings invisible while waiting) is
+            correct. Material Symbols is an icon font whose "text" content is
+            just ligature names like "support_agent" -- with swap, that literal
+            name renders in the fallback font and is visibly readable for a
+            moment before swapping to the actual icon glyph, on every icon on
+            every page load. block renders nothing during that same window
+            instead, so the icon simply appears once ready -- never the raw
+            name. */}
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&display=swap" rel="stylesheet"/>
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet"/>
         <Script
           id="theme-init"
           strategy="beforeInteractive"
