@@ -146,17 +146,17 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Header */}
-        <div className="px-8 py-6 bg-surface-container-lowest/80 backdrop-blur-sm border-b border-outline-variant flex items-center justify-between shrink-0 z-10">
+        <div className="px-4 sm:px-8 py-4 sm:py-6 bg-surface-container-lowest/80 backdrop-blur-sm border-b border-outline-variant flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0 z-10">
           <div className="flex items-center gap-3">
             <button onClick={() => setMobileNavOpen(true)} className="lg:hidden text-on-surface-variant hover:text-on-surface transition-colors" aria-label="Open menu">
               <span className="material-symbols-outlined text-xl">menu</span>
             </button>
             <div>
-              <h1 className="font-display text-2xl font-bold text-on-surface">Analytics</h1>
+              <h1 className="font-display text-xl sm:text-2xl font-bold text-on-surface">Analytics</h1>
               <p className="text-sm text-on-surface-variant mt-1">Deep insights into your chatbot performance</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-surface-container rounded-xl p-1 border border-outline-variant">
+          <div className="flex items-center gap-2 bg-surface-container rounded-xl p-1 border border-outline-variant self-start sm:self-auto">
             {["7d", "30d", "90d"].map(r => (
               <button key={r} onClick={() => setTimeRange(r)} disabled={chartLoading} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-60 ${timeRange === r ? "bg-primary text-on-primary shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98]" : "text-on-surface-variant hover:text-on-surface"}`}>{r}</button>
             ))}
