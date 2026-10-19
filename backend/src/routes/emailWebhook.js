@@ -80,6 +80,21 @@ router.post("/webhook", async (req, res) => {
     }
     const full = await response.json();
 
+    // Resend fires "email.received" for ANY mail arriving at a @botimi.co.zw
+    // address -- including botimi's own outbound mail, if it happens to be
+    // addressed to one (e.g. a test/internal vendor account using a
+    // @botimi.co.zw email). That's not a support inquiry, it's the app's own
+    // mail looping back, so forwarding it produces a confusing "New message
+    // to your support inbox... reply to noreply@botimi.co.zw" wrapper around
+    // whatever we ourselves just sent (confirmed live: a payment receipt got
+    // forwarded this way). Anything from our own sending address is never a
+    // genuine inbound inquiry -- skip it rather than relay it as one.
+    const senderAddress = (full.from || "").match(/<([^>]+)>/)?.[1] || full.from || "";
+    if (senderAddress.trim().toLowerCase() === config.email.from.trim().toLowerCase()) {
+      console.log(`[EmailWebhook] Skipping forward -- sender is our own outbound address (${senderAddress}), not a real inquiry`);
+      return;
+    }
+
     await sendInboundEmailForward({
       to: config.email.forwardTo,
       from: full.from,
