@@ -174,7 +174,7 @@ export async function sendPaymentReceiptEmail(vendorEmail, planName, amount, cur
     html: renderEmailShell(`
       <h1 style="color: ${BRAND.ink}; font-size: 22px; margin: 0 0 16px;">Payment received</h1>
       <p style="color: ${BRAND.ink}; line-height: 1.6;">Thanks — your payment for the ${planName} plan went through.</p>
-      ${renderInfoBox(`<p style="margin: 0 0 6px;"><strong>Plan:</strong> ${planName}</p><p style="margin: 0;"><strong>Amount:</strong> ${amount} ${currencyCode}</p>`)}
+      ${renderInfoBox(`<p style="margin: 0 0 6px;"><strong>Plan:</strong> ${planName}</p><p style="margin: 0;"><strong>Amount:</strong> $${Number(amount).toFixed(2)} ${currencyCode}</p>`)}
       ${renderButton(`${config.frontendUrl}/settings`, "View billing")}
     `),
   });
@@ -190,7 +190,7 @@ export async function sendTopUpReceiptEmail(vendorEmail, credits, amount, curren
     html: renderEmailShell(`
       <h1 style="color: ${BRAND.ink}; font-size: 22px; margin: 0 0 16px;">Top-up received</h1>
       <p style="color: ${BRAND.ink}; line-height: 1.6;">Your payment went through and the credits have been added to your balance.</p>
-      ${renderInfoBox(`<p style="margin: 0 0 6px;"><strong>Credits added:</strong> ${credits.toLocaleString()}</p><p style="margin: 0;"><strong>Amount:</strong> ${amount} ${currencyCode}</p>`)}
+      ${renderInfoBox(`<p style="margin: 0 0 6px;"><strong>Credits added:</strong> ${credits.toLocaleString()}</p><p style="margin: 0;"><strong>Amount:</strong> $${Number(amount).toFixed(2)} ${currencyCode}</p>`)}
       ${renderButton(`${config.frontendUrl}/settings`, "View billing")}
     `),
   });
