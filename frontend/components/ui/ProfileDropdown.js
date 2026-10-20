@@ -97,7 +97,11 @@ export default function ProfileDropdown({ vendor, logout, align = "right", varia
       {open && (
         <div
           role="menu"
-          className={`absolute ${align === "right" ? "right-0" : "left-0"} top-full mt-2 w-64 bg-surface-container border border-outline-variant rounded-xl shadow-xl z-50 overflow-hidden`}
+          className={`absolute ${align === "right" ? "right-0" : "left-0"} ${
+            variant === "full"
+              ? "bottom-full mb-2 w-full" // "full" is always the sidebar's bottom-most item, next to the viewport edge -- opening downward (the default below) pushes almost the whole panel off-screen. A fixed w-64 also overflowed the sidebar's own width; matching the trigger's actual width keeps it inside the sidebar in both collapsed and expanded states.
+              : "top-full mt-2 w-64"
+          } bg-surface-container border border-outline-variant rounded-xl shadow-xl z-50 overflow-hidden`}
         >
           <div className="p-4 border-b border-outline-variant flex items-center gap-3">
             <span
