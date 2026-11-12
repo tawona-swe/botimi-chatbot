@@ -320,7 +320,7 @@ export default function HowItWorks() {
               Ready to get started?
             </h2>
             <p className="text-on-surface-variant text-body-lg max-w-xl mx-auto mb-10 relative z-10">
-              Join 500+ businesses already using botimi. Pick a plan and deploy your AI chatbot today.
+              botimi is in early access — pick a plan and deploy your AI chatbot today, with direct support from the team building it.
             </p>
             <div className="flex flex-col md:flex-row gap-4 justify-center relative z-10">
               <button

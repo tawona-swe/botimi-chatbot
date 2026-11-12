@@ -678,7 +678,7 @@ export default function LandingPage() {
             <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-secondary/20 blur-[100px] rounded-full"></div>
             <h2 className="font-display text-display text-on-surface mb-6 relative z-10">Ready to automate?</h2>
             <p className="text-on-surface-variant text-body-lg max-w-xl mx-auto mb-10 relative z-10">
-              Join 500+ businesses automating their support with botimi. Deployment takes less than 5 minutes.
+              Be one of our first founding customers — deployment takes less than 5 minutes, with direct support from the team building it.
             </p>
             <div className="flex flex-col md:flex-row gap-4 justify-center relative z-10">
               <button
