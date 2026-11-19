@@ -1,4 +1,5 @@
 import db from "../db/index.js";
+import config from "../config.js";
 import { getEmbedding, getStorableEmbedding } from "./modelRouter.js";
 
 /**
@@ -31,7 +32,12 @@ import { getEmbedding, getStorableEmbedding } from "./modelRouter.js";
  * several days instead of failing in one burst.
  */
 
-const DEFAULT_LIMIT = 800;
+// The hosted provider is quota-bound (~1k requests/day shared with live
+// chat), so it gets a trickle that leaves headroom and resumes next run.
+// The local model has no quota at all and runs at ~17ms per embedding, so
+// capping it would be self-inflicted: a full 7,308-chunk corpus completes
+// in roughly two minutes, versus ten days at the hosted batch size.
+const DEFAULT_LIMIT = config.embeddingProvider === "local" ? 50_000 : 800;
 
 /** Chunks still needing a real, current-dimension embedding. */
 export function countPendingChunks(expectedDim) {
