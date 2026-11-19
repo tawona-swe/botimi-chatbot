@@ -9,9 +9,15 @@ import config from "../config.js";
  * can be transiently unavailable/rate-limited — that's normal, not a bug;
  * the router falls back automatically when one is down.
  */
-// Full free-model list as of 2026-11-19, per the OpenCode Zen pricing page
-// (pasted directly by the user — these slugs/names churn, so re-check that
-// page rather than guessing if a model here starts 404ing).
+// Free-model list, verified live against GET /zen/v1/models on 2026-11-19
+// rather than transcribed from the pricing page — the two disagree. Note
+// "big-pickle" carries NO "-free" suffix even though it is $0.00 (every
+// other free model here does), and "jev-1.13-free" is on the pricing page
+// but absent from the served catalog entirely. Both would have been silent
+// permanent failures. Also note "deepseek-v4.1-flash" exists in the catalog
+// WITHOUT the suffix as a paid model — the "-free" one below is the free
+// variant, don't "tidy" the name. Re-check via checkCatalogDrift() in
+// services/modelHealth.js; this pool genuinely rotates.
 const MODELS = {
   "deepseek-v4.1-flash": { modelId: "deepseek-v4.1-flash-free", contextWindow: 200_000 },
   "mimo-v2.6-flash": { modelId: "mimo-v2.6-flash-free", contextWindow: 128_000 },
@@ -22,9 +28,8 @@ const MODELS = {
   "inkling-2-small": { modelId: "inkling-2-small-free", contextWindow: 128_000 },
   "flint-40b": { modelId: "flint-40b-free", contextWindow: 128_000 },
   "beam": { modelId: "beam-free", contextWindow: 128_000 },
-  "big-pickle": { modelId: "big-pickle-free", contextWindow: 128_000 },
+  "big-pickle": { modelId: "big-pickle", contextWindow: 200_000 },
   "iceman": { modelId: "iceman-free", contextWindow: 128_000 },
-  "jev-1.13": { modelId: "jev-1.13-free", contextWindow: 128_000 },
   "tidepool-alpha": { modelId: "tidepool-alpha-free", contextWindow: 128_000 },
 };
 
@@ -68,7 +73,12 @@ export async function chatCompletion(messages, options = {}) {
 
   if (!response.ok) {
     const errText = await response.text().catch(() => "");
-    throw new Error(`OpenCode Zen API error (${response.status}): ${errText.slice(0, 300)}`);
+    const err = new Error(`OpenCode Zen API error (${response.status}): ${errText.slice(0, 300)}`);
+    // Carried so modelRouter can tell a quota block (retryable soon) from a
+    // dead/renamed slug (retryable never) without parsing this message.
+    err.status = response.status;
+    err.retryAfter = Number(response.headers.get("retry-after")) || null;
+    throw err;
   }
 
   const data = await response.json();

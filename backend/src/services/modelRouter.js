@@ -63,6 +63,96 @@ const FALLBACK_ORDER = [
 // potentially minutes of serial 20s timeouts.
 const FALLBACK_TIMEOUT_MS = 8000;
 
+// How long a candidate stays benched after each class of failure. Without
+// this, a rate-limited provider is rediscovered as dead on every single
+// request — e.g. an exhausted OpenCode Zen free quota meant 12 consecutive
+// doomed round trips per message, since nothing remembered the previous
+// 429. A dead/renamed slug gets a much longer bench because it will not
+// recover on its own: it needs the model list updating (see
+// services/modelHealth.js, which detects exactly that).
+const COOLDOWN_MS = {
+  quota: 10 * 60 * 1000, // 429 — free-tier cap, recovers on its own
+  gone: 6 * 60 * 60 * 1000, // 404/400 — slug retired or renamed, needs a human
+  auth: 30 * 60 * 1000, // 401/403 — bad/expired key, needs a human but cheap to recheck
+  transient: 60 * 1000, // 5xx, timeouts, network — usually self-heals fast
+};
+
+// candidateKey -> { until: epochMs, kind, detail }. Deliberately in-process
+// and unpersisted: it is a latency optimisation, not state worth surviving
+// a restart, and a fresh process re-learning the picture costs one request.
+const cooldowns = new Map();
+
+function candidateKey(provider, modelKey) {
+  return `${provider}/${modelKey}`;
+}
+
+/**
+ * Bucket a provider error so it can be benched for an appropriate time.
+ * Providers attach `status`/`retryAfter` to their thrown errors; the string
+ * checks are only a backstop for transport-level failures that never got a
+ * HTTP status at all.
+ */
+function classifyFailure(err) {
+  const status = err?.status;
+  const msg = String(err?.message || "").toLowerCase();
+  const blamesTheModel = msg.includes("model") || msg.includes("does not exist") || msg.includes("unavailable");
+
+  if (status === 429) return "quota";
+  if (status === 401 || status === 403) return "auth";
+  if (status === 404) return "gone";
+  // A 400 is ambiguous: OpenCode Zen returns one for a dead slug, but a
+  // malformed request returns one too — and that failure mode is real here
+  // (passing role='bot' straight through used to make Groq 400 on every
+  // multi-turn chat). Benching 6h on the latter would take the whole
+  // cascade down for hours over a caller-side bug, so only blame the model
+  // when the message actually does.
+  if (status === 400) return blamesTheModel ? "gone" : "transient";
+  if (status >= 500) return "transient";
+
+  if (msg.includes("rate limit") || msg.includes("usage limit") || msg.includes("quota")) return "quota";
+  if (msg.includes("does not exist") || msg.includes("unavailable")) return "gone";
+  return "transient";
+}
+
+// A provider's own Retry-After wins when it is longer than our default
+// (OpenCode Zen really does report ~16h until its free quota resets), but
+// it is clamped so a malformed or absurd value can't bench a working
+// candidate indefinitely. Note Retry-After may legally be an HTTP-date
+// rather than seconds; the providers normalise that to null, so it lands
+// on the default rather than NaN.
+const MAX_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+function benchCandidate(provider, modelKey, err) {
+  const kind = classifyFailure(err);
+  const retryAfterMs = Number.isFinite(err?.retryAfter) ? err.retryAfter * 1000 : 0;
+  const until = Date.now() + Math.min(Math.max(COOLDOWN_MS[kind], retryAfterMs), MAX_COOLDOWN_MS);
+  cooldowns.set(candidateKey(provider, modelKey), { kind, until, detail: String(err?.message || "").slice(0, 200) });
+
+  // A retired slug is a config problem that will never fix itself, so say so
+  // loudly rather than letting it decay into a silent per-request tax.
+  if (kind === "gone") {
+    console.error(`[Router] ${candidateKey(provider, modelKey)} looks retired/renamed — benched ${COOLDOWN_MS.gone / 3600000}h. Run checkCatalogDrift(). Detail: ${err?.message?.slice(0, 200)}`);
+  }
+}
+
+function isBenched(provider, modelKey) {
+  const entry = cooldowns.get(candidateKey(provider, modelKey));
+  if (!entry) return false;
+  if (Date.now() >= entry.until) {
+    cooldowns.delete(candidateKey(provider, modelKey));
+    return false;
+  }
+  return true;
+}
+
+/** Current bench state, for the health endpoint / debugging. */
+export function getCooldowns() {
+  const now = Date.now();
+  return [...cooldowns.entries()]
+    .filter(([, v]) => v.until > now)
+    .map(([candidate, v]) => ({ candidate, kind: v.kind, secondsLeft: Math.round((v.until - now) / 1000), detail: v.detail }));
+}
+
 function isConfigured(provider) {
   if (provider === GROQ_PROVIDER) return !!config.groq.apiKey;
   if (provider === GEMINI_PROVIDER) return !!config.gemini.apiKey;
@@ -103,17 +193,27 @@ async function callProvider(provider, modelKey, messages, options) {
  */
 async function tryFallback(excludeProvider, excludeModelKey, messages, options, reason) {
   const attempted = [];
-  for (const { provider, modelKey } of FALLBACK_ORDER) {
-    if (provider === excludeProvider && modelKey === excludeModelKey) continue;
-    if (!isConfigured(provider)) continue;
-    attempted.push(`${provider}/${modelKey}`);
-    try {
-      const result = await callProvider(provider, modelKey, messages, { ...options, timeoutMs: FALLBACK_TIMEOUT_MS });
-      return { ...result, provider, _routed: true, _fallbackReason: reason, _attempted: attempted };
-    } catch {
-      // try the next candidate
+
+  // Two passes: benched candidates are skipped first time round, then tried
+  // anyway if nothing else worked. A stale bench entry must never be able to
+  // turn a recoverable situation into a hard failure for the visitor.
+  for (const ignoreBench of [false, true]) {
+    for (const { provider, modelKey } of FALLBACK_ORDER) {
+      if (provider === excludeProvider && modelKey === excludeModelKey) continue;
+      if (!isConfigured(provider)) continue;
+      const key = candidateKey(provider, modelKey);
+      if (attempted.includes(key)) continue;
+      if (!ignoreBench && isBenched(provider, modelKey)) continue;
+      attempted.push(key);
+      try {
+        const result = await callProvider(provider, modelKey, messages, { ...options, timeoutMs: FALLBACK_TIMEOUT_MS });
+        return { ...result, provider, _routed: true, _fallbackReason: reason, _attempted: attempted };
+      } catch (err) {
+        benchCandidate(provider, modelKey, err);
+      }
     }
   }
+
   console.warn(`[Router] every fallback exhausted (${attempted.length} tried): ${attempted.join(", ")}`);
   return null;
 }
@@ -149,11 +249,21 @@ export async function chatCompletion(messages, options = {}) {
     throw new Error("No configured model provider available — every free-tier fallback was also exhausted or unconfigured");
   }
 
+  // Likewise if the preferred candidate is already known to be down — no
+  // point spending a round trip to be told the same thing again.
+  if (isBenched(provider, modelKey)) {
+    const fallback = await tryFallback(provider, modelKey, messages, options, `${provider}_cooling_down`);
+    if (fallback) return fallback;
+    // Everything was benched and the ignore-bench pass failed too; fall
+    // through and give the preferred candidate its own chance anyway.
+  }
+
   try {
     const result = await callProvider(provider, modelKey, messages, options);
     return { ...result, provider, _routed: false };
   } catch (err) {
     console.warn(`[Router] ${provider}/${modelKey} failed (${err.message}), falling back`);
+    benchCandidate(provider, modelKey, err);
     const fallback = await tryFallback(provider, modelKey, messages, options, `${provider}_error`);
     if (fallback) return fallback;
     throw err;

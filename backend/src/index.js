@@ -199,6 +199,26 @@ setInterval(() => {
   runScheduledRecrawls().catch((err) => console.error("[Cron] Scheduled re-crawl error:", err));
 }, 24 * 60 * 60 * 1000); // every 24 hours
 
+// --------------- Free-Model Catalog Drift ---------------
+// The free model pools these bots run on rotate without notice, and a
+// retired slug fails silently (the router just falls through to the next
+// candidate), so this compares the configured ids against each provider's
+// live catalog and logs loudly when one disappears. Daily rather than
+// weekly because the pools really do churn that fast — a single manual
+// sweep on 2026-11-19 found six stale ids across three providers. Costs
+// one list call per provider, not an inference call per model.
+const { checkCatalogDrift } = await import("./services/modelHealth.js");
+setInterval(() => {
+  console.log("[Cron] Checking free-model catalog drift...");
+  checkCatalogDrift().catch((err) => console.error("[Cron] Catalog drift check error:", err));
+}, 24 * 60 * 60 * 1000); // every 24 hours
+
+// Also run once after startup, so a deploy surfaces drift immediately
+// rather than up to a day later.
+setTimeout(() => {
+  checkCatalogDrift().catch((err) => console.error("[Cron] Initial catalog drift check error:", err));
+}, 45_000);
+
 // --------------- GDPR Data Cleanup ---------------
 // Auto-delete conversation logs older than 90 days
 setInterval(() => {

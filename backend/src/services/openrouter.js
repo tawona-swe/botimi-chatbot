@@ -73,7 +73,12 @@ export async function chatCompletion(messages, options = {}) {
 
   if (!response.ok) {
     const errText = await response.text().catch(() => "");
-    throw new Error(`OpenRouter API error (${response.status}): ${errText.slice(0, 300)}`);
+    const err = new Error(`OpenRouter API error (${response.status}): ${errText.slice(0, 300)}`);
+    // Carried so modelRouter can tell a quota block (retryable soon) from a
+    // dead/retired-from-free slug (retryable never) without parsing this message.
+    err.status = response.status;
+    err.retryAfter = Number(response.headers.get("retry-after")) || null;
+    throw err;
   }
 
   const data = await response.json();

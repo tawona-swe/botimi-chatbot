@@ -52,7 +52,12 @@ function checkRateLimit(modelKey) {
   const limit = limits[modelKey] || 15;
 
   if (requestCount >= limit) {
-    throw new Error(`GEMINI_RATE_LIMIT: ${modelKey} exceeded ${limit} req/min`);
+    const err = new Error(`GEMINI_RATE_LIMIT: ${modelKey} exceeded ${limit} req/min`);
+    // Self-imposed limit, but the same shape as a real 429 so modelRouter
+    // cools this model down rather than hammering it for the rest of the minute.
+    err.status = 429;
+    err.retryAfter = Math.max(1, Math.ceil((requestResetAt - Date.now()) / 1000));
+    throw err;
   }
   requestCount++;
 }
@@ -122,7 +127,11 @@ export async function chatCompletion(messages, options = {}) {
 
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`Gemini API error (${response.status}): ${errText}`);
+    const err = new Error(`Gemini API error (${response.status}): ${errText}`);
+    // Carried so modelRouter can tell a quota block from a dead model id.
+    err.status = response.status;
+    err.retryAfter = Number(response.headers.get("retry-after")) || null;
+    throw err;
   }
 
   const data = await response.json();
