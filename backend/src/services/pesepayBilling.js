@@ -6,6 +6,8 @@ import * as pesepay from "./pesepay.js";
 const BILLING_CYCLE_DAYS = 30;
 const MAX_DUNNING_ATTEMPTS = 3;
 const RETRY_BACKOFF_DAYS = [1, 3, 7]; // days after attempt 1, 2, 3
+const ADVANCE_WARNING_DAYS = 3; // send warning this many days before due date
+const RENEWAL_REMINDER_INTERVAL_DAYS = 3;
 
 // SQLite's datetime('now') produces "YYYY-MM-DD HH:MM:SS" (space-separated,
 // no milliseconds/Z). JS's toISOString() produces "YYYY-MM-DDTHH:MM:SS.sssZ".
@@ -286,15 +288,14 @@ export async function resolveCharge(referenceNumber) {
   return transaction.transactionStatus;
 }
 
-const RENEWAL_REMINDER_INTERVAL_DAYS = 3;
-
 /**
- * Card-paying vendors have no stored payment method to re-charge silently
- * (unlike Ecocash's phone-PIN push), so a due renewal just gets flagged
- * past_due and emailed instead of auto-charged — deduped so the hourly cron
- * doesn't re-send the same reminder every hour.
+ * Send a renewal reminder email to a vendor whose payment is now due.
+ * Works for all payment methods (Ecocash, Omari, card) — no auto-charge is
+ * attempted. Deduped to once every RENEWAL_REMINDER_INTERVAL_DAYS days so
+ * the hourly cron doesn't re-send every hour. Increments dunning_attempts on
+ * each send; suspends the account after MAX_DUNNING_ATTEMPTS reminders.
  */
-async function remindCardVendorToRenew(vendor) {
+async function remindVendorToRenew(vendor) {
   const recentReminder = db.prepare(`
     SELECT id FROM usage_events
     WHERE vendor_id = ? AND event_type = 'renewal_reminder'
@@ -302,29 +303,83 @@ async function remindCardVendorToRenew(vendor) {
   `).get(vendor.id, `-${RENEWAL_REMINDER_INTERVAL_DAYS} days`);
   if (recentReminder) return;
 
-  if (vendor.subscription_status !== "past_due") {
-    db.prepare("UPDATE vendors SET subscription_status = 'past_due' WHERE id = ?").run(vendor.id);
+  const newAttempts = vendor.dunning_attempts + 1;
+
+  if (newAttempts >= MAX_DUNNING_ATTEMPTS) {
+    db.prepare("UPDATE vendors SET subscription_status = 'canceled', is_suspended = 1, dunning_attempts = ?, canceled_at = datetime('now') WHERE id = ?").run(newAttempts, vendor.id);
+    db.prepare("INSERT INTO usage_events (id, vendor_id, event_type, metadata) VALUES (?, ?, 'renewal_reminder', ?)")
+      .run(uuidv4(), vendor.id, JSON.stringify({ sentAt: new Date().toISOString(), attempt: newAttempts }));
+    if (vendor.email) {
+      const planName = config.plans[vendor.subscription_plan]?.name || vendor.subscription_plan;
+      import("./email.js")
+        .then(({ sendSubscriptionCanceledEmail }) => sendSubscriptionCanceledEmail(vendor.email, planName))
+        .catch((err) => console.error(`[PesepayBilling] Failed to send cancellation email to vendor ${vendor.id}:`, err.message));
+    }
+    console.log(`[PesepayBilling] Vendor ${vendor.id} suspended after ${newAttempts} unpaid renewal reminders.`);
+    return;
   }
 
+  db.prepare("UPDATE vendors SET subscription_status = 'past_due', dunning_attempts = ? WHERE id = ?").run(newAttempts, vendor.id);
   db.prepare("INSERT INTO usage_events (id, vendor_id, event_type, metadata) VALUES (?, ?, 'renewal_reminder', ?)")
-    .run(uuidv4(), vendor.id, JSON.stringify({ sentAt: new Date().toISOString() }));
+    .run(uuidv4(), vendor.id, JSON.stringify({ sentAt: new Date().toISOString(), attempt: newAttempts }));
 
   try {
     const { sendRenewalReminder } = await import("./email.js");
-    await sendRenewalReminder(vendor.email, config.plans[vendor.subscription_plan]?.name || vendor.subscription_plan);
-    console.log(`[PesepayBilling] Sent renewal reminder to vendor ${vendor.id} (pays by card).`);
+    await sendRenewalReminder(vendor.email, config.plans[vendor.subscription_plan]?.name || vendor.subscription_plan, vendor.subscription_plan);
+    console.log(`[PesepayBilling] Sent renewal reminder to vendor ${vendor.id} (attempt ${newAttempts}/${MAX_DUNNING_ATTEMPTS}).`);
   } catch (err) {
     console.error(`[PesepayBilling] Failed to email renewal reminder to vendor ${vendor.id}:`, err.message);
   }
 }
 
 /**
- * Cron entry point: (1) resolve any charges still pending from a previous
- * cycle, (2) trigger a fresh renewal charge for every due vendor. Only
- * Ecocash/Omari vendors can be auto-charged (the phone PIN push doesn't need
- * the customer on our site) — card vendors used the redirect flow, which has
- * no stored payment method to re-charge silently, so they're just flagged
- * past_due and emailed a "renew now" link instead (see remindCardVendorToRenew).
+ * Send a 3-day advance warning email to vendors whose payment is due soon.
+ * Deduped per vendor so it fires once per billing cycle (not every hour).
+ */
+async function sendAdvanceWarnings() {
+  const upcoming = db.prepare(`
+    SELECT * FROM vendors
+    WHERE is_suspended = 0
+      AND subscription_status IN ('active', 'past_due')
+      AND next_charge_at IS NOT NULL
+      AND next_charge_at > datetime('now')
+      AND next_charge_at <= datetime('now', '+${ADVANCE_WARNING_DAYS} days')
+  `).all();
+
+  for (const vendor of upcoming) {
+    const alreadyWarned = db.prepare(`
+      SELECT id FROM usage_events
+      WHERE vendor_id = ? AND event_type = 'payment_due_warning'
+        AND created_at >= datetime('now', '-7 days')
+    `).get(vendor.id);
+    if (alreadyWarned) continue;
+
+    const planId = vendor.subscription_plan;
+    const planName = config.plans[planId]?.name || planId;
+    const amount = planPrice(planId, isLocalVendor(vendor));
+
+    db.prepare("INSERT INTO usage_events (id, vendor_id, event_type, metadata) VALUES (?, ?, 'payment_due_warning', ?)")
+      .run(uuidv4(), vendor.id, JSON.stringify({ sentAt: new Date().toISOString(), amount }));
+
+    try {
+      const { sendPaymentDueWarning } = await import("./email.js");
+      await sendPaymentDueWarning(vendor.email, planName, planId, amount);
+      console.log(`[PesepayBilling] Sent payment due warning to vendor ${vendor.id} ($${amount} due in ~${ADVANCE_WARNING_DAYS} days).`);
+    } catch (err) {
+      console.error(`[PesepayBilling] Failed to send due warning to vendor ${vendor.id}:`, err.message);
+    }
+  }
+}
+
+/**
+ * Cron entry point:
+ *  1. Resolve any charges still pending from a previous cycle (user-initiated
+ *     Ecocash/card payments that haven't got a final status yet).
+ *  2. Send advance warning emails to vendors whose payment is due in ~3 days.
+ *  3. Email renewal reminders to vendors whose payment is now due — no silent
+ *     auto-charge is attempted regardless of payment method. Vendors pay by
+ *     clicking the link in the email and initiating payment themselves from
+ *     the settings page.
  */
 export async function runBillingCycle() {
   const pendingCharges = db.prepare("SELECT reference_number FROM pesepay_charges WHERE status = 'pending'").all();
@@ -336,29 +391,17 @@ export async function runBillingCycle() {
     }
   }
 
+  await sendAdvanceWarnings();
+
   const dueVendors = db.prepare(`
     SELECT * FROM vendors
-    WHERE payment_provider = 'pesepay'
-      AND is_suspended = 0
+    WHERE is_suspended = 0
       AND subscription_status IN ('active', 'past_due')
       AND next_charge_at IS NOT NULL
       AND next_charge_at <= datetime('now')
   `).all();
 
   for (const vendor of dueVendors) {
-    const alreadyPending = db.prepare("SELECT id FROM pesepay_charges WHERE vendor_id = ? AND status = 'pending'").get(vendor.id);
-    if (alreadyPending) continue; // avoid double-charging while a previous attempt is still in flight
-
-    if (!["ecocash", "omari"].includes(vendor.pesepay_payment_method)) {
-      await remindCardVendorToRenew(vendor);
-      continue;
-    }
-
-    try {
-      await chargeVendor(vendor, vendor.subscription_plan, vendor.pesepay_phone_number, vendor.pesepay_payment_method);
-      console.log(`[PesepayBilling] Charge triggered for vendor ${vendor.id} — check their phone for the ${vendor.pesepay_payment_method} PIN prompt.`);
-    } catch (err) {
-      console.error(`[PesepayBilling] Failed to charge vendor ${vendor.id}:`, err.message);
-    }
+    await remindVendorToRenew(vendor);
   }
 }

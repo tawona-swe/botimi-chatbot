@@ -78,6 +78,20 @@ export default function SettingsPage() {
     }
   }
 
+  // Auto-open payment modal when arriving from a renewal email (?renew=planId).
+  // Runs once pricing is loaded so we have the price data to populate the modal.
+  // Uses window.location.search directly (client-side only) to avoid the
+  // Suspense boundary that useSearchParams() requires in static-prerendered pages.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const renewPlanId = new URLSearchParams(window.location.search).get("renew");
+    if (!renewPlanId || !pricing.plans[renewPlanId]) return;
+    const plan = pricing.plans[renewPlanId];
+    setCheckoutItem({ type: "plan", id: renewPlanId, name: plan.name, price: plan.price, cardPrice: plan.cardPrice });
+    // Strip the param from the URL so a refresh doesn't re-open the modal.
+    router.replace("/settings", { scroll: false });
+  }, [pricing.plans]);
+
   // Card payments redirect away to Pesepay's hosted page and back — on
   // return, look up whatever charge was left pending and poll it, since
   // Pesepay's referenceNumber isn't known until after checkout started.

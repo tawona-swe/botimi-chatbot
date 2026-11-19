@@ -285,19 +285,37 @@ export async function sendTrialExpiredAlert(vendorEmail) {
 }
 
 /**
- * Remind a card-paying vendor their plan is due for renewal. Card payments
- * go through Pesepay's redirect flow, which has no stored payment method to
- * re-charge silently (unlike Ecocash's phone-PIN push) — they have to click
- * through and pay again themselves.
+ * Remind a vendor their plan is now due for renewal. Sent on the billing
+ * date and again every 3 days until payment is made or the account is
+ * suspended (see pesepayBilling.js's remindVendorToRenew).
  */
-export async function sendRenewalReminder(vendorEmail, planName) {
+export async function sendRenewalReminder(vendorEmail, planName, planId) {
+  const payUrl = `${config.frontendUrl}/settings?renew=${encodeURIComponent(planId)}`;
   return sendEmail({
     to: vendorEmail,
     subject: "Your botimi plan is due for renewal",
     html: renderEmailShell(`
       <h1 style="color: ${BRAND.ink}; font-size: 22px; margin: 0 0 16px;">Time to renew</h1>
-      <p style="color: ${BRAND.ink}; line-height: 1.6;">Your ${planName} plan is due for renewal. Since you pay by card, we can't charge you automatically — click below to renew and keep your bot running without interruption.</p>
-      ${renderButton(`${config.frontendUrl}/settings`, "Renew now")}
+      <p style="color: ${BRAND.ink}; line-height: 1.6;">Your ${planName} plan is due for renewal. Click below to pay and keep your bot running without interruption.</p>
+      ${renderButton(payUrl, "Renew now")}
+    `),
+  });
+}
+
+/**
+ * Advance notice sent 3 days before a vendor's billing date so they can
+ * arrange payment without being caught off guard.
+ */
+export async function sendPaymentDueWarning(vendorEmail, planName, planId, amount) {
+  const payUrl = `${config.frontendUrl}/settings?renew=${encodeURIComponent(planId)}`;
+  return sendEmail({
+    to: vendorEmail,
+    subject: `Your botimi ${planName} plan renews in 3 days`,
+    html: renderEmailShell(`
+      <h1 style="color: ${BRAND.ink}; font-size: 22px; margin: 0 0 16px;">Payment due in 3 days</h1>
+      <p style="color: ${BRAND.ink}; line-height: 1.6;">Your ${planName} plan renews in 3 days. You can pay now to keep everything running smoothly.</p>
+      ${renderInfoBox(`<p style="margin: 0 0 6px;"><strong>Plan:</strong> ${planName}</p><p style="margin: 0;"><strong>Amount due:</strong> $${Number(amount).toFixed(2)} USD</p>`)}
+      ${renderButton(payUrl, "Pay now")}
     `),
   });
 }
