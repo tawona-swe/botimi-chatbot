@@ -10,6 +10,7 @@
     "seed": "node src/db/seed.js"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.3.2",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^13.0.3",
     "cheerio": "^1.0.0",

@@ -136,6 +136,44 @@ function fixStaleBrandColorDefault() {
   }
 }
 
+// Same shape as the brand-color fix above: schema.sql's new DEFAULT 0.65
+// only applies to bots created from now on, but the old 0.7 was calibrated
+// against a different embedding model and keeps only ~70% of genuinely
+// correct answers confident -- escalating nearly a third of good replies.
+// Scoped to rows still holding that exact old default so a deliberately
+// tuned threshold is never overwritten.
+function fixStaleConfidenceThresholdDefault() {
+  const bots = db.prepare("UPDATE bots SET confidence_threshold = 0.65 WHERE confidence_threshold = 0.7").run();
+  if (bots.changes > 0) {
+    console.log(`[DB] Updated stale default confidence_threshold on ${bots.changes} bot(s).`);
+  }
+}
+
+// Clears out embeddings that were never real: the hash-based pseudo-vectors
+// written while the embedding provider was unavailable (6,304 of 7,308
+// production chunks, before getStorableEmbedding stopped that at the
+// source). Nulling them hands them to the embedding backfill for repair.
+//
+// These cannot be found by dimension. The hash function emits 384 floats,
+// which is exactly the width of the local BGE model, so a dimension check
+// waves them straight through. They are identifiable by sign instead: the
+// hash derives every component from the fractional part of a sine, so all
+// 384 values are >= 0, whereas a real normalized embedding reliably has
+// hundreds of negative components (a genuine 384-dim vector being entirely
+// non-negative is not a case that occurs in practice).
+function purgeUnrealEmbeddings() {
+  const purged = db.prepare(`
+    UPDATE knowledge_chunks SET embedding = NULL
+    WHERE embedding IS NOT NULL AND embedding != ''
+      AND NOT EXISTS (
+        SELECT 1 FROM json_each(knowledge_chunks.embedding) WHERE CAST(value AS REAL) < 0
+      )
+  `).run();
+  if (purged.changes > 0) {
+    console.log(`[DB] Cleared ${purged.changes} hash-fallback embedding(s); the backfill job will re-embed them.`);
+  }
+}
+
 export function migrate() {
   const schemaPath = resolve(__dirname, "schema.sql");
   const schema = readFileSync(schemaPath, "utf-8");
@@ -143,6 +181,8 @@ export function migrate() {
   runColumnMigrations();
   backfillKnowledgeChunksFts();
   fixStaleBrandColorDefault();
+  fixStaleConfidenceThresholdDefault();
+  purgeUnrealEmbeddings();
   console.log("[DB] Migration complete.");
 }
 

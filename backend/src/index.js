@@ -146,6 +146,17 @@ app.use("/api/assistant", assistantRoutes);
 // Marketing-site guide for anonymous visitors (public, no auth — not a deployable bot)
 app.use("/api/guest-assistant", (await import("./routes/guestAssistant.js")).default);
 
+// --------------- Local Embedding Model ---------------
+// Loaded in-process rather than called over the network (see
+// services/localEmbedding.js). Warmed here, fire-and-forget, because the
+// very first load downloads ~130MB into the persistent data volume — a
+// couple of minutes once per volume. Without this, whichever visitor
+// happened to arrive first after a fresh deploy would be the one waiting.
+if (config.embeddingProvider === "local") {
+  const { warmUp } = await import("./services/localEmbedding.js");
+  warmUp().catch((err) => console.error("[Startup] Local embedding warm-up failed:", err?.message));
+}
+
 // --------------- Keepalive Cron ---------------
 // Periodic overage check every hour
 const { checkOverageAlerts } = await import("./services/overage.js");

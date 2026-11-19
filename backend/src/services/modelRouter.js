@@ -2,6 +2,7 @@ import * as groq from "./groq.js";
 import * as gemini from "./gemini.js";
 import * as openrouter from "./openrouter.js";
 import * as opencodezen from "./opencodezen.js";
+import * as localEmbedding from "./localEmbedding.js";
 import config from "../config.js";
 
 /**
@@ -287,15 +288,25 @@ export async function chatCompletion(messages, options = {}) {
  * of trusting a fake similarity score.
  */
 export async function getEmbedding(text, taskType = "RETRIEVAL_DOCUMENT") {
-  if (config.gemini.apiKey) {
-    try {
-      const vector = await gemini.getEmbedding(text, taskType);
-      if (vector) return { vector, isReal: true };
-    } catch { /* fall through */ }
+  // Exactly one embedding provider is ever consulted. Unlike chat, this
+  // must NOT cascade across providers: two embedding models produce
+  // vectors of different dimensions in different vector spaces, so a
+  // fallback would quietly write chunks that cosineSimilarity's length
+  // guard scores 0 against every query — i.e. content that exists but can
+  // never be retrieved. One provider, or a flagged-unreal vector.
+  try {
+    const vector = config.embeddingProvider === "gemini"
+      ? (config.gemini.apiKey ? await gemini.getEmbedding(text, taskType) : null)
+      : await localEmbedding.embed(text, taskType);
+    if (vector?.length) return { vector, isReal: true };
+  } catch (err) {
+    console.warn(`[Router] ${config.embeddingProvider} embedding failed: ${err?.message}`);
   }
 
   // Final fallback: deterministic hash-based pseudo-embedding (not semantically
   // meaningful — only reached when no real embedding provider is available).
+  // Safe at query time because callers check isReal and skip confidence
+  // scoring; never write it to storage (see getStorableEmbedding).
   return { vector: groq.hashEmbedding(text), isReal: false };
 }
 

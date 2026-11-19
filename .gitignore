@@ -44,6 +44,11 @@ backend/data/*.db-shm
 backend/data/*.db-wal
 backend/data/uploads/
 
+# Downloaded weights for the local embedding model (~128MB). Cached into
+# the data dir so the persistent volume keeps it across container
+# rebuilds; it is a build artifact, never source.
+backend/data/models/
+
 # Local scratch dirs, not part of the shipped product
 Claude outputs/
 marketing/

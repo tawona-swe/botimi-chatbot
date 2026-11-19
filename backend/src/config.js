@@ -22,6 +22,15 @@ const config = {
     apiKey: process.env.GEMINI_API_KEY || "",
   },
 
+  // Which provider produces embeddings: "local" (in-process BGE model, the
+  // default) or "gemini" (hosted API). Exactly one is ever active, and
+  // there is deliberately no fallback between them: their vectors have
+  // different dimensions and live in different spaces, so mixing them
+  // within one corpus makes the mixed-in chunks unreachable by semantic
+  // search. Flipping this value is a supported migration -- the embedding
+  // backfill detects the dimension change and re-embeds the corpus.
+  embeddingProvider: process.env.EMBEDDING_PROVIDER || "local",
+
   openrouter: {
     apiKey: process.env.OPENROUTER_API_KEY || "",
   },
