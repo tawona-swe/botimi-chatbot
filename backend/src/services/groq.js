@@ -16,10 +16,19 @@ function getClient() {
 // Model IDs updated 2026-07-08 per Groq deprecation schedule.
 // llama3-70b-8192 and llama3-8b-8192 deprecated Aug 2025.
 // llama-3.3-70b-versatile and llama-3.1-8b-instant shut down Aug 16, 2026.
+//
+// Re-verified live against GET https://api.groq.com/openai/v1/models on
+// 2026-11-19: "qwen/qwen3.6-27b" had quietly been replaced by
+// "qwen/qwen3.8-27b" (the old id now 404s) — fixed below. Also added
+// gpt-oss-safeguard-20b and allam-2-7b, the other two general-purpose chat
+// models in Groq's current free catalog (the rest — whisper-*, orpheus-*,
+// llama-prompt-guard-* — are audio/TTS/classifier models, not chat).
 const MODELS = {
-  "llama3-70b": { modelId: "openai/gpt-oss-120b", contextWindow: 32768, priority: 1 },
-  "llama3-8b": { modelId: "openai/gpt-oss-20b", contextWindow: 8192, priority: 2 },
-  "mixtral-8x7b": { modelId: "qwen/qwen3.6-27b", contextWindow: 32768, priority: 3 },
+  "llama3-70b": { modelId: "openai/gpt-oss-120b", contextWindow: 131072, priority: 1 },
+  "llama3-8b": { modelId: "openai/gpt-oss-20b", contextWindow: 131072, priority: 2 },
+  "qwen3.8-27b": { modelId: "qwen/qwen3.8-27b", contextWindow: 131072, priority: 3 },
+  "gpt-oss-safeguard-20b": { modelId: "openai/gpt-oss-safeguard-20b", contextWindow: 131072, priority: 4 },
+  "allam-2-7b": { modelId: "allam-2-7b", contextWindow: 4096, priority: 5 },
 };
 
 /**
@@ -38,18 +47,21 @@ export async function chatCompletion(messages, options = {}) {
   const modelConfig = MODELS[modelKey] || MODELS["llama3-70b"];
   const startTime = Date.now();
 
-  const completion = await client.chat.completions.create({
-    model: modelConfig.modelId,
-    messages: messages.map((m) => ({
-      role: m.role,
-      content: m.content,
-    })),
-    temperature: options.temperature ?? 0.7,
-    max_tokens: options.maxTokens ?? 1024,
-    stream: options.stream ?? false,
-    ...(options.tools ? { tools: options.tools } : {}),
-    ...(options.tool_choice ? { tool_choice: options.tool_choice } : {}),
-  });
+  const completion = await client.chat.completions.create(
+    {
+      model: modelConfig.modelId,
+      messages: messages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      })),
+      temperature: options.temperature ?? 0.7,
+      max_tokens: options.maxTokens ?? 1024,
+      stream: options.stream ?? false,
+      ...(options.tools ? { tools: options.tools } : {}),
+      ...(options.tool_choice ? { tool_choice: options.tool_choice } : {}),
+    },
+    options.timeoutMs ? { timeout: options.timeoutMs } : undefined
+  );
 
   const latencyMs = Date.now() - startTime;
 

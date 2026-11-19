@@ -4,15 +4,31 @@ import config from "../config.js";
  * OpenRouter — OpenAI-compatible gateway to many hosted models. Curated to
  * the free (":free") tier here; these are shared-pool and can rate-limit
  * or rotate out without notice, so callers should be ready to fall back.
+ *
+ * List verified live against GET https://openrouter.ai/api/v1/models on
+ * 2026-11-19 (filtered to id.endsWith(':free')) — four previously-listed
+ * slugs (glm-5.2, minimax-m3, nemotron-super, the old "inkling") had been
+ * retired from the free tier and now 404 with "use this slug instead"
+ * pointing at the *paid* version; removed rather than swapped in, since
+ * the whole point of this list is never paying for any of them. Re-check
+ * that endpoint periodically — this pool genuinely rotates.
  */
 const MODELS = {
   "auto": { modelId: "openrouter/free", contextWindow: 200_000 },
-  "glm-5.2": { modelId: "z-ai/glm-5.2:free", contextWindow: 256_000 },
-  "minimax-m3": { modelId: "minimax/minimax-m3:free", contextWindow: 1_048_576 },
   "nemotron-ultra": { modelId: "nvidia/nemotron-3-ultra-550b-a55b:free", contextWindow: 1_000_000 },
-  "nemotron-super": { modelId: "nvidia/nemotron-3-super-120b-a12b:free", contextWindow: 262_144 },
   "gemma-4": { modelId: "google/gemma-4-31b-it:free", contextWindow: 262_144 },
-  "inkling": { modelId: "thinkingmachines/inkling:free", contextWindow: 1_048_576 },
+  "gemma-4-26b": { modelId: "google/gemma-4-26b-a4b-it:free", contextWindow: 262_144 },
+  "ling-3.2-flash": { modelId: "inclusionai/ling-3.2-flash:free", contextWindow: 1_048_576 },
+  "ernie-5.5-flash": { modelId: "baidu/ernie-5.5-flash-preview:free", contextWindow: 1_024_000 },
+  "inkling-2-small": { modelId: "thinkingmachines/inkling-2-small:free", contextWindow: 1_048_576 },
+  "lfm-3": { modelId: "liquid/lfm-3-1.7b:free", contextWindow: 262_144 },
+  "particle-1": { modelId: "particle-ai/particle-1:free", contextWindow: 1_048_576 },
+  "flint-v1": { modelId: "recursive/flint-v1.0:free", contextWindow: 262_144 },
+  "nemotron-3.5-super-vl": { modelId: "nvidia/nemotron-3.5-super-vl:free", contextWindow: 1_000_000 },
+  "dots-3-note": { modelId: "dots-studio/dots-3-note-preview:free", contextWindow: 512_000 },
+  "nemotron-3.5-lightning": { modelId: "nvidia/nemotron-3.5-lightning:free", contextWindow: 1_000_000 },
+  "north-mini-code": { modelId: "cohere/north-mini-code:free", contextWindow: 256_000 },
+  "nemotron-3-nano-omni": { modelId: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free", contextWindow: 256_000 },
 };
 
 function getApiKey() {
@@ -50,7 +66,7 @@ export async function chatCompletion(messages, options = {}) {
       temperature: options.temperature ?? 0.7,
       max_tokens: options.maxTokens ?? 1024,
     }),
-    signal: AbortSignal.timeout(20000),
+    signal: AbortSignal.timeout(options.timeoutMs ?? 20000),
   });
 
   const latencyMs = Date.now() - startTime;

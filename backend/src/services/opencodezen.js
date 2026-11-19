@@ -9,12 +9,23 @@ import config from "../config.js";
  * can be transiently unavailable/rate-limited — that's normal, not a bug;
  * the router falls back automatically when one is down.
  */
+// Full free-model list as of 2026-11-19, per the OpenCode Zen pricing page
+// (pasted directly by the user — these slugs/names churn, so re-check that
+// page rather than guessing if a model here starts 404ing).
 const MODELS = {
-  "mimo-v2.5": { modelId: "mimo-v2.5-free", contextWindow: 128_000 },
-  "hy3": { modelId: "hy3-free", contextWindow: 128_000 },
-  "deepseek-v4-flash": { modelId: "deepseek-v4-flash-free", contextWindow: 200_000 },
-  "nemotron-3-ultra": { modelId: "nemotron-3-ultra-free", contextWindow: 128_000 },
+  "deepseek-v4.1-flash": { modelId: "deepseek-v4.1-flash-free", contextWindow: 200_000 },
+  "mimo-v2.6-flash": { modelId: "mimo-v2.6-flash-free", contextWindow: 128_000 },
+  "longcat-2.5": { modelId: "longcat-2.5-free", contextWindow: 128_000 },
   "nemotron-3.5-lightning": { modelId: "nemotron-3.5-lightning-free", contextWindow: 128_000 },
+  "nemotron-3.5-super-vl": { modelId: "nemotron-3.5-super-vl-free", contextWindow: 128_000 },
+  "hy4-flash": { modelId: "hy4-flash-free", contextWindow: 128_000 },
+  "inkling-2-small": { modelId: "inkling-2-small-free", contextWindow: 128_000 },
+  "flint-40b": { modelId: "flint-40b-free", contextWindow: 128_000 },
+  "beam": { modelId: "beam-free", contextWindow: 128_000 },
+  "big-pickle": { modelId: "big-pickle-free", contextWindow: 128_000 },
+  "iceman": { modelId: "iceman-free", contextWindow: 128_000 },
+  "jev-1.13": { modelId: "jev-1.13-free", contextWindow: 128_000 },
+  "tidepool-alpha": { modelId: "tidepool-alpha-free", contextWindow: 128_000 },
 };
 
 function getApiKey() {
@@ -50,7 +61,7 @@ export async function chatCompletion(messages, options = {}) {
       temperature: options.temperature ?? 0.7,
       max_tokens: options.maxTokens ?? 1024,
     }),
-    signal: AbortSignal.timeout(20000),
+    signal: AbortSignal.timeout(options.timeoutMs ?? 20000),
   });
 
   const latencyMs = Date.now() - startTime;

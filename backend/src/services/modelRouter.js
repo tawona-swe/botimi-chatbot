@@ -9,10 +9,15 @@ import config from "../config.js";
  *
  * Default: GPT-OSS 120B (Groq) for best quality.
  * Vendor can override provider + model in bot settings (model_provider,
- * model_name). If the chosen provider isn't configured, or the call fails
- * for any reason, this cascades: preferred provider -> Groq -> Gemini,
- * skipping whichever of those is already the one that just failed. All
- * model switches are invisible to the end user.
+ * model_name). If the chosen provider/model isn't configured, or the call
+ * fails for any reason (including a free-tier rate limit), this cascades
+ * through every other free model from every configured provider — Groq's
+ * other models, then OpenRouter's and OpenCode Zen's whole free catalogs,
+ * then Gemini — stopping at the first one that succeeds. Every provider
+ * here is a genuinely free tier (see each service file for its model
+ * list); this cascade exists so hitting one provider's free-tier ceiling
+ * degrades to a different free model instead of costing money or failing
+ * the chat. All model switches are invisible to the end user.
  *
  * Model IDs updated 2026-07-08 per Groq deprecation schedule.
  * llama3-70b-8192/llama3-8b-8192 deprecated Aug 2025.
@@ -35,8 +40,28 @@ const DEFAULT_MODEL_BY_PROVIDER = {
   [GROQ_PROVIDER]: "llama3-70b",
   [GEMINI_PROVIDER]: "gemini-flash",
   [OPENROUTER_PROVIDER]: "auto",
-  [OPENCODE_ZEN_PROVIDER]: "mimo-v2.5",
+  [OPENCODE_ZEN_PROVIDER]: "deepseek-v4.1-flash",
 };
+
+// Every (provider, model) pair worth falling back through, in the order
+// to try them — Groq's own other models first (same provider, so a
+// transient blip there is cheapest to retry), then each shared free pool
+// in full, then Gemini last (also used for embeddings, so kept as the
+// final safety net rather than burned early on chat traffic). Built from
+// each service's own MODELS map rather than hand-duplicated here, so a
+// model added to e.g. opencodezen.js automatically joins the cascade.
+const FALLBACK_ORDER = [
+  [GROQ_PROVIDER, groq.MODELS],
+  [OPENROUTER_PROVIDER, openrouter.MODELS],
+  [OPENCODE_ZEN_PROVIDER, opencodezen.MODELS],
+  [GEMINI_PROVIDER, gemini.MODELS],
+].flatMap(([provider, models]) => Object.keys(models).map((modelKey) => ({ provider, modelKey })));
+
+// First attempt gets the full per-provider timeout; every cascade attempt
+// after that uses a shorter one, so a total-outage worst case (every free
+// pool down at once) still resolves in well under a minute instead of
+// potentially minutes of serial 20s timeouts.
+const FALLBACK_TIMEOUT_MS = 8000;
 
 function isConfigured(provider) {
   if (provider === GROQ_PROVIDER) return !!config.groq.apiKey;
@@ -72,18 +97,24 @@ async function callProvider(provider, modelKey, messages, options) {
 }
 
 /**
- * Try one fallback provider, in order, skipping whichever provider just failed.
+ * Walk the full fallback cascade (every free model on every configured
+ * provider), skipping whichever single (provider, modelKey) pair was just
+ * tried as the primary attempt, and returning the first one that succeeds.
  */
-async function tryFallback(excludeProvider, messages, options, reason) {
-  for (const candidate of [GROQ_PROVIDER, GEMINI_PROVIDER]) {
-    if (candidate === excludeProvider || !isConfigured(candidate)) continue;
+async function tryFallback(excludeProvider, excludeModelKey, messages, options, reason) {
+  const attempted = [];
+  for (const { provider, modelKey } of FALLBACK_ORDER) {
+    if (provider === excludeProvider && modelKey === excludeModelKey) continue;
+    if (!isConfigured(provider)) continue;
+    attempted.push(`${provider}/${modelKey}`);
     try {
-      const result = await callProvider(candidate, DEFAULT_MODEL_BY_PROVIDER[candidate], messages, options);
-      return { ...result, provider: candidate, _routed: true, _fallbackReason: reason };
+      const result = await callProvider(provider, modelKey, messages, { ...options, timeoutMs: FALLBACK_TIMEOUT_MS });
+      return { ...result, provider, _routed: true, _fallbackReason: reason, _attempted: attempted };
     } catch {
       // try the next candidate
     }
   }
+  console.warn(`[Router] every fallback exhausted (${attempted.length} tried): ${attempted.join(", ")}`);
   return null;
 }
 
@@ -113,17 +144,17 @@ export async function chatCompletion(messages, options = {}) {
   // If the preferred provider isn't configured at all, go straight to fallback.
   if (!isConfigured(provider)) {
     console.warn(`[Router] ${provider} not configured, falling back`);
-    const fallback = await tryFallback(provider, messages, options, `${provider}_not_configured`);
+    const fallback = await tryFallback(provider, modelKey, messages, options, `${provider}_not_configured`);
     if (fallback) return fallback;
-    throw new Error(`No configured model provider available (wanted ${provider})`);
+    throw new Error("No configured model provider available — every free-tier fallback was also exhausted or unconfigured");
   }
 
   try {
     const result = await callProvider(provider, modelKey, messages, options);
     return { ...result, provider, _routed: false };
   } catch (err) {
-    console.warn(`[Router] ${provider} failed (${err.message}), falling back`);
-    const fallback = await tryFallback(provider, messages, options, `${provider}_error`);
+    console.warn(`[Router] ${provider}/${modelKey} failed (${err.message}), falling back`);
+    const fallback = await tryFallback(provider, modelKey, messages, options, `${provider}_error`);
     if (fallback) return fallback;
     throw err;
   }

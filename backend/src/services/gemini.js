@@ -115,7 +115,7 @@ export async function chatCompletion(messages, options = {}) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(20000),
+    signal: AbortSignal.timeout(options.timeoutMs ?? 20000),
   });
 
   const latencyMs = Date.now() - startTime;
