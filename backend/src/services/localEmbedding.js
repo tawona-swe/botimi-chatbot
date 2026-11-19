@@ -1,3 +1,4 @@
+import os from "node:os";
 import path from "node:path";
 import { pipeline, env } from "@huggingface/transformers";
 import config from "../config.js";
@@ -35,6 +36,18 @@ const QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
 // on every container rebuild.
 env.cacheDir = path.join(path.dirname(config.db.path), "models");
 
+// ONNX otherwise parallelises across every core it can see. That is fine on
+// a dedicated box but this VPS also hosts unrelated production projects and
+// the shared Caddy, and a bulk re-embed of the full corpus drove the load
+// average to 6.5 on 6 cores -- enough to make SSH time out. Capping to half
+// the cores keeps bulk runs neighbourly; the cost is modest (single-thread
+// is ~34ms/embedding versus ~18ms unrestricted, and normal operation embeds
+// one chunk at a time, not thousands). Must be set before the first ONNX
+// session is created, which happens on the pipeline() call below.
+const EMBEDDING_THREADS = Math.max(1, Math.floor((os.availableParallelism?.() ?? os.cpus().length) / 2));
+process.env.OMP_NUM_THREADS ??= String(EMBEDDING_THREADS);
+process.env.ORT_INTRA_OP_NUM_THREADS ??= String(EMBEDDING_THREADS);
+
 let extractorPromise = null;
 
 /**
@@ -64,7 +77,7 @@ export async function warmUp() {
   const started = Date.now();
   try {
     await getExtractor();
-    console.log(`[LocalEmbedding] ${MODEL_ID} ready in ${Date.now() - started}ms (cache: ${env.cacheDir})`);
+    console.log(`[LocalEmbedding] ${MODEL_ID} ready in ${Date.now() - started}ms (${EMBEDDING_THREADS} thread(s), cache: ${env.cacheDir})`);
     return true;
   } catch (err) {
     console.error(`[LocalEmbedding] Failed to load ${MODEL_ID}:`, err?.message);

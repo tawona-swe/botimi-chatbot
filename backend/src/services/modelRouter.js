@@ -208,6 +208,13 @@ async function tryFallback(excludeProvider, excludeModelKey, messages, options, 
       attempted.push(key);
       try {
         const result = await callProvider(provider, modelKey, messages, { ...options, timeoutMs: FALLBACK_TIMEOUT_MS });
+        // How deep the cascade had to go is the leading indicator that the
+        // free pools are drying up — it climbs well before anything starts
+        // failing outright. Only logged past the first fallback, since
+        // landing on the very next candidate is routine.
+        if (attempted.length > 1) {
+          console.warn(`[Router] recovered on fallback #${attempted.length} (${key}) after: ${attempted.slice(0, -1).join(", ")}`);
+        }
         return { ...result, provider, _routed: true, _fallbackReason: reason, _attempted: attempted };
       } catch (err) {
         benchCandidate(provider, modelKey, err);

@@ -277,9 +277,10 @@ export async function generateRagResponse(botId, userMessage, conversationHistor
   // embedding wasn't real -- see searchRelevantChunks -- so there's no
   // trustworthy signal to gate on either way).
   const hasKnowledgeBase = relevantChunks.length > 0;
-  // See schema.sql for how 0.65 was calibrated; it is specific to the
-  // active embedding model and must be re-measured if that changes.
-  const threshold = bot.confidence_threshold ?? 0.65;
+  // See schema.sql for how 0.72 was calibrated; it is specific to the
+  // active embedding model AND to corpus size, and must be re-measured if
+  // either changes.
+  const threshold = bot.confidence_threshold ?? 0.72;
   const isConfident = (hasKnowledgeBase && topSimilarity !== null) ? topSimilarity >= threshold : null;
 
   // Build system prompt

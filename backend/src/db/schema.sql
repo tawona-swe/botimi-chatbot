@@ -67,14 +67,24 @@ CREATE TABLE IF NOT EXISTS bots (
   response_tone       TEXT NOT NULL DEFAULT 'professional', -- professional | friendly | concise
   model_provider      TEXT NOT NULL DEFAULT 'groq',
   model_name          TEXT NOT NULL DEFAULT 'llama3-70b',
-  -- Calibrated against the local BGE embedding model on real production
-  -- content, not guessed: at 0.65, 87% of genuinely-correct answers stay
-  -- confident while 0% of out-of-scope questions were wrongly answered.
-  -- The old 0.7 was tuned for a different embedding model and kept only
-  -- 70% of correct answers, escalating nearly a third of good replies.
-  -- Re-measure if the embedding model changes -- similarity distributions
-  -- are model-specific and this number does not travel.
-  confidence_threshold REAL NOT NULL DEFAULT 0.65,
+  -- Calibrated against the local BGE model on the REAL production corpus
+  -- (7,286 chunks): 85.7% of genuinely-correct answers stay confident, and
+  -- 0% of out-of-scope questions are answered confidently.
+  --
+  -- Corpus size matters more than it looks. An earlier pass measured this
+  -- on a 60-chunk sample and concluded 0.65 was safe; re-run against the
+  -- full corpus, 0.65 let through 26.7% of out-of-scope questions. Top-1
+  -- similarity is a maximum, and maxima drift upward as the pool grows, so
+  -- a threshold calibrated on a small sample is always too loose. Calibrate
+  -- against a corpus the size of the real one.
+  --
+  -- Erring high is deliberate: an unconfident answer is still returned, just
+  -- hedged, and raises a ticket for a human -- whereas a falsely confident
+  -- one is wrong with no safety net.
+  --
+  -- Re-measure if the embedding model changes; similarity distributions are
+  -- model-specific and this number does not travel.
+  confidence_threshold REAL NOT NULL DEFAULT 0.72,
   widget_position     TEXT NOT NULL DEFAULT 'bottom-right', -- bottom-left | bottom-right
   widget_theme        TEXT NOT NULL DEFAULT 'dark', -- dark | light
   brand_color         TEXT DEFAULT '#4A1A8A',

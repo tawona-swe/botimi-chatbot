@@ -136,14 +136,19 @@ function fixStaleBrandColorDefault() {
   }
 }
 
-// Same shape as the brand-color fix above: schema.sql's new DEFAULT 0.65
-// only applies to bots created from now on, but the old 0.7 was calibrated
-// against a different embedding model and keeps only ~70% of genuinely
-// correct answers confident -- escalating nearly a third of good replies.
-// Scoped to rows still holding that exact old default so a deliberately
-// tuned threshold is never overwritten.
+// Same shape as the brand-color fix above: schema.sql's DEFAULT only
+// applies to bots created from now on, so existing rows need moving off
+// superseded defaults. Two are stale: 0.7 (calibrated for the old hosted
+// embedding model) and 0.65 (calibrated for the local model but against a
+// 60-chunk sample, which turned out far too loose on the real corpus --
+// see schema.sql). Scoped to those exact values so a deliberately tuned
+// threshold is never overwritten.
+const SUPERSEDED_THRESHOLDS = [0.7, 0.65];
+
 function fixStaleConfidenceThresholdDefault() {
-  const bots = db.prepare("UPDATE bots SET confidence_threshold = 0.65 WHERE confidence_threshold = 0.7").run();
+  const bots = db.prepare(
+    `UPDATE bots SET confidence_threshold = 0.72 WHERE confidence_threshold IN (${SUPERSEDED_THRESHOLDS.join(",")})`
+  ).run();
   if (bots.changes > 0) {
     console.log(`[DB] Updated stale default confidence_threshold on ${bots.changes} bot(s).`);
   }
