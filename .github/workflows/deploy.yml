@@ -18,11 +18,28 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          # Default is 10m. The backend image builds the local embedding
+          # model's onnxruntime dependency and takes ~6min to build plus
+          # ~3.5min to export, so the default silently killed the session
+          # mid-deploy -- twice -- leaving the OLD container running while
+          # the repo sat on the new commit.
+          command_timeout: 30m
           script: |
             set -e
             cd /home/botimi/botimi
             git fetch origin master
             git reset --hard origin/master
             docker compose up -d --build
+            # The health check below is necessary but NOT sufficient: a
+            # stale container left over from a half-finished deploy answers
+            # /api/health perfectly happily, which is exactly how two
+            # silent non-deploys went unnoticed. Assert the running
+            # container is the image we just built before trusting it.
+            RUNNING=$(docker inspect -f '{{.Image}}' botimi-backend-1)
+            BUILT=$(docker image inspect -f '{{.Id}}' botimi-backend:latest)
+            if [ "$RUNNING" != "$BUILT" ]; then
+              echo "Backend container is not running the freshly built image -- deploy did not take effect."
+              exit 1
+            fi
             sleep 5
             curl -sf https://app.botimi.co.zw/api/health
