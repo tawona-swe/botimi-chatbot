@@ -1,7 +1,7 @@
 import db, { migrate } from "./index.js";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
-import { getEmbedding } from "../services/modelRouter.js";
+import { getStorableEmbedding } from "../services/modelRouter.js";
 
 async function seed() {
   console.log("[Seed] Starting database seed...");
@@ -79,11 +79,10 @@ async function seed() {
     // Seeded without a real embedding, these chunks would never surface in
     // RAG search (searchRelevantChunks filters WHERE embedding IS NOT NULL),
     // leaving the demo bot with no actual knowledge despite looking trained.
-    const { vector } = await getEmbedding(chunk.content);
     const chunkId = uuidv4();
     insertChunk.run(
       chunkId, sourceId, demoBotId, demoVendorId,
-      chunk.content, vector ? JSON.stringify(vector) : null, chunk.index,
+      chunk.content, await getStorableEmbedding(chunk.content), chunk.index,
       JSON.stringify({ url: "https://botimi.ai/docs", title: "botimi Documentation" })
     );
     insertFts.run(chunkId, demoBotId, chunk.content);

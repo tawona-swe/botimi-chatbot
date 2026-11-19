@@ -299,4 +299,26 @@ export async function getEmbedding(text, taskType = "RETRIEVAL_DOCUMENT") {
   return { vector: groq.hashEmbedding(text), isReal: false };
 }
 
+/**
+ * The only way an embedding should ever reach the database.
+ *
+ * Returns a JSON string to store, or null when no *real* embedding could be
+ * produced. The hash fallback above is a tolerable momentary degradation at
+ * query time (callers check `isReal` and skip confidence scoring), but
+ * writing it to storage is corruption: it is noise that looks like a valid
+ * vector, nothing marks it as fake, and cosineSimilarity's length guard then
+ * returns a flat 0 for that chunk against every real query vector — so the
+ * content becomes permanently unreachable by semantic search.
+ *
+ * That is not hypothetical. On 2026-11-19, 6,304 of 7,308 production chunks
+ * were found to be stored hash vectors (384-dim, the hash function's
+ * signature) because both indexing paths destructured only `vector` and
+ * ignored `isReal`. Storing null instead leaves the chunk visibly
+ * un-embedded, which backfillEmbeddings() then repairs on its next run.
+ */
+export async function getStorableEmbedding(text) {
+  const { vector, isReal } = await getEmbedding(text, "RETRIEVAL_DOCUMENT");
+  return isReal && vector ? JSON.stringify(vector) : null;
+}
+
 export { GROQ_PROVIDER, GEMINI_PROVIDER, OPENROUTER_PROVIDER, OPENCODE_ZEN_PROVIDER, DEFAULT_MODEL_BY_PROVIDER };

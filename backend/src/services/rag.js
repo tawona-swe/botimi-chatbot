@@ -1,5 +1,5 @@
 import db from "../db/index.js";
-import { getEmbedding, chatCompletion } from "./modelRouter.js";
+import { getEmbedding, getStorableEmbedding, chatCompletion } from "./modelRouter.js";
 import { v4 as uuidv4 } from "uuid";
 
 /**
@@ -63,14 +63,13 @@ export async function indexPages(sourceId, botId, vendorId, pages) {
 
     for (let i = 0; i < chunks.length; i++) {
       const chunkId = uuidv4();
-      const { vector } = await getEmbedding(chunks[i]);
       insertChunk.run(
         chunkId,
         sourceId,
         botId,
         vendorId,
         chunks[i],
-        vector ? JSON.stringify(vector) : null,
+        await getStorableEmbedding(chunks[i]),
         totalChunks++,
         metadata
       );
@@ -105,14 +104,13 @@ export async function indexText(sourceId, botId, vendorId, text, title = "") {
   let totalChunks = 0;
   for (let i = 0; i < chunks.length; i++) {
     const chunkId = uuidv4();
-    const { vector } = await getEmbedding(chunks[i]);
     insertChunk.run(
       chunkId,
       sourceId,
       botId,
       vendorId,
       chunks[i],
-      vector ? JSON.stringify(vector) : null,
+      await getStorableEmbedding(chunks[i]),
       totalChunks++,
       metadata
     );

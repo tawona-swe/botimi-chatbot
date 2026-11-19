@@ -207,17 +207,38 @@ setInterval(() => {
 // weekly because the pools really do churn that fast — a single manual
 // sweep on 2026-11-19 found six stale ids across three providers. Costs
 // one list call per provider, not an inference call per model.
-const { checkCatalogDrift } = await import("./services/modelHealth.js");
+// Also checks that stored knowledge-chunk embeddings are still usable, and
+// emails the superadmin when either check finds a problem — logs alone were
+// not enough, since the first real failure this caught was only noticed
+// because someone happened to be tailing docker logs at the time.
+const { runModelHealthChecks } = await import("./services/modelHealth.js");
 setInterval(() => {
-  console.log("[Cron] Checking free-model catalog drift...");
-  checkCatalogDrift().catch((err) => console.error("[Cron] Catalog drift check error:", err));
+  console.log("[Cron] Running model health checks...");
+  runModelHealthChecks().catch((err) => console.error("[Cron] Model health check error:", err));
 }, 24 * 60 * 60 * 1000); // every 24 hours
 
-// Also run once after startup, so a deploy surfaces drift immediately
+// Also run once after startup, so a deploy surfaces problems immediately
 // rather than up to a day later.
 setTimeout(() => {
-  checkCatalogDrift().catch((err) => console.error("[Cron] Initial catalog drift check error:", err));
+  runModelHealthChecks().catch((err) => console.error("[Cron] Initial model health check error:", err));
 }, 45_000);
+
+// --------------- Embedding Backfill ---------------
+// Repairs knowledge chunks left without a usable embedding (historically,
+// chunks written as hash-fallback noise while the provider was down). Runs
+// as a trickle because the free embedding tier is ~1k requests/day shared
+// with live chat traffic — a large backlog heals over several days rather
+// than failing in one burst. Offset from the health check above so the two
+// don't contend for the same quota in the same instant.
+const { backfillEmbeddings } = await import("./services/embeddingBackfill.js");
+setInterval(() => {
+  console.log("[Cron] Running embedding backfill...");
+  backfillEmbeddings().catch((err) => console.error("[Cron] Embedding backfill error:", err));
+}, 24 * 60 * 60 * 1000); // every 24 hours
+
+setTimeout(() => {
+  backfillEmbeddings().catch((err) => console.error("[Cron] Initial embedding backfill error:", err));
+}, 90_000);
 
 // --------------- GDPR Data Cleanup ---------------
 // Auto-delete conversation logs older than 90 days
