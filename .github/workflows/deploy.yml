@@ -30,15 +30,23 @@ jobs:
             git fetch origin master
             git reset --hard origin/master
             docker compose up -d --build
-            # The health check below is necessary but NOT sufficient: a
-            # stale container left over from a half-finished deploy answers
-            # /api/health perfectly happily, which is exactly how two
-            # silent non-deploys went unnoticed. Assert the running
-            # container is the image we just built before trusting it.
-            RUNNING=$(docker inspect -f '{{.Image}}' botimi-backend-1)
+            # `up -d --build` does not reliably swap the container: compose
+            # has repeatedly reported "Running" and left the old one in
+            # place even though the build produced a new image id (buildx's
+            # containerd store rewrites the id on every build via
+            # attestation manifests, which compose's own staleness check
+            # does not always notice). That is how stale code reached
+            # production twice. The health check below cannot catch it
+            # either -- a stale container answers /api/health perfectly
+            # happily. So: compare image ids, force the swap if they differ,
+            # and only then trust it.
             BUILT=$(docker image inspect -f '{{.Id}}' botimi-backend:latest)
-            if [ "$RUNNING" != "$BUILT" ]; then
-              echo "Backend container is not running the freshly built image -- deploy did not take effect."
+            if [ "$(docker inspect -f '{{.Image}}' botimi-backend-1)" != "$BUILT" ]; then
+              echo "Backend is on a stale image -- forcing recreate."
+              docker compose up -d --force-recreate --no-deps backend
+            fi
+            if [ "$(docker inspect -f '{{.Image}}' botimi-backend-1)" != "$BUILT" ]; then
+              echo "Backend STILL not running the freshly built image -- deploy did not take effect."
               exit 1
             fi
             sleep 5
